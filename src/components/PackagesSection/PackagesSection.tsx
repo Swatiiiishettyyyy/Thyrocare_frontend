@@ -1,0 +1,53 @@
+import React from 'react'
+import type { PackagesSectionProps } from '../../types'
+import { TestCard } from '../TestCard'
+import type { TestCardProps } from '../../types'
+
+const PackagesSection = React.memo(function PackagesSection({ heading, subheading, cards }: PackagesSectionProps) {
+  return (
+    <section id="packages" style={{ background: '#fff', padding: '60px 110px' }}>
+      <div style={{ maxWidth: 1700, margin: '0 auto' }}>
+        {/* Header row: left-aligned title + right "View All" button */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 40 }}>
+          <div style={{ maxWidth: 480 }}>
+            <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 34, fontWeight: 700, color: '#111827', margin: '0 0 8px', lineHeight: 1.2 }}>
+              {heading}
+            </h2>
+            <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: 14, fontWeight: 400, color: '#6B7280', margin: 0, lineHeight: 1.6 }}>
+              {subheading}
+            </p>
+          </div>
+          <button style={{
+            background: '#7C5CFC', color: '#fff', border: 'none',
+            borderRadius: 50, padding: '12px 24px', cursor: 'pointer',
+            fontFamily: "'Poppins', sans-serif", fontSize: 14, fontWeight: 600,
+            whiteSpace: 'nowrap', alignSelf: 'center',
+          }}>
+            View All Package
+          </button>
+        </div>
+
+        {/* Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+          {cards.map((card, idx) => (
+            <TestCard
+              key={idx}
+              name={card.name}
+              description={card.description}
+              price={card.price}
+              originalPrice={card.originalPrice}
+              offerPercent={card.offerPercent}
+              tests={card.tests}
+              fasting={card.fasting}
+              turnaround={card.turnaround}
+              type={card.type as TestCardProps['type']}
+              onAddToCart={() => {}}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+})
+
+export { PackagesSection }
