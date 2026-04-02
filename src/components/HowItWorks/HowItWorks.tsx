@@ -1,3 +1,6 @@
+import rect20 from '../../assets/figma/Rectangle 20.png'
+import rect19 from '../../assets/figma/Rectangle 19.png'
+
 const STEPS = [
   { num: 1, desc: 'Choose tests by organ, condition, packages' },
   { num: 2, desc: 'Schedule home sample pickup in seconds' },
@@ -7,8 +10,26 @@ const STEPS = [
 
 export default function HowItWorks() {
   return (
-    <section style={{ background: '#fff', padding: '60px 110px' }}>
-      <div style={{ maxWidth: 1700, margin: '0 auto' }}>
+    <section style={{ background: '#fff', padding: '60px 110px', position: 'relative', overflow: 'hidden' }}>
+      {/* left side: rect20 top + rect19 bottom */}
+      <img src={rect20} alt="" aria-hidden="true" style={{
+        position: 'absolute', top: -80, left: -260, width: 620, height: 820,
+        pointerEvents: 'none', zIndex: 0, opacity: 0.7,
+      }} />
+      <img src={rect19} alt="" aria-hidden="true" style={{
+        position: 'absolute', bottom: -300, left: -180, width: 560, height: 760,
+        pointerEvents: 'none', zIndex: 0, opacity: 0.6,
+      }} />
+      {/* right side: rect19 top + rect20 bottom */}
+      <img src={rect19} alt="" aria-hidden="true" style={{
+        position: 'absolute', top: -100, right: -220, width: 620, height: 820,
+        pointerEvents: 'none', zIndex: 0, opacity: 0.7, transform: 'scaleX(-1)',
+      }} />
+      <img src={rect20} alt="" aria-hidden="true" style={{
+        position: 'absolute', bottom: -280, right: -180, width: 560, height: 760,
+        pointerEvents: 'none', zIndex: 0, opacity: 0.6, transform: 'scaleX(-1)',
+      }} />
+      <div style={{ maxWidth: 1700, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         {/* Heading */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginBottom: 48 }}>
           <h2 style={{ fontFamily: 'Poppins,sans-serif', fontSize: 36, fontWeight: 600, color: '#7C5CFC', margin: 0, textAlign: 'center' }}>

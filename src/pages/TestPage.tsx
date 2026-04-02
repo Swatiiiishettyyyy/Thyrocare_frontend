@@ -156,8 +156,26 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
         />
 
         {/* Comprehensive Health Packages */}
-        <section style={{ background: '#fff', padding: '60px 120px' }}>
-          <div style={{ maxWidth: 1700, margin: '0 auto', display: 'flex', gap: 160, alignItems: 'center' }}>
+        <section style={{ background: '#fff', padding: '60px 120px', position: 'relative', overflow: 'hidden' }}>
+          {/* left side: rect20 top + rect19 bottom — both colors on left */}
+          <img src={rect20} alt="" aria-hidden="true" style={{
+            position: 'absolute', top: -80, left: -260, width: 620, height: 820,
+            pointerEvents: 'none', zIndex: 0, opacity: 0.5,
+          }} />
+          <img src={rect19} alt="" aria-hidden="true" style={{
+            position: 'absolute', bottom: -300, left: -180, width: 560, height: 760,
+            pointerEvents: 'none', zIndex: 0, opacity: 0.4,
+          }} />
+          {/* right side: rect19 top + rect20 bottom — both colors on right */}
+          <img src={rect19} alt="" aria-hidden="true" style={{
+            position: 'absolute', top: -100, right: -220, width: 620, height: 820,
+            pointerEvents: 'none', zIndex: 0, opacity: 0.5, transform: 'scaleX(-1)',
+          }} />
+          <img src={rect20} alt="" aria-hidden="true" style={{
+            position: 'absolute', bottom: -280, right: -180, width: 560, height: 760,
+            pointerEvents: 'none', zIndex: 0, opacity: 0.4, transform: 'scaleX(-1)',
+          }} />
+          <div style={{ maxWidth: 1700, margin: '0 auto', display: 'flex', gap: 160, alignItems: 'center', position: 'relative', zIndex: 1 }}>
 
             {/* Left: heading — wider to push grid right */}
             <div style={{ width: 460, flexShrink: 0 }}>
@@ -184,7 +202,7 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
                     <button key={i} style={{
                       flex: 1, background: card.bg, borderRadius: 14, border: 'none', cursor: 'pointer',
                       display: 'flex', flexDirection: 'column', alignItems: 'center',
-                      padding: '16px 18px 12px', gap: 8, overflow: 'hidden', minWidth: 0, maxWidth: 160, aspectRatio: '3/4',
+                      padding: '16px 12px 12px', gap: 8, overflow: 'hidden', minWidth: 0, maxWidth: 160, aspectRatio: '3/4',
                     }}>
                       <div style={{ width: 120, height: 120, borderRadius: '50%', background: card.circleBg, overflow: 'hidden', flexShrink: 0 }}>
                         <img src={card.img} alt={card.label} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
