@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+﻿import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar, HeroSection, Footer } from '../components'
 import { WhyChooseUs } from '../components/WhyChooseUs'
@@ -11,6 +11,12 @@ import type { OrganItem, PackageCardProps, TestCardProps } from '../types'
 import men2550Img from '../assets/figma/25-50_men.png'
 import men50Img from '../assets/figma/50_men.png'
 import women50Img from '../assets/figma/50_women.png'
+import womenUnder25 from '../assets/figma/comprehensive/women_under25-4ef001.png'
+import women2550 from '../assets/figma/comprehensive/women_25_50-317855.png'
+import women50plus from '../assets/figma/comprehensive/women_50plus-2cf069.png'
+import menUnder25 from '../assets/figma/comprehensive/men_under25-4e32c2.png'
+import men2550Comp from '../assets/figma/comprehensive/men_25_50-531a98.png'
+import men50plus from '../assets/figma/comprehensive/men_50plus-224825.png'
 import heartImg from '../assets/figma/Heart.png'
 import liverImg from '../assets/figma/liver.png'
 import boneImg from '../assets/figma/Bone.png'
@@ -111,12 +117,12 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
 
         {/* Find Tests by Health Condition */}
         <section style={{ background: '#fff', padding: '60px 110px', position: 'relative', overflow: 'hidden' }}>
-          {/* Rectangle 20 — top left, behind content */}
+          {/* Rectangle 20 â€” top left, behind content */}
           <img src={rect20} alt="" aria-hidden="true" style={{
             position: 'absolute', top: -80, left: -280, width: 650 ,height:900,
             pointerEvents: 'none', zIndex: 0, opacity: 0.7,
           }} />
-          {/* Rectangle 19 — bottom right, behind content */}
+          {/* Rectangle 19 â€” bottom right, behind content */}
           <img src={rect19} alt="" aria-hidden="true" style={{
             position: 'absolute', bottom: -380, right: -180, width: 650 ,height:900,
             pointerEvents: 'none', zIndex: 0, opacity: 0.7,
@@ -150,71 +156,71 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
         />
 
         {/* Comprehensive Health Packages */}
-        <section style={{ background: '#F8F7FF', padding: '60px 110px' }}>
-          <div style={{ maxWidth: 1700, margin: '0 auto', display: 'flex', gap: 60, alignItems: 'flex-start' }}>
-            {/* Left heading */}
-            <div style={{ minWidth: 260, flexShrink: 0 }}>
-              <h2 style={{ fontFamily: 'Poppins,sans-serif', fontSize: 36, fontWeight: 700, color: '#7C5CFC', margin: '0 0 16px', lineHeight: 1.2 }}>
-                Comprehensive Health Packages
+        <section style={{ background: '#fff', padding: '60px 120px' }}>
+          <div style={{ maxWidth: 1700, margin: '0 auto', display: 'flex', gap: 160, alignItems: 'center' }}>
+
+            {/* Left: heading — wider to push grid right */}
+            <div style={{ width: 460, flexShrink: 0 }}>
+              <h2 style={{ fontFamily: 'Poppins,sans-serif', fontSize: 32, fontWeight: 600, color: '#101129', margin: '0 0 12px', lineHeight: 1.2 }}>
+                Comprehensive Health<br />Packages
               </h2>
-              <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, color: '#828282', margin: 0, lineHeight: 1.6 }}>
+              <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, fontWeight: 400, color: '#828282', margin: 0, lineHeight: 1.5 }}>
                 Preventive packages tailored by age and gender for deeper health screening.
               </p>
             </div>
 
-            {/* Right grid */}
-            <div style={{ flex: 1 }}>
+            {/* Right: card grid — narrower, taller cards */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
+
               {/* Women */}
-              <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#828282', margin: '0 0 12px', fontWeight: 500 }}>Women</p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 28 }}>
-                {[
-                  { label: 'Under 25', bg: '#C8F5EC', img: null },
-                  { label: '25–50',    bg: '#FAE0D8', img: null },
-                  { label: '50+',      bg: '#E8E4F8', img: women50Img },
-                ].map(card => (
-                  <button key={card.label} style={{
-                    background: card.bg, borderRadius: 16, border: 'none', cursor: 'pointer',
-                    padding: '20px 16px 16px', display: 'flex', flexDirection: 'column',
-                    alignItems: 'center', gap: 12, transition: 'transform 0.15s',
-                  }}>
-                    <div style={{ width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.5)', overflow: 'hidden', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-                      {card.img
-                        ? <img src={card.img} alt={card.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        : <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.3)' }} />
-                      }
-                    </div>
-                    <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, fontWeight: 600, color: '#1B1F3B' }}>{card.label}</span>
-                  </button>
-                ))}
+              <div>
+                <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 500, color: '#101129', display: 'block', marginBottom: 8 }}>Women</span>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  {[
+                    { label: 'Under 25', bg: '#E6F6F3', circleBg: 'linear-gradient(180deg, #41C9B3 0%, #E6FFFB 100%)', img: womenUnder25 },
+                    { label: '25-50',    bg: '#FFF4EF', circleBg: 'linear-gradient(180deg, #FFAD96 0%, #FFF4EF 100%)', img: women2550 },
+                    { label: '25-50',   bg: '#E7E1FF', circleBg: 'linear-gradient(180deg, #8B5CF6 0%, #E7E1FF 100%)', img: women50plus },
+                  ].map((card, i) => (
+                    <button key={i} style={{
+                      flex: 1, background: card.bg, borderRadius: 14, border: 'none', cursor: 'pointer',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center',
+                      padding: '16px 18px 12px', gap: 8, overflow: 'hidden', minWidth: 0, maxWidth: 160, aspectRatio: '3/4',
+                    }}>
+                      <div style={{ width: 120, height: 120, borderRadius: '50%', background: card.circleBg, overflow: 'hidden', flexShrink: 0 }}>
+                        <img src={card.img} alt={card.label} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
+                      </div>
+                      <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 12, fontWeight: 500, color: '#101129', textAlign: 'center' }}>{card.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Men */}
-              <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#828282', margin: '0 0 12px', fontWeight: 500 }}>Men</p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
-                {[
-                  { label: 'Under 25', bg: '#C8F5EC', img: null },
-                  { label: '25–50',    bg: '#FAE0D8', img: men2550Img },
-                  { label: '50+',      bg: '#E8E4F8', img: men50Img },
-                ].map(card => (
-                  <button key={card.label} style={{
-                    background: card.bg, borderRadius: 16, border: 'none', cursor: 'pointer',
-                    padding: '20px 16px 16px', display: 'flex', flexDirection: 'column',
-                    alignItems: 'center', gap: 12,
-                  }}>
-                    <div style={{ width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.5)', overflow: 'hidden', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-                      {card.img
-                        ? <img src={card.img} alt={card.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        : <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.3)' }} />
-                      }
-                    </div>
-                    <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, fontWeight: 600, color: '#1B1F3B' }}>{card.label}</span>
-                  </button>
-                ))}
+              <div>
+                <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 500, color: '#101129', display: 'block', marginBottom: 8 }}>Men</span>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  {[
+                    { label: 'Under 25', bg: '#E6F6F3', circleBg: 'linear-gradient(180deg, #41C9B3 0%, #E6FFFB 100%)', img: menUnder25 },
+                    { label: '25-50',    bg: '#FFF4EF', circleBg: 'linear-gradient(180deg, #FFAD96 0%, #FFF4EF 100%)', img: men2550Comp },
+                    { label: '25-50',   bg: '#E7E1FF', circleBg: 'linear-gradient(180deg, #8B5CF6 0%, #E7E1FF 100%)', img: men50plus },
+                  ].map((card, i) => (
+                    <button key={i} style={{
+                      flex: 1, background: card.bg, borderRadius: 14, border: 'none', cursor: 'pointer',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center',
+                      padding: '16px 8px 12px', gap: 8, overflow: 'hidden', minWidth: 0, maxWidth: 160, aspectRatio: '3/4',
+                    }}>
+                      <div style={{ width: 120, height: 120, borderRadius: '50%', background: card.circleBg, overflow: 'hidden', flexShrink: 0 }}>
+                        <img src={card.img} alt={card.label} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
+                      </div>
+                      <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 12, fontWeight: 500, color: '#101129', textAlign: 'center' }}>{card.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
+
             </div>
           </div>
         </section>
-
         {/* Why Choose Nucleotide */}
         <WhyChooseUs />
 

@@ -5,15 +5,18 @@ import type { TestCardProps } from '../../types'
 
 const PackagesSection = React.memo(function PackagesSection({ heading, subheading, cards }: PackagesSectionProps) {
   return (
-    <section id="packages" style={{ background: '#fff', padding: '60px 110px' }}>
+    <section id="packages" style={{
+      background: 'linear-gradient(to bottom, #1B1F3B 0%, #1B1F3B 55%, #fff 55%, #fff 100%)',
+      padding: '60px 110px',
+    }}>
       <div style={{ maxWidth: 1700, margin: '0 auto' }}>
         {/* Header row: left-aligned title + right "View All" button */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 40 }}>
           <div style={{ maxWidth: 480 }}>
-            <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 34, fontWeight: 700, color: '#111827', margin: '0 0 8px', lineHeight: 1.2 }}>
+            <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 34, fontWeight: 700, color: '#fff', margin: '0 0 8px', lineHeight: 1.2 }}>
               {heading}
             </h2>
-            <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: 14, fontWeight: 400, color: '#6B7280', margin: 0, lineHeight: 1.6 }}>
+            <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: 14, fontWeight: 400, color: '#9CA3AF', margin: 0, lineHeight: 1.6 }}>
               {subheading}
             </p>
           </div>
