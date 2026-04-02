@@ -34,10 +34,10 @@ export default function CartPage({ items, onUpdateQty }: CartPageProps) {
       <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" onCtaClick={() => navigate('/cart')} />
 
       {/* Breadcrumb */}
-      <div style={{ padding: '12px 40px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 13, color: '#6B7280', cursor: 'pointer' }} onClick={() => navigate('/')}>Tests</span>
-        <span style={{ fontSize: 13, color: '#6B7280' }}>›</span>
-        <span style={{ fontSize: 13, color: '#111827', fontWeight: 500 }}>Checkout</span>
+      <div style={{ padding: '14px 56px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ fontSize: 14, color: '#6B7280', cursor: 'pointer' }} onClick={() => navigate('/')}>Tests</span>
+        <span style={{ fontSize: 14, color: '#6B7280' }}>›</span>
+        <span style={{ fontSize: 14, color: '#111827', fontWeight: 500 }}>Checkout</span>
       </div>
 
       {/* Stepper */}
@@ -63,11 +63,11 @@ export default function CartPage({ items, onUpdateQty }: CartPageProps) {
       </div>
 
       {/* Content */}
-      <div className="cart-content">
+      <div className="cart-content" style={{ gap: 32, maxWidth: 1100 }}>
 
         {/* Cart items */}
         <div style={{ flex: 1 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 600, color: '#111827', marginBottom: 16 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 600, color: '#111827', marginBottom: 20 }}>
             Your Cart Items({items.length} item{items.length !== 1 ? 's' : ''})
           </h2>
           {items.length === 0 ? (
@@ -77,8 +77,8 @@ export default function CartPage({ items, onUpdateQty }: CartPageProps) {
           ) : (
             items.map((item) => (
               <div key={item.name} style={{
-                border: '1px solid #E5E7EB', borderRadius: 12, padding: '16px 20px',
-                marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                border: '1px solid #E5E7EB', borderRadius: 14, padding: '20px 24px',
+                marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
@@ -106,7 +106,7 @@ export default function CartPage({ items, onUpdateQty }: CartPageProps) {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: '#111827' }}>₹{parseInt(item.price) * item.quantity}</div>
+                  <div style={{ fontSize: 20, fontWeight: 500, color: '#111827' }}>₹{parseInt(item.price) * item.quantity}</div>
                   <div style={{ fontSize: 13, color: '#9CA3AF', textDecoration: 'line-through' }}>₹{parseInt(item.originalPrice) * item.quantity}</div>
                 </div>
               </div>
@@ -115,8 +115,8 @@ export default function CartPage({ items, onUpdateQty }: CartPageProps) {
         </div>
 
         {/* Order Summary */}
-        <div className="cart-summary" style={{ border: '1px solid #E5E7EB', borderRadius: 16, padding: '24px' }}>
-          <h3 style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 20px' }}>Order Summary</h3>
+        <div className="cart-summary" style={{ border: '1px solid #E5E7EB', borderRadius: 16, padding: '32px' }}>
+          <h3 style={{ fontSize: 18, fontWeight: 500, color: '#111827', margin: '0 0 20px' }}>Order Summary</h3>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
             <span style={{ fontSize: 14, color: '#6B7280' }}>Subtotal({items.length} item{items.length !== 1 ? 's' : ''})</span>
             <span style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>₹{subtotal}</span>
@@ -127,11 +127,11 @@ export default function CartPage({ items, onUpdateQty }: CartPageProps) {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
             <span style={{ fontSize: 14, color: '#6B7280' }}>Home Collection</span>
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#059669' }}>FREE</span>
+            <span style={{ fontSize: 14, fontWeight: 500, color: '#059669' }}>FREE</span>
           </div>
           <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: 16, display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
             <span style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>Total</span>
-            <span style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>₹{total}</span>
+            <span style={{ fontSize: 16, fontWeight: 500, color: '#111827' }}>₹{total}</span>
           </div>
           <button style={{
             width: '100%', padding: '14px', borderRadius: 50, border: 'none',

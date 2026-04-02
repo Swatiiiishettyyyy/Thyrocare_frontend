@@ -18,7 +18,7 @@ export function HeroSection() {
   const goTo = (i: number) => setCurrent(i)
 
   return (
-    <section className="hero-section">
+    <section className="hero-section" style={{ margin: '16px 12px' }}>
       {/* Sliding track */}
       <div style={{ borderRadius: 20, overflow: 'hidden', position: 'relative' }}>
         <div style={{

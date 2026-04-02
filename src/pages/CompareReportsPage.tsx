@@ -35,7 +35,7 @@ export default function CompareReportsPage() {
     <div style={{ minHeight: '100vh', background: '#F9FAFB', fontFamily: "'Poppins', sans-serif" }}>
       <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" onCtaClick={() => navigate('/cart')} />
 
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 24px 40px' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 40px 40px' }}>
 
         {/* Breadcrumb */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 0 12px' }}>
@@ -52,14 +52,14 @@ export default function CompareReportsPage() {
           <div style={{ flex: 1, background: '#252A4A', borderRadius: 12, padding: '16px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 20 }}>📅</span>
             <span style={{ fontSize: 12, color: '#9CA3AF' }}>Latest Report</span>
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>February 7th, 2026</span>
+            <span style={{ fontSize: 14, fontWeight: 500, color: '#fff' }}>February 7th, 2026</span>
           </div>
           <div style={{ fontSize: 20, color: '#9CA3AF' }}>⇄</div>
           <div style={{ flex: 1, background: '#252A4A', borderRadius: 12, padding: '16px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 20 }}>📅</span>
             <span style={{ fontSize: 12, color: '#9CA3AF' }}>Compare with</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>Jan 27, 2025</span>
+              <span style={{ fontSize: 14, fontWeight: 500, color: '#fff' }}>Jan 27, 2025</span>
               <span style={{ color: '#9CA3AF' }}>▾</span>
             </div>
           </div>
@@ -111,14 +111,14 @@ export default function CompareReportsPage() {
                   <div>
                     <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 8 }}>Previous</div>
                     <div style={{ background: '#F0FDF9', borderRadius: 10, padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: 20, fontWeight: 700, color: '#111827' }}>{fmtPrev} <span style={{ fontSize: 13, fontWeight: 400, color: '#9CA3AF' }}>{p.unit}</span></span>
+                      <span style={{ fontSize: 20, fontWeight: 500, color: '#111827' }}>{fmtPrev} <span style={{ fontSize: 13, fontWeight: 400, color: '#9CA3AF' }}>{p.unit}</span></span>
                       <span style={{ fontSize: 12, fontWeight: 600, color: ps.text, background: ps.bg, borderRadius: 20, padding: '3px 12px' }}>{p.prevStatus}</span>
                     </div>
                   </div>
                   <div>
                     <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 8 }}>Current</div>
                     <div style={{ background: p.currStatus === 'High' ? '#FFF7ED' : '#F0FDF9', borderRadius: 10, padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: 20, fontWeight: 700, color: '#111827' }}>{fmtCurr} <span style={{ fontSize: 13, fontWeight: 400, color: '#9CA3AF' }}>{p.unit}</span></span>
+                      <span style={{ fontSize: 20, fontWeight: 500, color: '#111827' }}>{fmtCurr} <span style={{ fontSize: 13, fontWeight: 400, color: '#9CA3AF' }}>{p.unit}</span></span>
                       <span style={{ fontSize: 12, fontWeight: 600, color: cs.text, background: cs.bg, borderRadius: 20, padding: '3px 12px' }}>{p.currStatus}</span>
                     </div>
                   </div>

@@ -27,10 +27,10 @@ export default function OrdersPage(_: OrdersPageProps) {
     <div style={{ minHeight: '100vh', background: '#F9FAFB', fontFamily: "'Poppins', sans-serif" }}>
       <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" onCtaClick={() => navigate('/cart')} />
 
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 24px' }}>
-        <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>Order Management</h1>
-          <p style={{ fontSize: 14, color: '#9CA3AF', margin: 0 }}>Track and manage your diagnostic appointments.</p>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 40px' }}>
+        <div style={{ marginBottom: 28 }}>
+          <h1 style={{ fontSize: 30, fontWeight: 500, color: '#111827', margin: '0 0 6px' }}>Order Management</h1>
+          <p style={{ fontSize: 15, color: '#9CA3AF', margin: 0 }}>Track and manage your diagnostic appointments.</p>
         </div>
 
         {/* Tabs */}
@@ -50,7 +50,7 @@ export default function OrdersPage(_: OrdersPageProps) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {MOCK_ORDERS.map((order, i) => (
             <div key={i} onClick={() => navigate('/order-details')} style={{
-              background: '#fff', borderRadius: 14, padding: '18px 20px',
+              background: '#fff', borderRadius: 14, padding: '22px 28px',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               cursor: 'pointer', border: '1.5px solid #E5E7EB',
               boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
@@ -61,7 +61,7 @@ export default function OrdersPage(_: OrdersPageProps) {
                 </div>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>{order.id}</span>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: '#111827' }}>{order.id}</span>
                     <span style={{ fontSize: 11, fontWeight: 600, color: order.statusColor, background: order.statusBg, borderRadius: 20, padding: '2px 10px' }}>{order.status}</span>
                   </div>
                   <div style={{ fontSize: 12, color: '#9CA3AF' }}>{order.patients} · {order.test}</div>
@@ -75,7 +75,7 @@ export default function OrdersPage(_: OrdersPageProps) {
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: 11, color: '#9CA3AF', marginBottom: 2 }}>Total</div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>{order.total}</div>
+                  <div style={{ fontSize: 16, fontWeight: 500, color: '#111827' }}>{order.total}</div>
                 </div>
                 <span style={{ color: '#9CA3AF', fontSize: 18 }}>›</span>
               </div>

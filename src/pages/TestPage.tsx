@@ -89,7 +89,7 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
         <HeroSection />
 
         {/* Essential Tests */}
-        <section id="tests" className="page-section" style={{ background: '#fff' }}>
+        <section id="tests" className="page-section" style={{ background: '#fff', paddingBottom: 20 }}>
           <div className="page-inner">
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginBottom: 40 }}>
               <h2 style={{ fontFamily: 'Poppins,sans-serif', fontSize: 48, fontWeight: 500, color: '#111827', margin: 0, textAlign: 'center', lineHeight: '61px', letterSpacing: '-0.03em' }}>Essential Tests</h2>
@@ -105,7 +105,7 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
         </section>
 
         {/* Check Your Vitals */}
-        <section className="page-section" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #E7E1FF 100%)' }}>
+        <section className="page-section" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #E7E1FF 100%)', paddingTop: 40 }}>
           <div className="page-inner">
             {sectionHeader('Check Your Vitals', 'Quick health checks organised by key organs to help you understand what to test.')}
             <OrganFilterBar organs={ORGANS} activeOrganId={activeOrgan} onOrganChange={handleOrganChange} />

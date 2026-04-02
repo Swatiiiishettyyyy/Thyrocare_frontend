@@ -18,7 +18,7 @@ export default function ConfirmationPage() {
       <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" onCtaClick={() => navigate('/cart')} />
 
       {/* Main content */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px 20px' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px 20px', maxWidth: 1100, margin: '0 auto', width: '100%' }}>
 
         {/* Success icon */}
         <div style={{ position: 'relative', width: 100, height: 100, marginBottom: 28 }}>
@@ -32,7 +32,7 @@ export default function ConfirmationPage() {
         </div>
 
         {/* Title */}
-        <h1 style={{ fontSize: 28, fontWeight: 700, color: '#7C5CFC', margin: '0 0 12px', textAlign: 'center' }}>
+        <h1 style={{ fontSize: 32, fontWeight: 500, color: '#7C5CFC', margin: '0 0 12px', textAlign: 'center' }}>
           Booking Confirmed!
         </h1>
         <p style={{ fontSize: 15, color: '#6B7280', textAlign: 'center', margin: '0 0 32px', lineHeight: 1.6, maxWidth: 460 }}>
@@ -51,17 +51,17 @@ export default function ConfirmationPage() {
           </button>
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 4 }}>Order ID</div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: '#111827' }}>{orderId}</div>
+            <div style={{ fontSize: 20, fontWeight: 500, color: '#111827' }}>{orderId}</div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <div>
               <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 4 }}>Appointment</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>Sunday, 8th Feb</div>
+              <div style={{ fontSize: 16, fontWeight: 500, color: '#111827' }}>Sunday, 8th Feb</div>
               <div style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>7.00 AM– 8.00 AM</div>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 4 }}>Samples</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>Home Collection</div>
+              <div style={{ fontSize: 16, fontWeight: 500, color: '#111827' }}>Home Collection</div>
             </div>
           </div>
         </div>

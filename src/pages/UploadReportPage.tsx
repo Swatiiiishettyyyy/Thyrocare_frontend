@@ -28,7 +28,7 @@ export default function UploadReportPage() {
     <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Poppins', sans-serif" }}>
       <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" onCtaClick={() => navigate('/cart')} />
 
-      <div style={{ maxWidth: 700, margin: '0 auto', padding: '24px 24px 60px' }}>
+      <div style={{ maxWidth: 700, margin: '0 auto', padding: '32px 40px 60px' }}>
 
         {/* Breadcrumb */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32 }}>
@@ -46,7 +46,7 @@ export default function UploadReportPage() {
                   width: 44, height: 44, borderRadius: '50%',
                   background: step.active ? '#7C5CFC' : '#EDE9FE',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 15, fontWeight: 700,
+                  fontSize: 16, fontWeight: 500,
                   color: step.active ? '#fff' : '#9CA3AF',
                 }}>{step.num}</div>
                 <span style={{ fontSize: 13, color: step.active ? '#7C5CFC' : '#9CA3AF', fontWeight: step.active ? 600 : 400 }}>{step.label}</span>
@@ -76,7 +76,7 @@ export default function UploadReportPage() {
           >
             {file ? (
               <>
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>{file.name}</div>
+                <div style={{ fontSize: 16, fontWeight: 500, color: '#111827' }}>{file.name}</div>
                 <div style={{ fontSize: 13, color: '#9CA3AF' }}>{(file.size / 1024 / 1024).toFixed(2)} MB</div>
                 <div style={{ fontSize: 12, color: '#9CA3AF' }}>Max file size: 10 MB</div>
                 <button onClick={() => setFile(null)} style={{
@@ -88,7 +88,7 @@ export default function UploadReportPage() {
               <>
                 <div style={{ width: 52, height: 52, borderRadius: '50%', background: '#EDE9FE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>⬆</div>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#111827', marginBottom: 4 }}>Drag & drop your report here</div>
+                  <div style={{ fontSize: 16, fontWeight: 500, color: '#111827', marginBottom: 4 }}>Drag & drop your report here</div>
                   <div style={{ fontSize: 13, color: '#9CA3AF' }}>or click to browse files</div>
                 </div>
                 <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>

@@ -56,7 +56,7 @@ export default function AddressPage({ items }: AddressPageProps) {
       </div>
 
       {/* Content */}
-      <div style={{ display: 'flex', gap: 24, padding: '0 40px 60px', maxWidth: 1100, margin: '0 auto', alignItems: 'flex-start' }}>
+      <div style={{ display: 'flex', gap: 32, padding: '0 56px 60px', maxWidth: 1100, margin: '0 auto', alignItems: 'flex-start' }}>
 
         {/* Left */}
         <div style={{ flex: 1 }}>
@@ -141,7 +141,7 @@ export default function AddressPage({ items }: AddressPageProps) {
 
         {/* Order Summary */}
         <div style={{ width: 320, border: '1px solid #E5E7EB', borderRadius: 16, padding: '24px', flexShrink: 0 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 20px' }}>Order Summary</h3>
+          <h3 style={{ fontSize: 18, fontWeight: 500, color: '#111827', margin: '0 0 20px' }}>Order Summary</h3>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
             <span style={{ fontSize: 14, color: '#6B7280' }}>Subtotal({items.length} item{items.length !== 1 ? 's' : ''})</span>
             <span style={{ fontSize: 14, fontWeight: 600 }}>₹{subtotal}</span>
@@ -152,11 +152,11 @@ export default function AddressPage({ items }: AddressPageProps) {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
             <span style={{ fontSize: 14, color: '#6B7280' }}>Home Collection</span>
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#059669' }}>FREE</span>
+            <span style={{ fontSize: 14, fontWeight: 500, color: '#059669' }}>FREE</span>
           </div>
           <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: 16, display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
             <span style={{ fontSize: 15, fontWeight: 600 }}>Total</span>
-            <span style={{ fontSize: 15, fontWeight: 700 }}>₹{total}</span>
+            <span style={{ fontSize: 16, fontWeight: 500 }}>₹{total}</span>
           </div>
           <button onClick={() => navigate('/cart')} style={{
             width: '100%', padding: '13px', borderRadius: 50, border: '1.5px solid #D1D5DB',

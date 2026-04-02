@@ -32,7 +32,7 @@ export default function OrderTrackingPage({ items }: OrderTrackingPageProps) {
     <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Poppins', sans-serif" }}>
       <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" onCtaClick={() => navigate('/cart')} />
 
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 24px 60px' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 40px 60px' }}>
 
         {/* Back */}
         <button onClick={() => navigate('/orders')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#7C5CFC', fontSize: 14, fontWeight: 500, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -45,7 +45,7 @@ export default function OrderTrackingPage({ items }: OrderTrackingPageProps) {
             <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#2D3160', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🏠</div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                <span style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>Order #NUC-8429103</span>
+                <span style={{ fontSize: 16, fontWeight: 500, color: '#fff' }}>Order #NUC-8429103</span>
                 <span style={{ fontSize: 11, fontWeight: 600, color: '#fff', background: '#7C5CFC', borderRadius: 20, padding: '3px 12px' }}>In Progress</span>
               </div>
               <span style={{ fontSize: 13, color: '#9CA3AF' }}>Home Collection</span>
@@ -64,7 +64,7 @@ export default function OrderTrackingPage({ items }: OrderTrackingPageProps) {
             <div style={{ border: '1.5px solid #E5E7EB', borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ fontSize: 22 }}>📅</span>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>Sunday, 8th Feb</div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: '#111827' }}>Sunday, 8th Feb</div>
                 <div style={{ fontSize: 13, color: '#6B7280' }}>7.00 AM– 8.00 AM</div>
               </div>
             </div>
@@ -74,7 +74,7 @@ export default function OrderTrackingPage({ items }: OrderTrackingPageProps) {
             <div style={{ border: '1.5px solid #E5E7EB', borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ fontSize: 22 }}>📍</span>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>Sunday, 8th Feb</div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: '#111827' }}>Sunday, 8th Feb</div>
                 <div style={{ fontSize: 13, color: '#6B7280' }}>7.00 AM– 8.00 AM</div>
               </div>
             </div>
@@ -171,7 +171,7 @@ export default function OrderTrackingPage({ items }: OrderTrackingPageProps) {
               </div>
             ))}
             <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: 12, display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>Total</span>
+              <span style={{ fontSize: 16, fontWeight: 500, color: '#111827' }}>Total</span>
               <span style={{ fontSize: 18, fontWeight: 800, color: '#111827' }}>₹{total || 399}</span>
             </div>
           </div>

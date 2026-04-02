@@ -22,7 +22,7 @@ export default function UploadReportDetailsPage() {
     <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Poppins', sans-serif" }}>
       <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" onCtaClick={() => navigate('/cart')} />
 
-      <div style={{ maxWidth: 700, margin: '0 auto', padding: '24px 24px 60px' }}>
+      <div style={{ maxWidth: 700, margin: '0 auto', padding: '32px 40px 60px' }}>
 
         {/* Breadcrumb */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32 }}>
@@ -40,7 +40,7 @@ export default function UploadReportDetailsPage() {
                   width: 44, height: 44, borderRadius: '50%',
                   background: step.done ? '#7C5CFC' : step.active ? '#EDE9FE' : '#EDE9FE',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: step.done ? 18 : 15, fontWeight: 700,
+                  fontSize: step.done ? 18 : 15, fontWeight: 500,
                   color: step.done ? '#fff' : step.active ? '#7C5CFC' : '#9CA3AF',
                   border: step.active ? '2px solid #7C5CFC' : 'none',
                 }}>
