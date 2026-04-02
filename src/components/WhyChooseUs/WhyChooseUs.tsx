@@ -24,7 +24,7 @@ const FEATURES = [
 export default function WhyChooseUs() {
   return (
     <section className="page-section" style={{ background: '#fff' }}>
-      <div className="page-inner">
+      <div className="page-inner" style={{ maxWidth: 1100 }}>
         {/* Heading */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginBottom: 48 }}>
           <h2 style={{ fontFamily: 'Poppins,sans-serif', fontSize: 36, fontWeight: 600, color: '#101129', margin: 0, textAlign: 'center' }}>

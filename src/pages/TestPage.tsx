@@ -1,4 +1,4 @@
-﻿import { useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar, HeroSection, Footer } from '../components'
 import { WhyChooseUs } from '../components/WhyChooseUs'
@@ -28,7 +28,7 @@ const NAV_LINKS = [
   { label: 'Tests',    href: '#tests' },
   { label: 'Packages', href: '/packages' },
   { label: 'Reports',  href: '/reports' },
-  { label: 'Metrics',  href: '#metrics' },
+  { label: 'Metrics',  href: '/metrics' },
   { label: 'Orders',   href: '/orders' },
 ]
 
@@ -90,7 +90,7 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
 
         {/* Essential Tests */}
         <section id="tests" className="page-section" style={{ background: '#fff', paddingBottom: 20 }}>
-          <div className="page-inner">
+          <div className="page-inner" style={{ maxWidth: 1200 }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginBottom: 40 }}>
               <h2 style={{ fontFamily: 'Poppins,sans-serif', fontSize: 48, fontWeight: 500, color: '#111827', margin: 0, textAlign: 'center', lineHeight: '61px', letterSpacing: '-0.03em' }}>Essential Tests</h2>
               <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 15, color: '#828282', margin: 0, textAlign: 'center', maxWidth: 560 }}>Quick, commonly recommended tests to help you monitor your basic health markers.</p>
@@ -114,17 +114,17 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
 
         {/* Find Tests by Health Condition */}
         <section className="page-section" style={{ background: '#fff', position: 'relative', overflow: 'hidden' }}>
-          {/* Rectangle 20 â€” top left, behind content */}
+          {/* Rectangle 20 � top left, behind content */}
           <img src={rect20} alt="" aria-hidden="true" style={{
             position: 'absolute', top: -80, left: -280, width: 650 ,height:900,
             pointerEvents: 'none', zIndex: 0, opacity: 0.7,
           }} />
-          {/* Rectangle 19 â€” bottom right, behind content */}
+          {/* Rectangle 19 � bottom right, behind content */}
           <img src={rect19} alt="" aria-hidden="true" style={{
             position: 'absolute', bottom: -380, right: -180, width: 650 ,height:900,
             pointerEvents: 'none', zIndex: 0, opacity: 0.7,
           }} />
-          <div className="page-inner" style={{ position: 'relative', zIndex: 1 }}>
+          <div className="page-inner" style={{ position: 'relative', zIndex: 1, maxWidth: 1200 }}>
             {sectionHeader('Find Tests by Health Condition', 'Select a condition to quickly see the most relevant tests and packages.')}
             <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 40, flexWrap: 'wrap' }}>
               {CONDITIONS.map(c => (
@@ -154,7 +154,7 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
 
         {/* Comprehensive Health Packages */}
         <section className="page-section" style={{ background: '#fff', position: 'relative', overflow: 'hidden' }}>
-          {/* left side: rect20 top + rect19 bottom — both colors on left */}
+          {/* left side: rect20 top + rect19 bottom ? both colors on left */}
           <img src={rect20} alt="" aria-hidden="true" style={{
             position: 'absolute', top: -80, left: -260, width: 620, height: 820,
             pointerEvents: 'none', zIndex: 0, opacity: 0.5,
@@ -163,7 +163,7 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
             position: 'absolute', bottom: -300, left: -180, width: 560, height: 760,
             pointerEvents: 'none', zIndex: 0, opacity: 0.4,
           }} />
-          {/* right side: rect19 top + rect20 bottom — both colors on right */}
+          {/* right side: rect19 top + rect20 bottom ? both colors on right */}
           <img src={rect19} alt="" aria-hidden="true" style={{
             position: 'absolute', top: -100, right: -220, width: 620, height: 820,
             pointerEvents: 'none', zIndex: 0, opacity: 0.5, transform: 'scaleX(-1)',
@@ -172,7 +172,7 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
             position: 'absolute', bottom: -280, right: -180, width: 560, height: 760,
             pointerEvents: 'none', zIndex: 0, opacity: 0.4, transform: 'scaleX(-1)',
           }} />
-          <div className="page-inner comp-layout" style={{ position: 'relative', zIndex: 1 }}>
+          <div className="page-inner comp-layout" style={{ position: 'relative', zIndex: 1, maxWidth: 1200 }}>
 
             {/* Left: heading */}
             <div className="comp-heading">
@@ -184,7 +184,7 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
               </p>
             </div>
 
-            {/* Right: card grid — narrower, taller cards */}
+            {/* Right: card grid ? narrower, taller cards */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
 
               {/* Women */}

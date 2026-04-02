@@ -6,7 +6,7 @@ const NAV_LINKS = [
   { label: 'Tests', href: '/' },
   { label: 'Packages', href: '/' },
   { label: 'Reports', href: '/reports' },
-  { label: 'Metrics', href: '#' },
+  { label: 'Metrics', href: '/metrics' },
   { label: 'Orders', href: '/orders' },
 ]
 
@@ -27,7 +27,7 @@ export default function ReportsListPage() {
     <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Poppins', sans-serif" }}>
       <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" onCtaClick={() => navigate('/cart')} />
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 40px' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 40px' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
@@ -42,23 +42,81 @@ export default function ReportsListPage() {
 
         {/* Tabs + Filter row */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <div style={{ display: 'flex', background: '#F3F4F6', borderRadius: 50, padding: 4, gap: 2 }}>
+          {/* Tab group — outlined capsule container */}
+          <div style={{ display: 'flex', border: '1.5px solid #E5E7EB', borderRadius: 100, padding: '4px 6px', gap: 2, background: '#F9F9F9' }}>
             {tabs.map(t => (
               <button key={t} onClick={() => setActiveTab(t)} style={{
-                padding: '8px 20px', borderRadius: 50, fontSize: 16, fontWeight: 300, cursor: 'pointer', border: 'none',
+                padding: '8px 22px', borderRadius: 100, fontSize: 14, fontWeight: activeTab === t ? 500 : 400,
+                cursor: 'pointer', border: 'none',
                 background: activeTab === t ? '#fff' : 'transparent',
-                color: activeTab === t ? '#111827' : '#6B7280',
-                boxShadow: activeTab === t ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
+                color: activeTab === t ? '#7C5CFC' : '#6B7280',
+                boxShadow: activeTab === t ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+                transition: 'all 0.15s ease',
               }}>{t}</button>
             ))}
           </div>
+          {/* Filter + Sorting */}
           <div style={{ display: 'flex', gap: 10 }}>
-            <button style={{ padding: '9px 18px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: '#374151' }}>Filter ▾</button>
-            <button style={{ padding: '9px 18px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: '#374151' }}>Sorting ▾</button>
+            <button style={{ padding: '10px 20px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 400, cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', gap: 6 }}>
+              Filter
+              <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+            <button style={{ padding: '10px 20px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 400, cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', gap: 6 }}>
+              Sorting
+              <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
           </div>
         </div>
 
-        {/* Report list */}
+        {/* Report list or empty state */}
+        {REPORTS.length === 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 20px', gap: 40 }}>
+            {/* Illustration */}
+            <div style={{ position: 'relative', width: 200, height: 195 }}>
+              <div style={{
+                width: 200, height: 195, borderRadius: '50%',
+                background: 'linear-gradient(180deg, #E7E1FF 0%, #fff 100%)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <svg width="80" height="80" viewBox="0 0 100 100" fill="none">
+                  <rect x="15" y="10" width="70" height="80" rx="8" fill="#101129"/>
+                  <rect x="25" y="25" width="50" height="6" rx="3" fill="#E7E1FF"/>
+                  <rect x="25" y="37" width="50" height="6" rx="3" fill="#E7E1FF"/>
+                  <rect x="25" y="49" width="35" height="6" rx="3" fill="#E7E1FF"/>
+                  <circle cx="72" cy="68" r="14" fill="#8B5CF6"/>
+                  <path d="M66 68l4 4 8-8" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            </div>
+            {/* Text */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, maxWidth: 440, textAlign: 'center' }}>
+              <h2 style={{ fontFamily: 'Poppins,sans-serif', fontSize: 24, fontWeight: 500, color: '#161616', margin: 0 }}>No Reports Found</h2>
+              <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 15, fontWeight: 400, color: '#414141', margin: 0, lineHeight: 1.6 }}>
+                Your reports will appear here after you complete a test or upload an external report.
+              </p>
+            </div>
+            {/* CTAs */}
+            <div style={{ display: 'flex', gap: 14, width: '100%', maxWidth: 440 }}>
+              <button onClick={() => navigate('/')} style={{
+                flex: 1, height: 52, background: '#8B5CF6', color: '#fff', border: 'none',
+                borderRadius: 10, fontFamily: 'Poppins,sans-serif', fontSize: 15, fontWeight: 500,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              }}>
+                Browse Tests
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M6 2l4 4-4 4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+              <button onClick={() => navigate('/upload-report')} style={{
+                flex: 1, height: 52, background: '#fff', color: '#101129',
+                border: '1.5px solid #8B5CF6', borderRadius: 8,
+                fontFamily: 'Poppins,sans-serif', fontSize: 15, fontWeight: 500,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              }}>
+                Upload Report
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M6 2l4 4-4 4" stroke="#8B5CF6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+            </div>
+          </div>
+        ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {REPORTS.map((r, i) => (
             <div key={i} onClick={() => navigate('/report')} style={{
@@ -119,6 +177,7 @@ export default function ReportsListPage() {
             </div>
           ))}
         </div>
+        )}
 
       </div>
     </div>

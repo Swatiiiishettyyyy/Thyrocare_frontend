@@ -4,7 +4,7 @@ import { Navbar } from '../components'
 
 const NAV_LINKS = [
   { label: 'Tests', href: '/' }, { label: 'Packages', href: '/' },
-  { label: 'Reports', href: '/reports' }, { label: 'Metrics', href: '#' }, { label: 'Orders', href: '/orders' },
+  { label: 'Reports', href: '/reports' }, { label: 'Metrics', href: '/metrics' }, { label: 'Orders', href: '/orders' },
 ]
 
 const steps = [

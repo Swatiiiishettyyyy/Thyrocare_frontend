@@ -8,7 +8,7 @@ const PackagesSection = React.memo(function PackagesSection({ heading, subheadin
     <section id="packages" className="page-section" style={{
       background: 'linear-gradient(to bottom, #1B1F3B 0%, #1B1F3B 55%, #fff 55%, #fff 100%)',
     }}>
-      <div className="page-inner">
+      <div className="page-inner" style={{ maxWidth: 1100 }}>
         {/* Header row: left-aligned title + right "View All" button */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 40 }}>
           <div style={{ maxWidth: 480 }}>

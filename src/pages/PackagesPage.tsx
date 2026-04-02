@@ -10,7 +10,7 @@ const NAV_LINKS = [
   { label: 'Tests', href: '/' },
   { label: 'Packages', href: '/packages' },
   { label: 'Reports', href: '/reports' },
-  { label: 'Metrics', href: '#' },
+  { label: 'Metrics', href: '/metrics' },
   { label: 'Orders', href: '/orders' },
 ]
 

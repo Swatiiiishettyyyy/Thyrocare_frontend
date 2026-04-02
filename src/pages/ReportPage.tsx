@@ -4,7 +4,7 @@ import { Navbar } from '../components'
 
 const NAV_LINKS = [
   { label: 'Tests', href: '/' }, { label: 'Packages', href: '/' },
-  { label: 'Reports', href: '/reports' }, { label: 'Metrics', href: '#' }, { label: 'Orders', href: '/orders' },
+  { label: 'Reports', href: '/reports' }, { label: 'Metrics', href: '/metrics' }, { label: 'Orders', href: '/orders' },
 ]
 
 type Status = 'Normal' | 'High' | 'Low'
@@ -15,9 +15,12 @@ interface Biomarker {
 
 const BIOMARKERS: Biomarker[] = [
   { name: 'Haemoglobin', category: 'Red Blood Cells', value: 14.2, unit: 'g/dl', normalRange: '13.5 – 17.5 g/dL', low: 13.5, high: 17.5, status: 'Normal', historical: 6 },
-  { name: 'Haemoglobin', category: 'Red Blood Cells', value: 14.2, unit: 'g/dl', normalRange: '13.5 – 17.5 g/dL', low: 13.5, high: 17.5, status: 'Normal', historical: 6 },
-  { name: 'Haemoglobin', category: 'Red Blood Cells', value: 14.2, unit: 'g/dl', normalRange: '13.5 – 17.5 g/dL', low: 13.5, high: 17.5, status: 'Normal', historical: 6 },
+  { name: 'RBC Count', category: 'Red Blood Cells', value: 5.1, unit: 'M/mcL', normalRange: '4.5 – 5.9 M/mcL', low: 4.5, high: 5.9, status: 'Normal', historical: 6 },
+  { name: 'Hematocrit', category: 'Red Blood Cells', value: 42, unit: '%', normalRange: '41 – 53 %', low: 41, high: 53, status: 'Normal', historical: 6 },
+  { name: 'MCV', category: 'Red Blood Cells', value: 88, unit: 'fL', normalRange: '80 – 100 fL', low: 80, high: 100, status: 'Normal', historical: 6 },
   { name: 'WBC Count', category: 'White Blood Cells', value: 11200, unit: '/mcL', normalRange: '4,500 – 11,000 /mcL', low: 4500, high: 11000, status: 'High', historical: 6 },
+  { name: 'Neutrophils', category: 'White Blood Cells', value: 68, unit: '%', normalRange: '40 – 70 %', low: 40, high: 70, status: 'Normal', historical: 6 },
+  { name: 'Lymphocytes', category: 'White Blood Cells', value: 28, unit: '%', normalRange: '20 – 40 %', low: 20, high: 40, status: 'Normal', historical: 6 },
   { name: 'Platelet Count', category: 'Platelets', value: 140000, unit: '/mcL', normalRange: '1,50,000 – 4,00,000 /mcL', low: 150000, high: 400000, status: 'Low', historical: 6 },
 ]
 
@@ -27,11 +30,6 @@ const STATUS_STYLE: Record<Status, { badge_bg: string; badge_text: string; dot: 
   Low:    { badge_bg: '#EDE9FE', badge_text: '#7C3AED', dot: '#7C5CFC', card_bg: '#F5F3FF' },
 }
 
-const CAT_ICON_BG: Record<string, string> = {
-  'Red Blood Cells': '#10B981',
-  'White Blood Cells': '#F59E0B',
-  'Platelets': '#7C5CFC',
-}
 
 function pct(value: number, low: number, high: number) {
   const ext = (high - low) * 0.3
@@ -47,65 +45,80 @@ function BiomarkerCard({ b }: { b: Biomarker }) {
   const fmtHigh = b.high >= 1000 ? b.high.toLocaleString('en-IN') : b.high.toString()
 
   return (
-    <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 16, overflow: 'hidden', marginBottom: 14, boxShadow: '0 1px 6px rgba(0,0,0,0.04)' }}>
-
-      {/* Coloured header row */}
-      <div style={{ background: ss.card_bg, padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div style={{
+      background: '#fff', borderRadius: 16, overflow: 'hidden', marginBottom: 12,
+      boxShadow: '0px 4px 27.3px 0px rgba(0,0,0,0.05)',
+      padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12,
+    }}>
+      {/* Header row — tinted background */}
+      <div style={{ background: ss.card_bg, borderRadius: 12, padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          {/* Circle icon with minus */}
-          <div style={{ width: 36, height: 36, borderRadius: '50%', background: ss.dot, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width="14" height="3" viewBox="0 0 14 3" fill="none"><rect width="14" height="3" rx="1.5" fill="#fff"/></svg>
+          {/* Circle icon */}
+          <div style={{ width: 34, height: 34, borderRadius: '50%', background: ss.dot, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="14" height="2" viewBox="0 0 14 2" fill="none"><rect width="14" height="2" rx="1" fill="#fff"/></svg>
           </div>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{b.name}</div>
-            <div style={{ fontSize: 12, color: '#6B7280' }}>{b.category}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, fontWeight: 500, color: '#161616', lineHeight: 1.3 }}>{b.name}</span>
+            <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 12, fontWeight: 400, color: '#828282' }}>{b.category}</span>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#fff', background: ss.dot, borderRadius: 100, padding: '6px 18px' }}>{b.status}</span>
-          <svg width="7" height="12" viewBox="0 0 7 12" fill="none"><path d="M1 1l5 5-5 5" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{
+            fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 500, color: '#fff',
+            background: ss.dot, borderRadius: 47, padding: '5px 16px',
+            boxShadow: `0px 4px 27.3px 0px rgba(0,0,0,0.05)`,
+          }}>{b.status}</span>
+          <svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="#828282" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </div>
       </div>
 
-      {/* Body */}
-      <div style={{ padding: '20px 24px 20px' }}>
-        {/* Value */}
-        <div style={{ marginBottom: 4 }}>
-          <span style={{ fontSize: 32, fontWeight: 600, color: '#111827', letterSpacing: '-0.5px' }}>{fmtVal}</span>
-          <span style={{ fontSize: 14, color: '#9CA3AF', marginLeft: 6 }}>{b.unit}</span>
+      {/* Value + normal range */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 11 }}>
+          <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 28, fontWeight: 600, color: '#161616', lineHeight: 1 }}>{fmtVal}</span>
+          <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 400, color: '#828282', lineHeight: 1.4, paddingBottom: 2 }}>{b.unit}</span>
         </div>
-        <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 24 }}>Normal range: {b.normalRange}</div>
+        <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 400, color: '#828282' }}>Normal range: {b.normalRange}</span>
+      </div>
 
-        {/* Range bar */}
-        <div style={{ position: 'relative', marginBottom: 6 }}>
-          {/* Dot on bar */}
-          <div style={{ height: 4, borderRadius: 2, background: '#E5E7EB', position: 'relative', marginBottom: 28 }}>
-            <div style={{ position: 'absolute', left: `${p}%`, top: '50%', transform: 'translate(-50%,-50%)', width: 10, height: 10, borderRadius: '50%', background: ss.dot }} />
-          </div>
-          {/* Labels row: Low | fmtLow ... value pill ... fmtHigh | High */}
-          <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
-            <span style={{ fontSize: 13, color: '#9CA3AF', marginRight: 12 }}>Low</span>
-            <span style={{ fontSize: 13, fontWeight: 500, color: '#374151', marginRight: 'auto' }}>{fmtLow}</span>
-            {/* Value pill — positioned at p% */}
-            <span style={{
-              position: 'absolute', left: `${p}%`, transform: 'translateX(-50%)',
-              background: ss.dot, color: '#fff', fontSize: 12, fontWeight: 600,
-              borderRadius: 100, padding: '3px 10px', whiteSpace: 'nowrap',
-            }}>{fmtVal}</span>
-            <span style={{ fontSize: 13, fontWeight: 500, color: '#374151', marginLeft: 'auto' }}>{fmtHigh}</span>
-            <span style={{ fontSize: 13, color: '#9CA3AF', marginLeft: 12 }}>High</span>
-          </div>
+      {/* Range bar — dot above, value pill below, Low/High labels */}
+      <div style={{ position: 'relative', height: 55 }}>
+        {/* Dot + pill stacked at p% */}
+        <div style={{ position: 'absolute', left: `${p}%`, top: 0, transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: ss.dot }} />
+          <div style={{
+            background: ss.dot, color: '#fff', fontFamily: 'Poppins,sans-serif',
+            fontSize: 13, fontWeight: 500, borderRadius: 34, padding: '0 10px',
+            whiteSpace: 'nowrap', lineHeight: 1.45, outline: `1px solid ${ss.dot}`,
+          }}>{fmtVal}</div>
         </div>
+        {/* Bar: gray bg with colored fill up to p% */}
+        <div style={{ position: 'absolute', top: 14, left: 0, right: 0, height: 9, borderRadius: 285, background: '#F9F9F9', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', left: 0, top: 0, width: `${p}%`, height: '100%', background: ss.card_bg, borderRadius: 285 }} />
+        </div>
+        {/* Low / fmtLow / fmtHigh / High labels */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, display: 'flex', alignItems: 'center' }}>
+          <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 400, color: '#828282' }}>Low</span>
+          <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 500, color: '#161616', marginLeft: 10 }}>{fmtLow}</span>
+          <span style={{ flex: 1 }} />
+          <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 500, color: '#161616', marginRight: 10 }}>{fmtHigh}</span>
+          <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 400, color: '#828282' }}>High</span>
+        </div>
+      </div>
 
-        {/* Historical readings */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 20, paddingTop: 16, borderTop: '1px solid #F3F4F6' }}>
-          <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
-            <rect x="1" y="8" width="3" height="9" rx="1" fill="#7C5CFC" opacity="0.5"/>
-            <rect x="6" y="5" width="3" height="12" rx="1" fill="#7C5CFC" opacity="0.7"/>
-            <rect x="11" y="2" width="3" height="15" rx="1" fill="#7C5CFC"/>
-            <rect x="16" y="6" width="3" height="11" rx="1" fill="#7C5CFC" opacity="0.6"/>
-          </svg>
-          <span style={{ fontSize: 13, color: '#374151' }}>{b.historical} Historical readings available</span>
+      {/* Historical readings */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ height: 0, outline: `2px solid ${ss.card_bg}` }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 49, background: '#E7E1FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+              <rect x="1" y="9" width="3" height="8" rx="1" fill="#7C5CFC" opacity="0.4"/>
+              <rect x="6" y="6" width="3" height="11" rx="1" fill="#7C5CFC" opacity="0.65"/>
+              <rect x="11" y="3" width="3" height="14" rx="1" fill="#7C5CFC"/>
+              <rect x="16" y="7" width="3" height="10" rx="1" fill="#7C5CFC" opacity="0.55"/>
+            </svg>
+          </div>
+          <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 400, color: '#101129' }}>{b.historical} Historical readings avialable</span>
         </div>
       </div>
     </div>
@@ -115,7 +128,6 @@ function BiomarkerCard({ b }: { b: Biomarker }) {
 export default function ReportPage() {
   const navigate = useNavigate()
   const [activeFilter, setActiveFilter] = useState('All(8)')
-  const filters = ['All(8)', 'Normal(7)', 'Needs Attention(2)', 'Red Blood Cells', 'White Blood Cells', 'Platelets']
   const normal = BIOMARKERS.filter(b => b.status === 'Normal').length
   const high = BIOMARKERS.filter(b => b.status === 'High').length
   const low = BIOMARKERS.filter(b => b.status === 'Low').length
@@ -200,23 +212,41 @@ export default function ReportPage() {
         {high > 0 || low > 0 ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, padding: '14px 18px', marginBottom: 16 }}>
             <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
-            <span style={{ fontSize: 13, color: '#374151' }}>{high + low} test group{high + low !== 1 ? 's' : ''} with parameters outside normal range. Expand below to review.</span>
+            <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 20, fontWeight: 400, color: '#374151' }}>{high + low} test group{high + low !== 1 ? 's' : ''} with parameters outside normal range. Expand below to review.</span>
           </div>
         ) : null}
 
-        {/* Filters */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {filters.map(f => (
+        {/* Parameters heading + filters */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 16, fontWeight: 500, color: '#161616' }}>Parameters</span>
+          <button style={{ background: 'none', border: 'none', color: '#8B5CF6', fontFamily: 'Poppins,sans-serif', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Clear Filter</button>
+        </div>
+
+        {/* Filters — all on one row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+          {/* Main filter tabs — outer pill container */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: 6, background: '#fff', borderRadius: 100, outline: '1px solid #E7E1FF' }}>
+            {['All(8)', 'Normal(7)', 'Needs Attention(2)'].map(f => (
               <button key={f} onClick={() => setActiveFilter(f)} style={{
-                padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: 'pointer',
-                border: activeFilter === f ? 'none' : '1.5px solid #E5E7EB',
-                background: activeFilter === f ? '#1B1F3B' : '#fff',
-                color: activeFilter === f ? '#fff' : '#374151',
+                padding: '6px 16px', borderRadius: 100, fontFamily: 'Poppins,sans-serif',
+                fontSize: 13, fontWeight: 500, cursor: 'pointer', border: 'none',
+                background: activeFilter === f ? '#fff' : 'transparent',
+                outline: activeFilter === f ? '1px solid #E7E1FF' : 'none',
+                boxShadow: activeFilter === f ? '0px 4px 27.3px 0px rgba(0,0,0,0.05)' : 'none',
+                color: activeFilter === f ? '#8B5CF6' : '#414141',
               }}>{f}</button>
             ))}
           </div>
-          <button style={{ background: 'none', border: 'none', color: '#7C5CFC', fontSize: 13, cursor: 'pointer' }}>Clear Filter</button>
+          {/* Vertical divider */}
+          <div style={{ width: 2, height: 28, background: '#E7E1FF', borderRadius: 2, flexShrink: 0 }} />
+          {/* Category pills — same row */}
+          {['Red Blood Cells', 'White Blood Cells', 'Platelets'].map(f => (
+            <button key={f} onClick={() => setActiveFilter(f)} style={{
+              padding: '6px 14px', borderRadius: 36, fontFamily: 'Poppins,sans-serif',
+              fontSize: 13, fontWeight: 400, cursor: 'pointer', border: 'none',
+              background: '#F9F9F9', color: '#414141',
+            }}>{f}</button>
+          ))}
         </div>
 
         {/* Biomarker cards by category */}
@@ -224,8 +254,8 @@ export default function ReportPage() {
           const markers = BIOMARKERS.filter(b => b.category === cat)
           if (!markers.length) return null
           return (
-            <div key={cat}>
-              <p style={{ fontSize: 12, color: '#9CA3AF', margin: '16px 0 8px' }}>{cat}</p>
+            <div key={cat} style={{ marginBottom: 60 }}>
+              <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, fontWeight: 500, color: '#161616', margin: '0 0 16px' }}>{cat}</p>
               {markers.map((b, i) => <BiomarkerCard key={i} b={b} />)}
             </div>
           )

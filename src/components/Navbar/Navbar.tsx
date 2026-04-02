@@ -7,7 +7,7 @@ const Navbar = React.memo(function Navbar({ links, ctaLabel, onCtaClick }: Navba
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    <header style={{ background: '#fff', position: 'sticky', top: 0, zIndex: 50, borderBottom: '1px solid #F3F4F6', boxShadow: '0 1px 12px rgba(139,92,246,0.08)' }}>
+    <header style={{ background: '#fff', position: 'sticky', top: 0, zIndex: 50, borderBottom: '1px solid #F3F4F6', boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)' }}>
       <div className="navbar-inner">
 
         {/* Logo */}
@@ -47,6 +47,7 @@ const Navbar = React.memo(function Navbar({ links, ctaLabel, onCtaClick }: Navba
             } else if (link.href === '/packages') { isActive = path === '/packages'
             } else if (link.href === '/orders') { isActive = path.startsWith('/order')
             } else if (link.href === '/reports') { isActive = path.startsWith('/report') || path.startsWith('/compare-report')
+            } else if (link.href === '/metrics') { isActive = path === '/metrics'
             } else { isActive = path === link.href }
             return (
               <Link key={link.label} to={link.href.startsWith('#') ? '/' + link.href : link.href}

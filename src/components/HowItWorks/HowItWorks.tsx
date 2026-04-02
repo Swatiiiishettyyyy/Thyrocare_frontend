@@ -17,7 +17,7 @@ export default function HowItWorks() {
       <img src={rect19} alt="" aria-hidden="true" style={{ position: 'absolute', top: -100, right: -220, width: 620, height: 820, pointerEvents: 'none', zIndex: 0, opacity: 0.7, transform: 'scaleX(-1)' }} />
       <img src={rect20} alt="" aria-hidden="true" style={{ position: 'absolute', bottom: -280, right: -180, width: 560, height: 760, pointerEvents: 'none', zIndex: 0, opacity: 0.6, transform: 'scaleX(-1)' }} />
 
-      <div className="page-inner" style={{ position: 'relative', zIndex: 1 }}>
+      <div className="page-inner" style={{ position: 'relative', zIndex: 1, maxWidth: 1100 }}>
         {/* Heading */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginBottom: 56 }}>
           <h2 style={{ fontFamily: 'Poppins,sans-serif', fontSize: 36, fontWeight: 600, color: '#7C5CFC', margin: 0, textAlign: 'center' }}>
