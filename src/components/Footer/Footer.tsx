@@ -25,7 +25,7 @@ export function Footer() {
   return (
     <footer style={{ background: '#13152B', fontFamily: 'Poppins,sans-serif' }}>
       {/* Main section */}
-      <div style={{ padding: '48px 110px 40px', display: 'flex', gap: 60, alignItems: 'flex-start' }}>
+      <div className="footer-main">
         {/* Brand col */}
         <div style={{ minWidth: 260, flexShrink: 0 }}>
           {/* Logo */}
@@ -59,7 +59,7 @@ export function Footer() {
         </div>
 
         {/* Link columns */}
-        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 32 }}>
+        <div className="footer-links-grid">
           {COLUMNS.map(col => (
             <div key={col.heading}>
               <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginBottom: 16 }}>{col.heading}</div>
@@ -79,7 +79,7 @@ export function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div style={{ borderTop: '1px solid #1F2340', padding: '20px 110px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="footer-bottom">
         <span style={{ fontSize: 13, color: '#6B7280' }}>© 2024 Nucleotide. All rights reserved.</span>
         {/* Email subscribe */}
         <div style={{ display: 'flex', gap: 0 }}>

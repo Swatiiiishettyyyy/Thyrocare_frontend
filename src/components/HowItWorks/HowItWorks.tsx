@@ -10,7 +10,7 @@ const STEPS = [
 
 export default function HowItWorks() {
   return (
-    <section style={{ background: '#fff', padding: '60px 110px', position: 'relative', overflow: 'hidden' }}>
+    <section className="page-section" style={{ background: '#fff', position: 'relative', overflow: 'hidden' }}>
       {/* left side: rect20 top + rect19 bottom */}
       <img src={rect20} alt="" aria-hidden="true" style={{
         position: 'absolute', top: -80, left: -260, width: 620, height: 820,
@@ -29,7 +29,7 @@ export default function HowItWorks() {
         position: 'absolute', bottom: -280, right: -180, width: 560, height: 760,
         pointerEvents: 'none', zIndex: 0, opacity: 0.6, transform: 'scaleX(-1)',
       }} />
-      <div style={{ maxWidth: 1700, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+      <div className="page-inner" style={{ position: 'relative', zIndex: 1 }}>
         {/* Heading */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginBottom: 48 }}>
           <h2 style={{ fontFamily: 'Poppins,sans-serif', fontSize: 36, fontWeight: 600, color: '#7C5CFC', margin: 0, textAlign: 'center' }}>
@@ -41,7 +41,7 @@ export default function HowItWorks() {
         </div>
 
         {/* Steps */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 20 }}>
+        <div className="grid-4">
           {STEPS.map(step => (
             <div key={step.num} style={{
               background: '#fff',

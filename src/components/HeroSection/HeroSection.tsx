@@ -18,7 +18,7 @@ export function HeroSection() {
   const goTo = (i: number) => setCurrent(i)
 
   return (
-    <section style={{ margin: '16px 30px' }}>
+    <section className="hero-section">
       {/* Sliding track */}
       <div style={{ borderRadius: 20, overflow: 'hidden', position: 'relative' }}>
         <div style={{
@@ -32,7 +32,7 @@ export function HeroSection() {
               key={i}
               src={src}
               alt={`Banner ${i + 1}`}
-              style={{ width: '100%', flexShrink: 0, display: 'block', objectFit: 'cover' }}
+              className="hero-img"
             />
           ))}
         </div>

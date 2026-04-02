@@ -40,7 +40,7 @@ export default function PackagesPage({ onAddToCart }: { onAddToCart: (test: Test
 
       <HeroSection />
 
-      <div style={{ padding: '32px 110px', maxWidth: 1700, margin: '0 auto' }}>
+      <div style={{ maxWidth: 1700, margin: '0 auto' }} className="page-section" >
 
         {/* Category filter pills */}
         <div style={{ display: 'flex', gap: 12, marginBottom: 32, flexWrap: 'wrap' }}>
@@ -56,7 +56,7 @@ export default function PackagesPage({ onAddToCart }: { onAddToCart: (test: Test
         </div>
 
         {/* Package cards grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+        <div className="grid-3">
           {ALL_PACKAGES.map((pkg, i) => (
             <TestCard key={i} {...pkg} onAddToCart={() => handleAddToCart(pkg)} />
           ))}

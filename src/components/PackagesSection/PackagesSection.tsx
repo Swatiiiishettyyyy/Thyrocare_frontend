@@ -5,11 +5,10 @@ import type { TestCardProps } from '../../types'
 
 const PackagesSection = React.memo(function PackagesSection({ heading, subheading, cards }: PackagesSectionProps) {
   return (
-    <section id="packages" style={{
+    <section id="packages" className="page-section" style={{
       background: 'linear-gradient(to bottom, #1B1F3B 0%, #1B1F3B 55%, #fff 55%, #fff 100%)',
-      padding: '60px 110px',
     }}>
-      <div style={{ maxWidth: 1700, margin: '0 auto' }}>
+      <div className="page-inner">
         {/* Header row: left-aligned title + right "View All" button */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 40 }}>
           <div style={{ maxWidth: 480 }}>
@@ -31,7 +30,7 @@ const PackagesSection = React.memo(function PackagesSection({ heading, subheadin
         </div>
 
         {/* Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+        <div className="grid-3">
           {cards.map((card, idx) => (
             <TestCard
               key={idx}

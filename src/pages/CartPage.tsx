@@ -63,7 +63,7 @@ export default function CartPage({ items, onUpdateQty }: CartPageProps) {
       </div>
 
       {/* Content */}
-      <div style={{ display: 'flex', gap: 24, padding: '0 40px 60px', maxWidth: 1100, margin: '0 auto', alignItems: 'flex-start' }}>
+      <div className="cart-content">
 
         {/* Cart items */}
         <div style={{ flex: 1 }}>
@@ -115,7 +115,7 @@ export default function CartPage({ items, onUpdateQty }: CartPageProps) {
         </div>
 
         {/* Order Summary */}
-        <div style={{ width: 320, border: '1px solid #E5E7EB', borderRadius: 16, padding: '24px', flexShrink: 0 }}>
+        <div className="cart-summary" style={{ border: '1px solid #E5E7EB', borderRadius: 16, padding: '24px' }}>
           <h3 style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 20px' }}>Order Summary</h3>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
             <span style={{ fontSize: 14, color: '#6B7280' }}>Subtotal({items.length} item{items.length !== 1 ? 's' : ''})</span>

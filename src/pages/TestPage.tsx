@@ -8,15 +8,12 @@ import { OrganFilterBar } from '../components/OrganFilterBar'
 import { PackagesSection } from '../components/PackagesSection'
 import type { OrganItem, PackageCardProps, TestCardProps } from '../types'
 
-import men2550Img from '../assets/figma/25-50_men.png'
-import men50Img from '../assets/figma/50_men.png'
-import women50Img from '../assets/figma/50_women.png'
+import men2550Comp from '../assets/figma/comprehensive/men_25_50-531a98.png'
+import men50plus from '../assets/figma/comprehensive/men_50plus-224825.png'
 import womenUnder25 from '../assets/figma/comprehensive/women_under25-4ef001.png'
 import women2550 from '../assets/figma/comprehensive/women_25_50-317855.png'
 import women50plus from '../assets/figma/comprehensive/women_50plus-2cf069.png'
 import menUnder25 from '../assets/figma/comprehensive/men_under25-4e32c2.png'
-import men2550Comp from '../assets/figma/comprehensive/men_25_50-531a98.png'
-import men50plus from '../assets/figma/comprehensive/men_50plus-224825.png'
 import heartImg from '../assets/figma/Heart.png'
 import liverImg from '../assets/figma/liver.png'
 import boneImg from '../assets/figma/Bone.png'
@@ -92,13 +89,13 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
         <HeroSection />
 
         {/* Essential Tests */}
-        <section id="tests" style={{ background: '#fff', padding: '60px 110px' }}>
-          <div style={{ maxWidth: 1700, margin: '0 auto' }}>
+        <section id="tests" className="page-section" style={{ background: '#fff' }}>
+          <div className="page-inner">
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginBottom: 40 }}>
               <h2 style={{ fontFamily: 'Poppins,sans-serif', fontSize: 48, fontWeight: 500, color: '#111827', margin: 0, textAlign: 'center', lineHeight: '61px', letterSpacing: '-0.03em' }}>Essential Tests</h2>
               <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 15, color: '#828282', margin: 0, textAlign: 'center', maxWidth: 560 }}>Quick, commonly recommended tests to help you monitor your basic health markers.</p>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 20 }}>
+            <div className="grid-3">
               {ESSENTIAL_TESTS.map((t, i) => <TestCard key={i} {...t} onAddToCart={() => handleAddToCart(t)} />)}
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 32 }}>
@@ -108,15 +105,15 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
         </section>
 
         {/* Check Your Vitals */}
-        <section style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #E7E1FF 100%)', padding: '60px 110px' }}>
-          <div style={{ maxWidth: 1700, margin: '0 auto' }}>
+        <section className="page-section" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #E7E1FF 100%)' }}>
+          <div className="page-inner">
             {sectionHeader('Check Your Vitals', 'Quick health checks organised by key organs to help you understand what to test.')}
             <OrganFilterBar organs={ORGANS} activeOrganId={activeOrgan} onOrganChange={handleOrganChange} />
           </div>
         </section>
 
         {/* Find Tests by Health Condition */}
-        <section style={{ background: '#fff', padding: '60px 110px', position: 'relative', overflow: 'hidden' }}>
+        <section className="page-section" style={{ background: '#fff', position: 'relative', overflow: 'hidden' }}>
           {/* Rectangle 20 â€” top left, behind content */}
           <img src={rect20} alt="" aria-hidden="true" style={{
             position: 'absolute', top: -80, left: -280, width: 650 ,height:900,
@@ -127,7 +124,7 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
             position: 'absolute', bottom: -380, right: -180, width: 650 ,height:900,
             pointerEvents: 'none', zIndex: 0, opacity: 0.7,
           }} />
-          <div style={{ maxWidth: 1700, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+          <div className="page-inner" style={{ position: 'relative', zIndex: 1 }}>
             {sectionHeader('Find Tests by Health Condition', 'Select a condition to quickly see the most relevant tests and packages.')}
             <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 40, flexWrap: 'wrap' }}>
               {CONDITIONS.map(c => (
@@ -142,7 +139,7 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
                 </button>
               ))}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 20 }}>
+            <div className="grid-3">
               {CONDITION_TESTS.map((t, i) => <TestCard key={i} {...t} onAddToCart={() => handleAddToCart(t)} />)}
             </div>
           </div>
@@ -156,7 +153,7 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
         />
 
         {/* Comprehensive Health Packages */}
-        <section style={{ background: '#fff', padding: '60px 120px', position: 'relative', overflow: 'hidden' }}>
+        <section className="page-section" style={{ background: '#fff', position: 'relative', overflow: 'hidden' }}>
           {/* left side: rect20 top + rect19 bottom — both colors on left */}
           <img src={rect20} alt="" aria-hidden="true" style={{
             position: 'absolute', top: -80, left: -260, width: 620, height: 820,
@@ -175,10 +172,10 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
             position: 'absolute', bottom: -280, right: -180, width: 560, height: 760,
             pointerEvents: 'none', zIndex: 0, opacity: 0.4, transform: 'scaleX(-1)',
           }} />
-          <div style={{ maxWidth: 1700, margin: '0 auto', display: 'flex', gap: 160, alignItems: 'center', position: 'relative', zIndex: 1 }}>
+          <div className="page-inner comp-layout" style={{ position: 'relative', zIndex: 1 }}>
 
-            {/* Left: heading — wider to push grid right */}
-            <div style={{ width: 460, flexShrink: 0 }}>
+            {/* Left: heading */}
+            <div className="comp-heading">
               <h2 style={{ fontFamily: 'Poppins,sans-serif', fontSize: 32, fontWeight: 600, color: '#101129', margin: '0 0 12px', lineHeight: 1.2 }}>
                 Comprehensive Health<br />Packages
               </h2>
@@ -202,7 +199,7 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
                     <button key={i} style={{
                       flex: 1, background: card.bg, borderRadius: 14, border: 'none', cursor: 'pointer',
                       display: 'flex', flexDirection: 'column', alignItems: 'center',
-                      padding: '16px 12px 12px', gap: 8, overflow: 'hidden', minWidth: 0, maxWidth: 160, aspectRatio: '3/4',
+                      padding: '16px 12px 12px', gap: 8, overflow: 'hidden', minWidth: 0, maxWidth: 180, aspectRatio: '5/5',
                     }}>
                       <div style={{ width: 120, height: 120, borderRadius: '50%', background: card.circleBg, overflow: 'hidden', flexShrink: 0 }}>
                         <img src={card.img} alt={card.label} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
@@ -225,7 +222,7 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
                     <button key={i} style={{
                       flex: 1, background: card.bg, borderRadius: 14, border: 'none', cursor: 'pointer',
                       display: 'flex', flexDirection: 'column', alignItems: 'center',
-                      padding: '16px 8px 12px', gap: 8, overflow: 'hidden', minWidth: 0, maxWidth: 160, aspectRatio: '3/4',
+                      padding: '16px 8px 12px', gap: 8, overflow: 'hidden', minWidth: 0, maxWidth: 180, aspectRatio: '5/5',
                     }}>
                       <div style={{ width: 120, height: 120, borderRadius: '50%', background: card.circleBg, overflow: 'hidden', flexShrink: 0 }}>
                         <img src={card.img} alt={card.label} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
