@@ -20,7 +20,7 @@ export default function HowItWorks() {
       <div className="page-inner" style={{ position: 'relative', zIndex: 1, maxWidth: 1100 }}>
         {/* Heading */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginBottom: 56 }}>
-          <h2 style={{ fontFamily: 'Poppins,sans-serif', fontSize: 36, fontWeight: 600, color: '#7C5CFC', margin: 0, textAlign: 'center' }}>
+          <h2 style={{ fontFamily: 'Poppins,sans-serif', fontSize: 36, fontWeight: 600, color: '#8B5CF6', margin: 0, textAlign: 'center' }}>
             How It Works
           </h2>
           <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 15, color: '#828282', margin: 0, textAlign: 'center', maxWidth: 560 }}>
@@ -67,7 +67,7 @@ export default function HowItWorks() {
                 <p style={{
                   fontFamily: 'Poppins,sans-serif',
                   fontSize: 16,
-                  color: '#374151',
+                  color: '#414141',
                   marginBottom: 10,
                   lineHeight: 1.6,
                   fontWeight: 400,

@@ -51,7 +51,7 @@ export function HeroSection() {
               borderRadius: 4,
               border: 'none',
               cursor: 'pointer',
-              background: i === current ? '#7C5CFC' : '#E7E1FF',
+              background: i === current ? '#8B5CF6' : '#E7E1FF',
               transition: 'all 0.3s ease',
               padding: 0,
             }}

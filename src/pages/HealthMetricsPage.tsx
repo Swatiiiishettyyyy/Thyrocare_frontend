@@ -48,40 +48,58 @@ function OrganCard({ organ, onClick }: { organ: typeof ORGANS[0]; onClick: () =>
     <div onClick={onClick} style={{
       background: '#fff',
       boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)',
-      borderRadius: 20, padding: '16px 14px 12px',
-      display: 'flex', flexDirection: 'column', gap: 0,
+      borderRadius: 20,
+      padding: '16px 12px 10px',
+      display: 'flex', flexDirection: 'column', gap: 10,
       cursor: 'pointer',
     }}>
-      {/* Row 1: icon+name LEFT, status badge RIGHT */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+      {/* Row 1: icon + name left, badge right */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src={organ.icon} alt={organ.name} width={44} height={44} style={{ flexShrink: 0 }} />
-          <span style={{ fontSize: 15, fontWeight: 400, color: '#161616', fontFamily: 'Poppins, sans-serif' }}>{organ.name}</span>
+          {/* Icon with navy gradient bg */}
+          <div style={{
+            width: 44, height: 44, flexShrink: 0, borderRadius: 10,
+            background: 'linear-gradient(90deg, #101129 0%, #2A2C5B 100%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <img src={organ.icon} alt={organ.name} width={26} height={26}
+              style={{ filter: 'brightness(0) invert(1)' }} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <span style={{ fontSize: 16, fontWeight: 400, color: '#161616', fontFamily: 'Poppins, sans-serif', lineHeight: '22px' }}>
+              {organ.name}
+            </span>
+            {organ.score !== null ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ fontSize: 28, fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif', lineHeight: '32px' }}>
+                  {organ.score}
+                </span>
+                <span style={{ fontSize: 13, color: '#828282', fontFamily: 'Inter, sans-serif', fontWeight: 400 }}>
+                  /100
+                </span>
+                {organ.trend && (
+                  <svg width="18" height="14" viewBox="0 0 20 16" fill="none">
+                    {organ.trend === 'up'
+                      ? <path d="M1 15L7 7L12 11L19 1" stroke="#41C9B3" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                      : <path d="M1 1L7 9L12 5L19 15" stroke="#E12D2D" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                    }
+                  </svg>
+                )}
+              </div>
+            ) : (
+              <span style={{ fontSize: 13, color: '#828282', fontFamily: 'Inter, sans-serif' }}>No data</span>
+            )}
+          </div>
         </div>
         <span style={{
+          alignSelf: 'flex-start',
           padding: '3px 10px', borderRadius: 100,
           background: st.bg, color: st.color,
-          fontSize: 13, fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap',
+          fontSize: 13, fontFamily: 'Inter, sans-serif', fontWeight: 400,
+          whiteSpace: 'nowrap', flexShrink: 0,
         }}>{organ.status}</span>
       </div>
-
-      {/* Row 2: score large */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, marginBottom: 12 }}>
-        {organ.score !== null ? (
-          <>
-            <span style={{ fontSize: 30, fontWeight: 500, color: '#161616', lineHeight: 1, fontFamily: 'Poppins, sans-serif' }}>{organ.score}</span>
-            <span style={{ fontSize: 13, color: '#828282', marginBottom: 3, fontFamily: 'Inter, sans-serif' }}>/100</span>
-            {organ.trend && (
-              <svg width="18" height="12" viewBox="0 0 24 14" fill="none"
-                style={{ marginBottom: 4, transform: organ.trend === 'down' ? 'rotate(180deg)' : 'none' }}>
-                <path d="M1 13L12 2L23 13" stroke={organ.trend === 'down' ? '#E12D2D' : '#41C9B3'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            )}
-          </>
-        ) : <div style={{ height: 30 }} />}
-      </div>
-
-      {/* Row 3: updated date right-aligned */}
+      {/* Updated date bottom right */}
       <span style={{ fontSize: 12, color: '#828282', textAlign: 'right', fontFamily: 'Inter, sans-serif', display: 'block' }}>
         {organ.updated}
       </span>

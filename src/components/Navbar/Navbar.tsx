@@ -20,7 +20,7 @@ const Navbar = React.memo(function Navbar({ links, ctaLabel, onCtaClick }: Navba
         <div className="navbar-search" style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#F9F9F9', border: '1px solid #E7E1FF', borderRadius: 100, height: 40, overflow: 'hidden' }}>
           <button style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#fff', border: 'none', borderRight: '1px solid #E7E1FF', borderRadius: '100px 0 0 100px', padding: '0 14px', height: '100%', cursor: 'pointer', flexShrink: 0 }}>
             <svg width="10" height="12" viewBox="0 0 12 16" fill="none">
-              <path d="M6 0C3.24 0 1 2.24 1 5C1 8.75 6 14 6 14C6 14 11 8.75 11 5C11 2.24 8.76 0 6 0ZM6 6.5C5.17 6.5 4.5 5.83 4.5 5C4.5 4.17 5.17 3.5 6 3.5C6.83 3.5 7.5 4.17 7.5 5C7.5 5.83 6.83 6.5 6 6.5Z" fill="#7C5CFC"/>
+              <path d="M6 0C3.24 0 1 2.24 1 5C1 8.75 6 14 6 14C6 14 11 8.75 11 5C11 2.24 8.76 0 6 0ZM6 6.5C5.17 6.5 4.5 5.83 4.5 5C4.5 4.17 5.17 3.5 6 3.5C6.83 3.5 7.5 4.17 7.5 5C7.5 5.83 6.83 6.5 6 6.5Z" fill="#8B5CF6"/>
             </svg>
             <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 12, fontWeight: 500, color: '#374151' }}>Location</span>
             <svg width="8" height="5" viewBox="0 0 12 8" fill="none">
@@ -65,7 +65,7 @@ const Navbar = React.memo(function Navbar({ links, ctaLabel, onCtaClick }: Navba
               <path d="M7 19C7 20.1 7.9 21 9 21C10.1 21 11 20.1 11 19M2 17V16C2 14.6 2.42 13.3 3.15 12.3C3.88 11.24 4 10.62 4 9C4 6.24 6.24 4 9 4C11.76 4 14 6.24 14 9C14 10.62 14.12 11.24 14.85 12.3C15.58 13.3 16 14.6 16 16V17H2Z" stroke="#374151" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
           </button>
-          <span style={{ position: 'absolute', top: -2, right: -2, width: 16, height: 16, background: '#7C5CFC', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins,sans-serif', fontSize: 10, fontWeight: 600, color: '#fff' }}>1</span>
+          <span style={{ position: 'absolute', top: -2, right: -2, width: 16, height: 16, background: '#8B5CF6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins,sans-serif', fontSize: 10, fontWeight: 600, color: '#fff' }}>1</span>
         </div>
 
         {/* Cart button */}

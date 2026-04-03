@@ -18,12 +18,12 @@ const PackageCard = React.memo(function PackageCard({ name, badge, description, 
 
       {/* Body */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
-        <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: 14, fontWeight: 400, color: '#667388', lineHeight: 1.6, margin: 0 }}>
+        <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: 14, fontWeight: 400, color: '#828282', lineHeight: 1.6, margin: 0 }}>
           {description}
         </p>
         <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
           {[`${tests} Tests included`, fasting, `Results ${turnaround}`].map(item => (
-            <li key={item} style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Poppins, sans-serif', fontSize: 13, color: '#667388' }}>
+            <li key={item} style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Poppins, sans-serif', fontSize: 13, color: '#828282' }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#8B5CF6', flexShrink: 0 }} />
               {item}
             </li>
@@ -38,7 +38,7 @@ const PackageCard = React.memo(function PackageCard({ name, badge, description, 
             ₹{price}
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: 13, color: '#667388', textDecoration: 'line-through' }}>₹{originalPrice}</span>
+            <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: 13, color: '#828282', textDecoration: 'line-through' }}>₹{originalPrice}</span>
             <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: 12, fontWeight: 500, color: '#41C9B3' }}>{offerPercent}</span>
           </div>
         </div>
