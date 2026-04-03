@@ -306,6 +306,49 @@ interface TestCardProps {
 }
 ```
 
+#### Corrected Figma Spec (v2)
+
+**Card outer shell:** `borderRadius: 20`, `border: 1px solid #E7E1FF`, `padding: 10`, white background.
+
+**Inner gradient area:** `background: linear-gradient(0deg, #E7E1FF 0%, #FFFFFF 100%)` — purple at bottom, white at top. `borderRadius: 10`.
+
+**Layout order (top → bottom):**
+1. Badge row (flush to top)
+   - Left: Single/Package pill — `background: linear-gradient(131deg, #101129 0%, #2A2C5B 100%)`, `color: #fff`, `borderTopLeftRadius: 10`, `borderBottomRightRadius: 8`, `fontSize: 14`, `fontWeight: 600`, Poppins
+   - Right: Fasting badge — white background, `border: 1px solid #E7E1FF`, `borderRadius: 8`, `fontSize: 12`, `fontWeight: 500`, `color: #374151`, `margin: 10px 19px 0 0`
+2. Test name — `fontFamily: Poppins`, `fontSize: 24`, `fontWeight: 500`, `color: #161616`, `margin: 30px 0 10px`
+3. Description — `fontFamily: Inter`, `fontSize: 18`, `fontWeight: 400`, `color: #828282`
+4. Meta boxes row — two boxes side by side, each `width: 201px`, `height: 74px`, white bg, `boxShadow: 0px 4px 53.9px rgba(136,107,249,0.10)`, `borderRadius: 8`
+   - Report Time box: label `fontSize: 18`, `fontFamily: Inter`, `color: #828282`; value `fontSize: 18`, `fontFamily: Inter`, `color: #161616`, `paddingLeft: 35`; uses `ReportIcon`
+   - Parameters box: label `fontSize: 18`, `fontFamily: Inter`, `color: #828282`; value `fontSize: 18`, `fontFamily: Inter`, `color: #161616`, `paddingLeft: 34`; uses `ParameterIcon` (currently unused — must be added)
+5. Dashed divider — `stroke: #8B5CF6`, `strokeDasharray: 4 4`
+6. Price + Button row
+   - Price: `fontSize: 32`, `fontWeight: 600`, `color: #161616`
+   - Original price: `fontSize: 20`, `fontWeight: 500`, `color: #828282`; strikethrough implemented as a sibling `<div>` with `outline: 1px #828282 solid`, `position: relative`, `top: 12px` (not CSS `text-decoration`)
+   - Offer badge: `background: #E6F6F3`, `border: 0.2px solid #41C9B3`, `color: #41C9B3`, `fontSize: 20`, `borderRadius: 6`, `padding: 4px 10px`
+   - "Add to Cart" button: `background: #8B5CF6`, `color: #fff`, `height: 58px`, `borderRadius: 8`, Poppins `fontSize: 14`, `fontWeight: 600`
+
+---
+
+### 7b. Popular Health Packages Section Background
+
+**Figma spec:** The entire section uses a dark navy background `#101129`.
+- Section heading text: `color: 'white'`
+- Subheading text: `color: '#9CA3AF'`
+- "View All Package" button: `background: #8B5CF6`, aligned to the right of the heading row
+- Current `PackagesSection` uses `linear-gradient(to bottom, #1B1F3B …)` — must be changed to solid `#101129`
+
+### 7c. Check Your Vitals Section Gradient
+
+**Figma spec:** `linear-gradient(0deg, #E7E1FF 0%, white 100%)` — purple at bottom, white at top.
+**Current implementation:** `linear-gradient(180deg, #FFFFFF 0%, #E7E1FF 100%)` — visually equivalent (same result, different angle notation). No change required.
+
+### 7d. Condition Filter Pills
+
+**Active pill:** `background: #E7E1FF`, `border: 1px solid #6D55CC`, `color: #161616`, `width: 182px`, `height: 57px`, `borderRadius: 67px`
+**Inactive pill:** no background (`transparent`), `border: 1px solid #E7E1FF`, `color: #161616`
+**Current implementation** uses `#EDE9FE` background and `#8B5CF6` / `#7C5CFC` colors — must be updated to match above.
+
 ---
 
 ### 8. Button

@@ -62,3 +62,42 @@
   - [x] 11.5 Write PBT for P4 — Navbar aria-expanded reflects open state
   - [x] 11.6 Write PBT for P5 — SectionHeading renders title and optional subtitle
   - [x] 11.7 Write PBT for P6 — Responsive class presence
+
+- [x] 12. Fix TestCard gradient direction and badge styles
+  - [x] 12.1 Update inner gradient in `TestCard.tsx` from `linear-gradient(180deg, #E7E1FF 36%, #FFFFFF 80.05%)` to `linear-gradient(0deg, #E7E1FF 0%, #FFFFFF 100%)` (purple at bottom, white at top)
+    - _Requirements: Figma spec — TestCard inner gradient_
+  - [x] 12.2 Update Single/Package badge background from flat colour to `linear-gradient(131deg, #101129 0%, #2A2C5B 100%)` and fix border radii to `borderTopLeftRadius: 10, borderBottomRightRadius: 8`
+    - _Requirements: Figma spec — TestCard badge row_
+
+- [x] 13. Fix TestCard typography and meta boxes
+  - [x] 13.1 Update test name styles: `fontSize: 24`, `fontWeight: 500`, `color: #161616`, `fontFamily: Poppins`
+    - _Requirements: Figma spec — TestCard name_
+  - [x] 13.2 Update description styles: `fontSize: 18`, `fontFamily: Inter`, `fontWeight: 400`, `color: #828282`
+    - _Requirements: Figma spec — TestCard description_
+  - [x] 13.3 Update each meta box to `width: 201px`, `height: 74px`, white bg, `boxShadow: 0px 4px 53.9px rgba(136,107,249,0.10)`, `borderRadius: 8`; update label/value font sizes to 18px Inter, colors `#828282` / `#161616`, and correct paddingLeft values (35 for Report Time value, 34 for Parameters value)
+    - _Requirements: Figma spec — TestCard meta boxes_
+  - [x] 13.4 Add `ParameterIcon` to the Parameters meta box (currently declared but unused)
+    - _Requirements: Figma spec — ParameterIcon usage_
+
+- [x] 14. Fix TestCard price section
+  - [x] 14.1 Update price display: `fontSize: 32`, `fontWeight: 600`, `color: #161616`
+    - _Requirements: Figma spec — TestCard price_
+  - [x] 14.2 Update original price: `fontSize: 20`, `fontWeight: 500`, `color: #828282`; replace CSS `textDecoration: line-through` with a sibling `<div>` strikethrough using `outline: 1px #828282 solid`, `position: relative`, `top: 12px`
+    - _Requirements: Figma spec — TestCard original price strikethrough_
+  - [x] 14.3 Update offer badge: `background: #E6F6F3`, `border: 0.2px solid #41C9B3`, `color: #41C9B3`, `fontSize: 20`
+    - _Requirements: Figma spec — TestCard offer badge_
+  - [x] 14.4 Update "Add to Cart" button height from 48px to 58px
+    - _Requirements: Figma spec — TestCard CTA button_
+
+- [x] 15. Fix Popular Health Packages section background
+  - [x] 15.1 Update `PackagesSection.tsx` section background from `linear-gradient(to bottom, #1B1F3B …)` to solid `#101129`
+    - _Requirements: Figma spec — Popular Health Packages background_
+
+- [x] 16. Fix condition filter pills styling in `TestPage.tsx`
+  - [x] 16.1 Update active pill styles: `background: #E7E1FF`, `border: 1px solid #6D55CC`, `color: #161616`, `width: 182px`, `height: 57px`, `borderRadius: 67px`
+    - _Requirements: Figma spec — condition filter active pill_
+  - [x] 16.2 Update inactive pill styles: `background: transparent`, `border: 1px solid #E7E1FF`, `color: #161616`
+    - _Requirements: Figma spec — condition filter inactive pill_
+
+- [x] 17. Checkpoint — Ensure all visual fixes render correctly
+  - Verify TestCard gradient, badges, meta boxes, price section, and section backgrounds match Figma. Ensure no TypeScript errors. Ask the user if questions arise.

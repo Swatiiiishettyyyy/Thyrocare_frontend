@@ -6,9 +6,11 @@ import type { TestCardProps } from '../../types'
 const PackagesSection = React.memo(function PackagesSection({ heading, subheading, cards }: PackagesSectionProps) {
   return (
     <section id="packages" className="page-section" style={{
-      background: 'linear-gradient(to bottom, #1B1F3B 0%, #1B1F3B 55%, #fff 55%, #fff 100%)',
+      background: 'linear-gradient(to bottom, #101129 0%, #101129 340px, #ffffff 340px, #ffffff 100%)',
+      paddingBottom: 60,
+      marginTop: 40,
     }}>
-      <div className="page-inner" style={{ maxWidth: 1100 }}>
+      <div className="page-inner">
         {/* Header row: left-aligned title + right "View All" button */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 40 }}>
           <div style={{ maxWidth: 480 }}>
@@ -20,7 +22,7 @@ const PackagesSection = React.memo(function PackagesSection({ heading, subheadin
             </p>
           </div>
           <button style={{
-            background: '#7C5CFC', color: '#fff', border: 'none',
+            background: '#8B5CF6', color: '#fff', border: 'none',
             borderRadius: 50, padding: '12px 24px', cursor: 'pointer',
             fontFamily: "'Poppins', sans-serif", fontSize: 14, fontWeight: 600,
             whiteSpace: 'nowrap', alignSelf: 'center',

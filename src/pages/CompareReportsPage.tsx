@@ -91,7 +91,7 @@ export default function CompareReportsPage() {
       }}>
 
         {/* Breadcrumb */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '20px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '20px 0 24px' }}>
           {[
             { label: 'Reports', path: '/reports' },
             { label: 'Report Detail', path: '/report' },
@@ -122,7 +122,7 @@ export default function CompareReportsPage() {
         <div style={{
           background: '#101129',
           borderRadius: 10,
-          padding: '14px 20px',
+          padding: '20px 28px',
           display: 'flex',
           flexWrap: 'wrap',
           alignItems: 'center',

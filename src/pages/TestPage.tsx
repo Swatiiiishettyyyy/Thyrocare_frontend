@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+ï»¿import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar, HeroSection, Footer } from '../components'
 import { WhyChooseUs } from '../components/WhyChooseUs'
@@ -92,7 +92,7 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
         <section id="tests" className="page-section" style={{ background: '#fff', paddingBottom: 20 }}>
           <div className="page-inner" style={{ maxWidth: 1200 }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginBottom: 40 }}>
-              <h2 style={{ fontFamily: 'Poppins,sans-serif', fontSize: 48, fontWeight: 500, color: '#111827', margin: 0, textAlign: 'center', lineHeight: '61px', letterSpacing: '-0.03em' }}>Essential Tests</h2>
+              <h2 style={{ fontFamily: 'Poppins,sans-serif', fontSize: 36, fontWeight: 600, color: '#111827', margin: 0, textAlign: 'center', lineHeight: 1.3, letterSpacing: '-0.02em' }}>Essential Tests</h2>
               <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 15, color: '#828282', margin: 0, textAlign: 'center', maxWidth: 560 }}>Quick, commonly recommended tests to help you monitor your basic health markers.</p>
             </div>
             <div className="grid-3">
@@ -114,12 +114,12 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
 
         {/* Find Tests by Health Condition */}
         <section className="page-section" style={{ background: '#fff', position: 'relative', overflow: 'hidden' }}>
-          {/* Rectangle 20 — top left, behind content */}
+          {/* Rectangle 20 ï¿½ top left, behind content */}
           <img src={rect20} alt="" aria-hidden="true" style={{
             position: 'absolute', top: -80, left: -280, width: 650 ,height:900,
             pointerEvents: 'none', zIndex: 0, opacity: 0.7,
           }} />
-          {/* Rectangle 19 — bottom right, behind content */}
+          {/* Rectangle 19 ï¿½ bottom right, behind content */}
           <img src={rect19} alt="" aria-hidden="true" style={{
             position: 'absolute', bottom: -380, right: -180, width: 650 ,height:900,
             pointerEvents: 'none', zIndex: 0, opacity: 0.7,
@@ -129,10 +129,10 @@ export default function TestPage({ onAddToCart }: { onAddToCart: (test: TestCard
             <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 40, flexWrap: 'wrap' }}>
               {CONDITIONS.map(c => (
                 <button key={c} onClick={() => setActiveCondition(c)} style={{
-                  padding: '10px 24px', borderRadius: 100,
-                  border: c === activeCondition ? '2px solid #8B5CF6' : '1.5px solid #D1D5DB',
-                  background: c === activeCondition ? '#EDE9FE' : '#fff',
-                  color: c === activeCondition ? '#7C5CFC' : '#374151',
+                  width: 182, height: 57, borderRadius: 67,
+                  border: c === activeCondition ? '1px solid #6D55CC' : '1px solid #E7E1FF',
+                  background: c === activeCondition ? '#E7E1FF' : 'transparent',
+                  color: '#161616',
                   fontFamily: 'Poppins,sans-serif', fontSize: 14, fontWeight: 500, cursor: 'pointer',
                 }}>
                   {c}

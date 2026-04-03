@@ -168,52 +168,65 @@ export default function OrderDetailsPage(_: OrderDetailsPageProps) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <span style={SECTION_TITLE}>Patient Record</span>
             <div style={CARD}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                 {PATIENTS.map((p, i) => (
                   <div key={p.name}>
-                    {i > 0 && <div style={{ height: 1, background: '#E7E1FF', marginBottom: 16 }} />}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-                      {/* Patient info */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{ width: 40, height: 40, borderRadius: 10, background: '#E7E1FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <svg width="18" height="20" viewBox="0 0 21 23" fill="none">
-                            <path d="M17.5 1H3.5C2.4 1 1.5 1.9 1.5 3V21L5.5 18L10.5 21L15.5 18L19.5 21V3C19.5 1.9 18.6 1 17.5 1Z" stroke="#8B5CF6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    {i > 0 && <div style={{ height: 1, background: '#E7E1FF', margin: '20px 0' }} />}
+                    {/* Top row: avatar+name | outcome */}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 14 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                        <div style={{ width: 52, height: 52, borderRadius: 12, background: '#E7E1FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                            <rect x="3" y="4" width="18" height="16" rx="2" stroke="#8B5CF6" strokeWidth="1.8"/>
+                            <path d="M8 2v4M16 2v4M3 10h18" stroke="#8B5CF6" strokeWidth="1.8" strokeLinecap="round"/>
+                            <rect x="7" y="14" width="4" height="3" rx="0.5" fill="#8B5CF6"/>
                           </svg>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                          <span style={VALUE}>{p.name}</span>
-                          <span style={LABEL}>{p.meta}</span>
+                          <span style={{ fontSize: 15, fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif' }}>{p.name}</span>
+                          <span style={{ fontSize: 13, color: '#828282', fontFamily: 'Poppins, sans-serif' }}>{p.meta}</span>
                         </div>
                       </div>
-                      {/* Outcome + test */}
-                      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 16 }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                          <span style={LABEL}>Report Outcome</span>
-                          <span style={{ ...VALUE, color: p.outcomeDone ? '#41C9B3' : '#8B5CF6' }}>{p.outcome}</span>
+                      {/* Report Outcome — top right */}
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
+                        <span style={{ fontSize: 14, fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif' }}>Report Outcome</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ width: 18, height: 18, borderRadius: '50%', background: p.outcomeDone ? '#41C9B3' : '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {p.outcomeDone
+                              ? <svg width="10" height="8" viewBox="0 0 12 10" fill="none"><path d="M1 5l3 3L11 1" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                              : <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="3" fill="#fff"/></svg>
+                            }
+                          </div>
+                          <span style={{ fontSize: 14, color: '#828282', fontFamily: 'Poppins, sans-serif' }}>{p.outcome}</span>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                          <span style={LABEL}>Assigned Biomarker</span>
-                          <span style={{
-                            padding: '4px 10px', background: '#FFF4EF',
-                            borderRadius: 100, outline: '1px solid #EA8C5A', outlineOffset: -1,
-                            fontSize: 'clamp(10px, 0.8vw, 13px)', color: '#161616',
-                          }}>{p.test}</span>
-                        </div>
-                        {p.outcomeDone && (
-                          <button style={{
-                            display: 'flex', alignItems: 'center', gap: 8,
-                            padding: '8px 20px', background: '#8B5CF6', borderRadius: 8, border: 'none',
-                            color: '#fff', fontSize: 'clamp(11px, 0.9vw, 14px)', fontWeight: 500,
-                            cursor: 'pointer', fontFamily: 'Poppins, sans-serif',
-                          }}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/>
-                              <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/>
-                            </svg>
-                            View Report
-                          </button>
-                        )}
                       </div>
+                    </div>
+                    {/* Bottom row: biomarker | view report */}
+                    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <span style={{ fontSize: 13, color: '#828282', fontFamily: 'Poppins, sans-serif' }}>Assigned Biomarker</span>
+                        <span style={{
+                          padding: '6px 16px', background: '#FFF4EF',
+                          borderRadius: 100, outline: '1px solid #EA8C5A', outlineOffset: -1,
+                          fontSize: 13, color: '#161616', fontFamily: 'Inter, sans-serif',
+                          display: 'inline-block',
+                        }}>{p.test}</span>
+                      </div>
+                      {p.outcomeDone && (
+                        <button style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          padding: '10px 24px', background: '#8B5CF6', borderRadius: 8, border: 'none',
+                          color: '#fff', fontSize: 14, fontWeight: 500,
+                          cursor: 'pointer', fontFamily: 'Poppins, sans-serif',
+                          whiteSpace: 'nowrap', flexShrink: 0,
+                        }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/>
+                            <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/>
+                          </svg>
+                          View Report
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -225,44 +238,47 @@ export default function OrderDetailsPage(_: OrderDetailsPageProps) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <span style={SECTION_TITLE}>Billing &amp; Payment Summary</span>
             <div style={CARD}>
-              {/* Payment meta */}
+              {/* Payment meta — 4 columns */}
               <div style={{
                 background: 'linear-gradient(180deg, #E7E1FF 0%, #fff 100%)',
-                borderRadius: 10, padding: '16px 20px', marginBottom: 16,
-                display: 'flex', flexWrap: 'wrap', gap: 24,
+                borderRadius: 10, padding: '16px 20px', marginBottom: 20,
+                display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16,
               }}>
                 {[
-                  { label: 'Payment Mode',    value: 'UPI / Digital Wallet' },
+                  { label: 'Payment Mode',     value: 'UPI / Digital Wallet' },
                   { label: 'Transaction Date', value: '7th Feb, 2026' },
                   { label: 'Security',         value: 'AES-256 Encrypted' },
                   { label: 'Invoice No',       value: 'NUC-INV-2401' },
                 ].map(m => (
-                  <div key={m.label} style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 120 }}>
-                    <span style={VALUE}>{m.label}</span>
-                    <span style={LABEL}>{m.value}</span>
+                  <div key={m.label} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif' }}>{m.label}</span>
+                    <span style={{ fontSize: 13, color: '#828282', fontFamily: 'Poppins, sans-serif' }}>{m.value}</span>
                   </div>
                 ))}
               </div>
+
+              {/* Item line */}
+              <div style={{ marginBottom: 12 }}>
+                <span style={{ fontSize: 14, color: '#161616', fontFamily: 'Poppins, sans-serif' }}>Complete Blood Count (CBC) with ESR x 1</span>
+              </div>
+
               {/* Line items */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={LABEL}>Complete Blood Count (CBC) with ESR x 1</span>
-                </div>
                 <div style={{ height: 1, background: '#E7E1FF' }} />
                 {[
-                  { label: 'Subtotal (1 item)', value: '₹599', color: '#161616' },
+                  { label: 'Subtotal (1 item)', value: '₹599',  color: '#161616' },
                   { label: 'You Save',          value: '-₹200', color: '#41C9B3' },
                   { label: 'Home Collection',   value: 'FREE',  color: '#41C9B3' },
                 ].map(row => (
                   <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={LABEL}>{row.label}</span>
-                    <span style={{ ...VALUE, color: row.color }}>{row.value}</span>
+                    <span style={{ fontSize: 14, color: '#161616', fontFamily: 'Poppins, sans-serif' }}>{row.label}</span>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: row.color, fontFamily: 'Poppins, sans-serif' }}>{row.value}</span>
                   </div>
                 ))}
                 <div style={{ height: 1, background: '#E7E1FF' }} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 'clamp(13px, 1.1vw, 18px)', fontWeight: 500, color: '#161616' }}>Total</span>
-                  <span style={{ fontSize: 'clamp(16px, 1.5vw, 24px)', fontWeight: 600, color: '#101129' }}>₹399</span>
+                  <span style={{ fontSize: 16, fontWeight: 600, color: '#161616', fontFamily: 'Poppins, sans-serif' }}>Total</span>
+                  <span style={{ fontSize: 22, fontWeight: 700, color: '#101129', fontFamily: 'Poppins, sans-serif' }}>₹399</span>
                 </div>
               </div>
             </div>

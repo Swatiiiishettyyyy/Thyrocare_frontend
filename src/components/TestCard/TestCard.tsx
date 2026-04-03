@@ -1,29 +1,13 @@
 import React from 'react'
 import type { TestCardProps } from '../../types'
 import cartImg from '../../assets/figma/cart.png'
-
-const ReportIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-    <rect x="3" y="2" width="18" height="20" rx="3" fill="#7C5CFC" opacity="0.15"/>
-    <path d="M7 7h10M7 11h10M7 15h6" stroke="#7C5CFC" strokeWidth="1.8" strokeLinecap="round"/>
-  </svg>
-)
-
-const ParameterIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-    <rect x="3" y="3" width="7" height="7" rx="1.5" fill="#7C5CFC"/>
-    <rect x="14" y="3" width="7" height="7" rx="1.5" fill="#7C5CFC"/>
-    <rect x="3" y="14" width="7" height="7" rx="1.5" fill="#7C5CFC"/>
-    <rect x="14" y="14" width="7" height="7" rx="1.5" fill="#7C5CFC"/>
-  </svg>
-)
+import fileIcon from '../../assets/figma/file.svg'
+import iconsIcon from '../../assets/figma/icons.svg'
 
 const TestCard = React.memo(function TestCard({
   name, description, price, originalPrice, offerPercent,
   tests, fasting, turnaround, type, onAddToCart,
 }: TestCardProps) {
-  const isPackage = type === 'Package'
-
   return (
     <article style={{
       background: '#FFFFFF',
@@ -34,25 +18,30 @@ const TestCard = React.memo(function TestCard({
       flexDirection: 'column',
       boxSizing: 'border-box',
       height: '100%',
+      minHeight: 0,
     }}>
       <div style={{
-        background: 'linear-gradient(180deg, #E7E1FF 36%, #FFFFFF 80.05%)',
-        borderRadius: 10,
-        overflow: 'hidden',
+        background: 'linear-gradient(0deg, #E7E1FF 0%, #FFFFFF 100%)',
+        borderRadius: 12,
         display: 'flex',
         flexDirection: 'column',
         flex: 1,
+        overflow: 'hidden',
       }}>
-        {/* Badge row — flush to top */}
+        {/* Badge row — flush corners */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <span style={{
-            background: isPackage ? '#7C5CFC' : '#1B1F3B',
+            background: 'linear-gradient(131deg, #101129 0%, #2A2C5B 100%)',
             color: '#fff',
             fontFamily: 'Poppins,sans-serif',
-            fontSize: 14, fontWeight: 600,
-            padding: '8px 23px 13px 12px',
-            borderRadius: '10px 0 10px 0px',
+            fontSize: 13, fontWeight: 600,
+            padding: '6px 20px 10px 14px',
+            borderTopLeftRadius: 12,
+            borderBottomRightRadius: 10,
+            borderTopRightRadius: 0,
+            borderBottomLeftRadius: 0,
             flexShrink: 0,
+            lineHeight: 1.2,
           }}>
             {type}
           </span>
@@ -63,73 +52,87 @@ const TestCard = React.memo(function TestCard({
             background: '#fff',
             border: '1px solid #E5E7EB',
             borderRadius: 8,
-            padding: '6px 14px',
-            margin: '10px 19px 0 0',
+            padding: '5px 12px',
+            margin: '8px 8px 0 0',
             whiteSpace: 'nowrap',
+            lineHeight: 1.2,
           }}>
             {fasting}
           </span>
         </div>
 
-        {/* Content */}
-        <div style={{ padding: '10px 20px 12px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-          {/* spacing above title */}
+        {/* Card content — less top/bottom, more left/right */}
+        <div style={{ padding: '20px 20px 20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
           <h3 style={{
-            fontFamily: 'Poppins,sans-serif', fontSize: 20, fontWeight: 500,
-            color: '#111827', margin: '30px 0 10px', lineHeight: 1.3,
+            fontFamily: 'Poppins,sans-serif', fontSize: 19, fontWeight: 500,
+            color: '#161616', margin: '20px 0 8px', lineHeight: 1.35,
           }}>
             {name}
           </h3>
 
-          {/* spacing below description */}
           <p style={{
-            fontFamily: 'Poppins,sans-serif', fontSize: 14,
-            color: '#6B7280', margin: '10px 0 18px', lineHeight: 1.6,
-            minHeight: 48,
+            fontFamily: 'Inter,sans-serif', fontSize: 14, fontWeight: 400,
+            color: '#828282', margin: '0 0 16px', lineHeight: 1.6,
+            flex: 1,
           }}>
             {description}
           </p>
 
           {/* Meta boxes */}
           <div style={{ display: 'flex', gap: 10 }}>
-            <div style={{ background: '#fff', borderRadius: 8, padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
-              <ReportIcon />
-              <div>
-                <div style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#9CA3AF' }}>Report Time:</div>
-                <div style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 500, color: '#111827' }}>{turnaround}</div>
+            <div style={{
+              flex: 1, minWidth: 0, background: '#fff', borderRadius: 10,
+              boxShadow: '0px 4px 24px rgba(136,107,249,0.12)',
+              padding: '10px 12px', display: 'flex', alignItems: 'flex-start', gap: 8,
+            }}>
+              {/* file.svg is 24×24 viewBox — render at 22px */}
+              <img src={fileIcon} alt="" width={22} height={22} style={{ display: 'block', flexShrink: 0, marginTop: 2 }} />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 11, color: '#828282', lineHeight: 1.4, whiteSpace: 'nowrap' }}>Report Time:</div>
+                <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 12, color: '#161616', fontWeight: 600, lineHeight: 1.4 }}>{turnaround}</div>
               </div>
             </div>
-            <div style={{ background: '#fff', borderRadius: 8, padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
-              
-              <div>
-                <div style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, color: '#9CA3AF' }}>Parameters</div>
-                <div style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 500, color: '#111827' }}>{tests}</div>
+            <div style={{
+              flex: 1, minWidth: 0, background: '#fff', borderRadius: 10,
+              boxShadow: '0px 4px 24px rgba(136,107,249,0.12)',
+              padding: '10px 12px', display: 'flex', alignItems: 'flex-start', gap: 8,
+            }}>
+              {/* parameters icon from icons.svg */}
+              <img src={iconsIcon} alt="" width={22} height={22} style={{ display: 'block', flexShrink: 0, marginTop: 2 }} />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 11, color: '#828282', lineHeight: 1.4, whiteSpace: 'nowrap' }}>Parameters</div>
+                <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 12, color: '#161616', fontWeight: 600, lineHeight: 1.4 }}>{tests}</div>
               </div>
             </div>
           </div>
 
           {/* Dashed divider */}
-          <div style={{ margin: '35px 0 18px' }}>
+          <div style={{ margin: '20px 0 20px' }}>
             <svg width="100%" height="1" style={{ display: 'block' }}>
-              <line x1="0" y1="0" x2="100%" y2="0" stroke="#8B5CF6" strokeWidth="1" strokeDasharray="4 4" />
+              <line x1="0" y1="0" x2="100%" y2="0" stroke="#8B5CF6" strokeWidth="1.5" strokeDasharray="5 5" />
             </svg>
           </div>
 
           {/* Price + Button */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, flexWrap: 'nowrap' }}>
             <div>
-              <div style={{ fontFamily: 'Poppins,sans-serif', fontSize: 30, fontWeight: 700, color: '#111827', lineHeight: 1 }}>
+              <div style={{ fontFamily: 'Poppins,sans-serif', fontSize: 24, fontWeight: 500, color: '#161616', lineHeight: 1 }}>
                 ₹{price}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 16, fontWeight: 500, color: '#828282', textDecoration: 'line-through' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 5, flexWrap: 'nowrap' }}>
+                <span style={{
+                  fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 400,
+                  color: '#828282', textDecoration: 'line-through', flexShrink: 0,
+                }}>
                   ₹{originalPrice}
                 </span>
                 <span style={{
-                  fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 600,
-                  color: '#0D9488', background: '#CCFBF1',
-                  borderRadius: 6, padding: '4px 10px',
+                  fontFamily: 'Poppins,sans-serif', fontSize: 11, fontWeight: 600,
+                  color: '#41C9B3', background: '#E6F6F3',
+                  border: '0.5px solid #41C9B3',
+                  borderRadius: 6, padding: '2px 7px',
                   display: 'inline-flex', alignItems: 'center',
+                  whiteSpace: 'nowrap', flexShrink: 0,
                 }}>
                   {offerPercent}
                 </span>
@@ -138,12 +141,12 @@ const TestCard = React.memo(function TestCard({
             <button onClick={onAddToCart} style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               background: '#8B5CF6', color: '#fff', border: 'none',
-              borderRadius: 8, height: 48, padding: '15px 30px 20px',
+              borderRadius: 10, height: 48, padding: '0 24px',
               cursor: 'pointer',
               fontFamily: 'Poppins,sans-serif', fontSize: 14, fontWeight: 600,
               whiteSpace: 'nowrap', flexShrink: 0,
             }}>
-              <img src={cartImg} alt="" style={{ width: 18, height: 16, objectFit: 'contain' }} />
+              <img src={cartImg} alt="" style={{ width: 15, height: 14, objectFit: 'contain' }} />
               Add to Cart
             </button>
           </div>

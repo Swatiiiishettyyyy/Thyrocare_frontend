@@ -1,15 +1,22 @@
 /* ─── Shared layout helpers ─────────────────────────────────────────────── */
 .page-section {
-  padding: 60px 110px;
+  padding: 48px 40px;
 }
 .page-inner {
-  max-width: 1700px;
+  max-width: 1200px;
   margin: 0 auto;
+  width: 100%;
 }
 .grid-3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
+  align-items: stretch;
+}
+.grid-3 > * {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 .grid-4 {
   display: grid;
@@ -54,7 +61,7 @@
 
 /* ─── Footer ────────────────────────────────────────────────────────────── */
 .footer-main {
-  padding: 48px 110px 40px;
+  padding: 48px 40px 40px;
   display: flex;
   gap: 60px;
   align-items: flex-start;
@@ -67,7 +74,7 @@
 }
 .footer-bottom {
   border-top: 1px solid #1F2340;
-  padding: 20px 110px;
+  padding: 20px 40px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -90,11 +97,11 @@
 /* ─── Comprehensive packages ────────────────────────────────────────────── */
 .comp-layout {
   display: flex;
-  gap: 160px;
+  gap: 80px;
   align-items: center;
 }
 .comp-heading {
-  width: 460px;
+  width: 400px;
   flex-shrink: 0;
 }
 
@@ -109,13 +116,13 @@
 
 /* ── 1280px ─────────────────────────────────────────────────────────────── */
 @media (max-width: 1280px) {
-  .page-section   { padding: 48px 60px; }
-  .footer-main    { padding: 40px 60px 32px; gap: 40px; }
-  .footer-bottom  { padding: 18px 60px; }
+  .page-section   { padding: 40px 32px; }
+  .footer-main    { padding: 40px 32px 32px; gap: 40px; }
+  .footer-bottom  { padding: 18px 32px; }
   .navbar-inner   { padding: 0 28px; gap: 12px; }
   .hero-section   { margin: 12px 20px; }
-  .comp-layout    { gap: 80px; }
-  .comp-heading   { width: 360px; }
+  .comp-layout    { gap: 60px; }
+  .comp-heading   { width: 340px; }
 }
 
 /* ── 1024px ─────────────────────────────────────────────────────────────── */

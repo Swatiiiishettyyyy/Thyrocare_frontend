@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import locationIcon from '../assets/figma/checkout-pages/location.svg'
+import profileIcon from '../assets/figma/checkout-pages/profile.svg'
+import familyIcon from '../assets/figma/checkout-pages/family.svg'
+import selectIcon from '../assets/figma/checkout-pages/select.svg'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components'
 import { CheckoutStepper } from '../components/CheckoutStepper'
@@ -54,7 +56,7 @@ export default function AddressPage({ items }: AddressPageProps) {
               }}>
                 <div style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: 14 }}>
                   <div style={{ width: 48, height: 48, borderRadius: 118, background: '#E7E1FF', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <img src={locationIcon} alt="person" width={22} height={22} />
+                    <img src={profileIcon} alt="person" width={48} height={48} style={{ borderRadius: '50%' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <span style={{ fontSize: 15, fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif' }}>For Myself</span>
@@ -72,7 +74,7 @@ export default function AddressPage({ items }: AddressPageProps) {
               }}>
                 <div style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: 14 }}>
                   <div style={{ width: 48, height: 48, borderRadius: 118, background: !forSelf ? '#8B5CF6' : '#E7E1FF', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <img src={locationIcon} alt="family" width={22} height={22} />
+                    <img src={familyIcon} alt="family" width={48} height={48} style={{ borderRadius: '50%' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <span style={{ fontSize: 15, fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif' }}>For Family Members</span>
@@ -91,9 +93,9 @@ export default function AddressPage({ items }: AddressPageProps) {
             </div>
             <div style={{ width: '100%', height: 80, position: 'relative', background: '#fff', boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)', borderRadius: 20, outline: '1px solid #E7E1FF', outlineOffset: '-1px', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#8B5CF6', flexShrink: 0 }} />
+                <input type="radio" name="familyMember" defaultChecked style={{ width: 20, height: 20, accentColor: '#8B5CF6', flexShrink: 0, cursor: 'pointer' }} />
                 <div style={{ width: 48, height: 48, borderRadius: 118, background: '#F9F9F9', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <img src={locationIcon} alt="avatar" width={22} height={22} />
+                  <img src={selectIcon} alt="avatar" width={48} height={48} style={{ borderRadius: '50%' }} />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -118,7 +120,7 @@ export default function AddressPage({ items }: AddressPageProps) {
             </div>
             <div style={{ width: '100%', position: 'relative', background: '#fff', boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)', borderRadius: 20, outline: '1px solid #E7E1FF', outlineOffset: '-1px', padding: '16px 16px 16px 16px' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#8B5CF6', flexShrink: 0, marginTop: 4 }} />
+                <input type="radio" name="address" defaultChecked style={{ width: 20, height: 20, accentColor: '#8B5CF6', flexShrink: 0, marginTop: 4, cursor: 'pointer' }} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ fontSize: 15, fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif' }}>Home</span>

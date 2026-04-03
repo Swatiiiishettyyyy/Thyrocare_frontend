@@ -139,19 +139,19 @@ export default function ReportPage() {
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 40px 40px' }}>
 
         {/* Breadcrumb */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 0 0', marginBottom: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 0 0', marginBottom: 20 }}>
           <span onClick={() => navigate('/reports')} style={{ fontSize: 15, color: '#9CA3AF', cursor: 'pointer', fontWeight: 400 }}>Reports</span>
           <span style={{ fontSize: 15, color: '#9CA3AF' }}>›</span>
           <span style={{ fontSize: 15, color: '#1B1F3B', fontWeight: 600 }}>Report Detail</span>
         </div>
         {/* Compare Reports + View Insights — above the dark card */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20, marginBottom: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginBottom: 16 }}>
           <button onClick={() => navigate('/compare-reports')} style={{ background: '#7C5CFC', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>📊 Compare Reports</button>
           <button style={{ background: 'none', color: '#374151', border: '1.5px solid #E5E7EB', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>✓ View Insights</button>
         </div>
 
         {/* Dark header card */}
-        <div style={{ background: '#1B1F3B', borderRadius: 16, padding: '32px 36px 28px', marginBottom: 12 }}>
+        <div style={{ background: '#1B1F3B', borderRadius: 16, padding: '36px 36px 32px', marginBottom: 12 }}>
           {/* Row 1: Title + badge */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
             <h2 style={{ fontSize: 24, fontWeight: 500, color: '#fff', margin: 0 }}>Complete Blood Count (CBC)</h2>

@@ -40,17 +40,18 @@ export default function PackagesPage({ onAddToCart }: { onAddToCart: (test: Test
 
       <HeroSection />
 
-      <div style={{ maxWidth: 1700, margin: '0 auto' }} className="page-section" >
+      <div className="page-section">
+        <div className="page-inner">
 
         {/* Category filter pills */}
         <div style={{ display: 'flex', gap: 12, marginBottom: 32, flexWrap: 'wrap' }}>
           {CATEGORIES.map(cat => (
             <button key={cat} onClick={() => setActiveCategory(cat)} style={{
               padding: '10px 22px', borderRadius: 50, fontSize: 14, fontWeight: 500, cursor: 'pointer',
-              border: activeCategory === cat ? 'none' : '1.5px solid #E5E7EB',
-              background: activeCategory === cat ? '#1B1F3B' : '#fff',
-              color: activeCategory === cat ? '#fff' : '#374151',
-              boxShadow: activeCategory === cat ? '0 2px 8px rgba(0,0,0,0.15)' : 'none',
+              border: activeCategory === cat ? '1px solid #6D55CC' : '1px solid #E7E1FF',
+              background: activeCategory === cat ? '#E7E1FF' : 'transparent',
+              color: '#161616',
+              fontFamily: 'Poppins,sans-serif',
             }}>{cat}</button>
           ))}
         </div>
@@ -62,6 +63,7 @@ export default function PackagesPage({ onAddToCart }: { onAddToCart: (test: Test
           ))}
         </div>
 
+        </div>
       </div>
 
       <WhyChooseUs />

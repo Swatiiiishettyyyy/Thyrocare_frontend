@@ -15,6 +15,9 @@ import PackagesPage from './pages/PackagesPage'
 import OrdersPage from './pages/OrdersPage'
 import ReportPage from './pages/ReportPage'
 import TestPage from './pages/TestPage'
+import HealthMetricsPage from './pages/HealthMetricsPage'
+import OrganDetailPage from './pages/OrganDetailPage'
+import TimeSlotPage from './pages/TimeSlotPage'
 import type { CartItem, TestCardProps } from './types'
 
 export default function App() {
@@ -53,6 +56,11 @@ export default function App() {
       <Route path="/analysing-report" element={<AnalysingReportPage />} />
       <Route path="/review-report" element={<ReviewReportPage />} />
       <Route path="/packages" element={<PackagesPage onAddToCart={handleAddToCart} />} />
+      <Route path="/metrics" element={<HealthMetricsPage />} />
+      <Route path="/metrics/:organ" element={<OrganDetailPage />} />
+      <Route path="/timeslot" element={<TimeSlotPage items={cartItems} />} />
     </Routes>
   )
 }
+
+
