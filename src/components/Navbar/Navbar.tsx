@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { useLocation, Link } from 'react-router-dom'
 import type { NavbarProps } from '../../types'
+import nucleotideLogo from '../../assets/figma/Property 1=Tests.png'
+import frame29051 from '../../assets/figma/Frame 29051.png'
 
 const Navbar = React.memo(function Navbar({ links, ctaLabel, onCtaClick }: NavbarProps) {
   const location = useLocation()
@@ -12,8 +14,7 @@ const Navbar = React.memo(function Navbar({ links, ctaLabel, onCtaClick }: Navba
 
         {/* Logo */}
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', flexShrink: 0 }}>
-          <img src="/favicon.svg" alt="Nucleotide" style={{ width: 28, height: 26 }} />
-          <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 16, fontWeight: 700, color: '#101129' }}>Nucleotide</span>
+          <img src={nucleotideLogo} alt="Nucleotide" style={{ width: 250, height: 190, objectFit: 'contain' }} />
         </Link>
 
         {/* Search bar */}
@@ -58,22 +59,9 @@ const Navbar = React.memo(function Navbar({ links, ctaLabel, onCtaClick }: Navba
           })}
         </nav>
 
-        {/* Bell */}
-        <div className="navbar-bell" style={{ position: 'relative', flexShrink: 0 }}>
-          <button aria-label="Notifications" style={{ width: 40, height: 40, borderRadius: '50%', background: '#F9F9F9', border: '1px solid #E7E1FF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-            <svg width="14" height="17" viewBox="0 0 18 22" fill="none">
-              <path d="M7 19C7 20.1 7.9 21 9 21C10.1 21 11 20.1 11 19M2 17V16C2 14.6 2.42 13.3 3.15 12.3C3.88 11.24 4 10.62 4 9C4 6.24 6.24 4 9 4C11.76 4 14 6.24 14 9C14 10.62 14.12 11.24 14.85 12.3C15.58 13.3 16 14.6 16 16V17H2Z" stroke="#374151" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-          </button>
-          <span style={{ position: 'absolute', top: -2, right: -2, width: 16, height: 16, background: '#8B5CF6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins,sans-serif', fontSize: 10, fontWeight: 600, color: '#fff' }}>1</span>
-        </div>
-
-        {/* Cart button */}
-        <button onClick={onCtaClick} style={{ height: 40, borderRadius: 100, padding: '0 18px', background: '#101129', border: 'none', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', flexShrink: 0 }}>
-          <svg width="16" height="14" viewBox="0 0 20 18" fill="none">
-            <path d="M1 1H3.25L4.2 3M4.2 3H19L16 10H6L4.2 3ZM7 15C7 15.55 6.8 16.02 6.41 16.41C6.02 16.8 5.55 17 5 17C4.45 17 3.98 16.8 3.59 16.41C3.2 16.02 3 15.55 3 15C3 14.45 3.2 13.98 3.59 13.59C3.98 13.2 4.45 13 5 13C5.55 13 6.02 13.2 6.41 13.59C6.8 13.98 17 14.45 17 15Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <span className="navbar-cart-label" style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 600, color: '#fff' }}>{ctaLabel}</span>
+        {/* Bell + Cart replaced by Frame 29051 */}
+        <button onClick={onCtaClick} aria-label="Cart and notifications" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+          <img src={frame29051} alt="Cart and notifications" style={{ height: 40, objectFit: 'contain' }} />
         </button>
 
         {/* Hamburger — mobile only */}

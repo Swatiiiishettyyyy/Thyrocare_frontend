@@ -2,14 +2,14 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components'
 
-import heartIcon    from '../assets/figma/Health metrics/Frame 1948760734.svg'
-import kidneyIcon   from '../assets/figma/Health metrics/Frame 1948760736.svg'
-import liverIcon    from '../assets/figma/Health metrics/Frame 1948760738.svg'
-import boneIcon     from '../assets/figma/Health metrics/Frame 1948760740.svg'
-import gutIcon      from '../assets/figma/Health metrics/Frame 1948760739.svg'
-import thyroidIcon  from '../assets/figma/Health metrics/Frame 1948760735.svg'
-import bloodIcon    from '../assets/figma/Health metrics/Frame 1948760737.svg'
-import vitaminsIcon from '../assets/figma/Health metrics/Frame 1948760741.svg'
+import heartIcon    from '../assets/figma/Health metrics/heart.svg'
+import kidneyIcon   from '../assets/figma/Health metrics/kidney.svg'
+import liverIcon    from '../assets/figma/Health metrics/liver.svg'
+import boneIcon     from '../assets/figma/Health metrics/Bone.svg'
+import gutIcon      from '../assets/figma/Health metrics/gut.svg'
+import thyroidIcon  from '../assets/figma/Health metrics/thyroid.svg'
+import bloodIcon    from '../assets/figma/Health metrics/blood.svg'
+import vitaminsIcon from '../assets/figma/Health metrics/vitamins.svg'
 import bodyImg      from '../assets/figma/Health metrics/freepik__use-this-in-midjourney-leonardo-sdxlpromptultra-hi__47708 1.png'
 
 const NAV_LINKS = [
@@ -49,22 +49,15 @@ function OrganCard({ organ, onClick }: { organ: typeof ORGANS[0]; onClick: () =>
       background: '#fff',
       boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)',
       borderRadius: 20,
-      padding: '16px 12px 10px',
+      padding: '20px 16px 14px',
       display: 'flex', flexDirection: 'column', gap: 10,
       cursor: 'pointer',
     }}>
       {/* Row 1: icon + name left, badge right */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {/* Icon with navy gradient bg */}
-          <div style={{
-            width: 44, height: 44, flexShrink: 0, borderRadius: 10,
-            background: 'linear-gradient(90deg, #101129 0%, #2A2C5B 100%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <img src={organ.icon} alt={organ.name} width={26} height={26}
-              style={{ filter: 'brightness(0) invert(1)' }} />
-          </div>
+          {/* Icon — displayed directly, no background wrapper */}
+          <img src={organ.icon} alt={organ.name} width={44} height={44} style={{ flexShrink: 0 }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             <span style={{ fontSize: 16, fontWeight: 400, color: '#161616', fontFamily: 'Poppins, sans-serif', lineHeight: '22px' }}>
               {organ.name}
@@ -164,16 +157,16 @@ export default function HealthMetricsPage() {
         </div>
 
         {/* 3-column layout: left cards | body | right cards */}
-        <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', gap: 20, alignItems: 'center', justifyContent: 'center' }}>
 
           {/* Left column */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
             {leftCol.map(o => <OrganCard key={o.name} organ={o} onClick={() => navigate(`/metrics/${o.name.toLowerCase()}`)} />)}
           </div>
 
-          {/* Body illustration — center */}
-          <div style={{ width: 320, flexShrink: 0, position: 'relative', paddingTop: 40 }}>
-            <img src={bodyImg} alt="Body" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', borderRadius: 16 }} />
+          {/* Body illustration — fixed center, vertically centered */}
+          <div style={{ width: 300, flexShrink: 0, position: 'relative', alignSelf: 'center' }}>
+            <img src={bodyImg} alt="Body" style={{ width: '100%', display: 'block', borderRadius: 16, objectFit: 'contain' }} />
             <div style={{
               position: 'absolute', bottom: 0, left: 0, right: 0, height: 100,
               background: 'linear-gradient(180deg, rgba(233,228,255,0.12) 0%, #EBE7FF 100%)',
@@ -182,7 +175,7 @@ export default function HealthMetricsPage() {
           </div>
 
           {/* Right column */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
             {rightCol.map(o => <OrganCard key={o.name} organ={o} onClick={() => navigate(`/metrics/${o.name.toLowerCase()}`)} />)}
           </div>
 

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import footerLogo from '../../assets/figma/WhatsApp Image 2026-04-06 at 7.56.48 AM.jpeg'
 
 const COLUMNS = [
   {
@@ -30,8 +31,7 @@ export function Footer() {
         <div style={{ minWidth: 260, flexShrink: 0 }}>
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <img src="/favicon.svg" alt="Nucleotide" style={{ width: 36, height: 34 }} />
-            <span style={{ fontSize: 18, fontWeight: 700, color: '#fff' }}>Nucleotide</span>
+            <img src={footerLogo} alt="Nucleotide" style={{ width: 140, height: 48, objectFit: 'contain' }} />
           </div>
           {/* Tagline */}
           <p style={{ fontSize: 13, color: '#9CA3AF', lineHeight: 1.7, margin: '0 0 24px', maxWidth: 240 }}>
