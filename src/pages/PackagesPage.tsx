@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar, Footer, HeroSection } from '../components'
 import { WhyChooseUs } from '../components/WhyChooseUs'
 import { HowItWorks } from '../components/HowItWorks'
 import { TestCard } from '../components/TestCard'
 import type { TestCardProps } from '../types'
+import { fetchProducts, toTestCard, filterByCategory } from '../api/products'
 
 const NAV_LINKS = [
   { label: 'Tests', href: '/' },
@@ -14,29 +15,47 @@ const NAV_LINKS = [
   { label: 'Orders', href: '/orders' },
 ]
 
-const CATEGORIES = ['Popular Package', 'Organ Health', "Men's Health", "Women's Health"]
-
-const ALL_PACKAGES: TestCardProps[] = [
-  { name: 'Full Body Checkup – Basic', description: 'Essential blood tests to assess overall health and organ function', price: '1499', originalPrice: '2499', offerPercent: '40% OFF', tests: 45, fasting: 'Fasting Required', turnaround: 'within 24 hours', type: 'Package' },
-  { name: 'Heart Health Package', description: 'Monitors cholesterol, lipid levels and cardiac risk markers', price: '999', originalPrice: '1799', offerPercent: '44% OFF', tests: 18, fasting: 'Fasting Required', turnaround: 'within 24 hours', type: 'Package' },
-  { name: 'Diabetes Care Package', description: 'Comprehensive diabetes monitoring with sugar and organ markers', price: '899', originalPrice: '1599', offerPercent: '44% OFF', tests: 22, fasting: 'No Fasting Required', turnaround: 'within 24 hours', type: 'Package' },
-  { name: 'Full Body Checkup – Basic', description: 'Essential blood tests to assess overall health and organ function', price: '1499', originalPrice: '2499', offerPercent: '40% OFF', tests: 45, fasting: 'Fasting Required', turnaround: 'within 24 hours', type: 'Package' },
-  { name: 'Heart Health Package', description: 'Monitors cholesterol, lipid levels and cardiac risk markers', price: '999', originalPrice: '1799', offerPercent: '44% OFF', tests: 18, fasting: 'Fasting Required', turnaround: 'within 24 hours', type: 'Package' },
-  { name: 'Diabetes Care Package', description: 'Comprehensive diabetes monitoring with sugar and organ markers', price: '899', originalPrice: '1599', offerPercent: '44% OFF', tests: 22, fasting: 'No Fasting Required', turnaround: 'within 24 hours', type: 'Package' },
+// Map display label → API category value
+const CATEGORIES: { label: string; category: string }[] = [
+  { label: 'Popular Package',  category: 'Popular Packages' },
+  { label: 'Organ Health',     category: 'Organ Health'     },
+  { label: "Men's Health",     category: "Men's Health"     },
+  { label: "Women's Health",   category: "Women's Health"   },
+  { label: 'Essential Tests',  category: 'Essential Tests'  },
 ]
 
-export default function PackagesPage({ onAddToCart }: { onAddToCart: (test: TestCardProps) => void }) {
+export default function PackagesPage({ cartCount }: { cartCount?: number } = {}) {
   const navigate = useNavigate()
-  const [activeCategory, setActiveCategory] = useState('Popular Package')
+  const [activeCategory, setActiveCategory] = useState<string>('Popular Packages')
+  const [loading, setLoading] = useState(true)
+  const [rawProducts, setRawProducts] = useState<import('../api/products').ThyrocareProduct[]>([])
+  const [visibleCount, setVisibleCount] = useState(6)
 
-  const handleAddToCart = useCallback((pkg: TestCardProps) => {
-    onAddToCart(pkg)
-    navigate('/cart')
-  }, [onAddToCart, navigate])
+  const LOAD_STEP = 6
+
+  useEffect(() => {
+    fetchProducts()
+      .then(products => {
+        setRawProducts(products)
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    setVisibleCount(6)
+  }, [activeCategory])
+
+  const filtered = useMemo(
+    () => filterByCategory(rawProducts, activeCategory).map(toTestCard),
+    [rawProducts, activeCategory],
+  )
+  const visible = filtered.slice(0, visibleCount)
+  const hasMore = visibleCount < filtered.length
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Poppins', sans-serif" }}>
-      <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" onCtaClick={() => navigate('/cart')} />
+      <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" cartCount={cartCount} onCtaClick={() => navigate('/cart')} />
 
       <HeroSection />
 
@@ -44,24 +63,52 @@ export default function PackagesPage({ onAddToCart }: { onAddToCart: (test: Test
         <div className="page-inner">
 
         {/* Category filter pills */}
-        <div style={{ display: 'flex', gap: 12, marginBottom: 32, flexWrap: 'wrap' }}>
-          {CATEGORIES.map(cat => (
-            <button key={cat} onClick={() => setActiveCategory(cat)} style={{
-              padding: '10px 22px', borderRadius: 50, fontSize: 14, fontWeight: 500, cursor: 'pointer',
-              border: activeCategory === cat ? '1px solid #6D55CC' : '1px solid #E7E1FF',
-              background: activeCategory === cat ? '#E7E1FF' : 'transparent',
-              color: '#161616',
-              fontFamily: 'Poppins,sans-serif',
-            }}>{cat}</button>
+        <div className="packages-filter-pills">
+          {CATEGORIES.map(({ label, category }) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => setActiveCategory(category)}
+              className={`condition-pill-btn${activeCategory === category ? ' condition-pill-btn--active' : ''}`}
+            >
+              {label}
+            </button>
           ))}
         </div>
 
         {/* Package cards grid */}
-        <div className="grid-3">
-          {ALL_PACKAGES.map((pkg, i) => (
-            <TestCard key={i} {...pkg} onAddToCart={() => handleAddToCart(pkg)} />
-          ))}
-        </div>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 40, color: '#828282', fontFamily: 'Poppins,sans-serif' }}>Loading products...</div>
+        ) : (
+          <>
+            <div className="grid-3">
+              {visible.map((pkg, i) => (
+                <TestCard key={`${activeCategory}-${pkg.thyrocareProductId ?? pkg.name}-${i}`} {...pkg} />
+              ))}
+            </div>
+            {hasMore && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 22 }}>
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount(v => Math.min(filtered.length, v + LOAD_STEP))}
+                  style={{
+                    padding: '12px 22px',
+                    borderRadius: 999,
+                    border: '1px solid #E7E1FF',
+                    background: '#F9F9F9',
+                    color: '#101129',
+                    fontFamily: 'Poppins, sans-serif',
+                    fontSize: 14,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Load more
+                </button>
+              </div>
+            )}
+          </>
+        )}
 
         </div>
       </div>

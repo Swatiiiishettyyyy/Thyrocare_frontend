@@ -28,7 +28,7 @@ export const DEFAULT_STEPS: StepperStep[] = [
 
 export default function CheckoutStepper({ steps = DEFAULT_STEPS, activeStep }: CheckoutStepperProps) {
   return (
-    <div style={{
+    <div className="checkout-stepper" style={{
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'flex-start',
@@ -40,7 +40,7 @@ export default function CheckoutStepper({ steps = DEFAULT_STEPS, activeStep }: C
         const icon = isCompleted ? completedIcon : isActive ? step.activeIcon : step.inactiveIcon
         return (
           <div key={step.label} style={{ display: 'flex', alignItems: 'flex-start' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 13, width: 75 }}>
+            <div className="checkout-stepper__step" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 13, width: 75 }}>
               <img
                 src={icon}
                 alt={step.label}
@@ -61,7 +61,7 @@ export default function CheckoutStepper({ steps = DEFAULT_STEPS, activeStep }: C
             </div>
 
             {i < steps.length - 1 && (
-              <div style={{
+              <div className="checkout-stepper__connector" style={{
                 width: 80,
                 borderTop: `2px ${isCompleted ? 'solid' : 'dashed'} ${isCompleted ? '#8B5CF6' : '#C4B5FD'}`,
                 marginTop: 30,

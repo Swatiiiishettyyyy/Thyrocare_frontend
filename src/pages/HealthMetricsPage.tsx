@@ -100,7 +100,7 @@ function OrganCard({ organ, onClick }: { organ: typeof ORGANS[0]; onClick: () =>
   )
 }
 
-export default function HealthMetricsPage() {
+export default function HealthMetricsPage({ cartCount }: { cartCount?: number } = {}) {
   const navigate = useNavigate()
   const [activeFilter, setActiveFilter] = useState('All')
 
@@ -109,18 +109,40 @@ export default function HealthMetricsPage() {
   const rightCol = filtered.filter((_, i) => i >= 4)
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(0deg, #E7E1FF 0%, #fff 100%)', fontFamily: 'Poppins, sans-serif' }}>
-      <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" onCtaClick={() => navigate('/cart')} />
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      background: 'linear-gradient(0deg, #E7E1FF 0%, #fff 100%)',
+      fontFamily: 'Poppins, sans-serif',
+    }}>
+      <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" cartCount={cartCount} hideSearchOnMobile onCtaClick={() => navigate('/cart')} />
 
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 40px 60px', boxSizing: 'border-box' }}>
+      {/* Breadcrumb */}
+      <div
+        className="cart-breadcrumb"
+        style={{
+          padding: '14px clamp(16px, 5vw, 56px)',
+          borderBottom: '1px solid #F3F4F6',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}
+      >
+        <span style={{ fontSize: 14, color: '#6B7280', cursor: 'pointer' }} onClick={() => navigate('/')}>Tests</span>
+        <span style={{ fontSize: 14, color: '#6B7280' }}>›</span>
+        <span style={{ fontSize: 14, color: '#111827', fontWeight: 500 }}>Health Metrics</span>
+      </div>
+
+      <div className="metrics-inner" style={{ flex: 1, width: '100%', maxWidth: 1200, margin: '0 auto', padding: '32px 40px 60px', boxSizing: 'border-box' }}>
 
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
+        <div className="metrics-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
           <div>
-            <h1 style={{ fontSize: 28, fontWeight: 500, color: '#161616', margin: '0 0 6px', lineHeight: 1.1 }}>Health Metrics</h1>
+            <h1 className="metrics-title" style={{ fontSize: 28, fontWeight: 500, color: '#161616', margin: '0 0 6px', lineHeight: 1.1 }}>Health Metrics</h1>
             <p style={{ fontSize: 15, color: '#828282', margin: 0, fontFamily: 'Poppins, sans-serif' }}>Track your organ health over time with smart insights.</p>
           </div>
-          <button style={{
+          <button className="metrics-selfBtn" style={{
             display: 'flex', alignItems: 'center', gap: 8,
             padding: '12px 24px', background: '#fff',
             boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)',
@@ -135,7 +157,7 @@ export default function HealthMetricsPage() {
         </div>
 
         {/* Filter tabs */}
-        <div style={{
+        <div className="metrics-filters" style={{
           display: 'flex', flexWrap: 'wrap',
           background: '#fff', boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)',
           borderRadius: 112, outline: '1px solid #E7E1FF', outlineOffset: -1,
@@ -156,16 +178,23 @@ export default function HealthMetricsPage() {
           })}
         </div>
 
-        {/* 3-column layout: left cards | body | right cards */}
-        <div style={{ display: 'flex', gap: 20, alignItems: 'center', justifyContent: 'center' }}>
+        {/* Mobile grid (CSS shows on small screens) */}
+        <div className="metrics-mobile-grid">
+          {filtered.map(o => (
+            <OrganCard key={o.name} organ={o} onClick={() => navigate(`/metrics/${o.name.toLowerCase()}`)} />
+          ))}
+        </div>
+
+        {/* Desktop 3-column layout: left cards | body | right cards */}
+        <div className="metrics-layout" style={{ display: 'flex', gap: 20, alignItems: 'center', justifyContent: 'center' }}>
 
           {/* Left column */}
-          <div style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="metrics-col metrics-col--left" style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
             {leftCol.map(o => <OrganCard key={o.name} organ={o} onClick={() => navigate(`/metrics/${o.name.toLowerCase()}`)} />)}
           </div>
 
           {/* Body illustration — fixed center, vertically centered */}
-          <div style={{ width: 300, flexShrink: 0, position: 'relative', alignSelf: 'center' }}>
+          <div className="metrics-body" style={{ width: 300, flexShrink: 0, position: 'relative', alignSelf: 'center' }}>
             <img src={bodyImg} alt="Body" style={{ width: '100%', display: 'block', borderRadius: 16, objectFit: 'contain' }} />
             <div style={{
               position: 'absolute', bottom: 0, left: 0, right: 0, height: 100,
@@ -175,7 +204,7 @@ export default function HealthMetricsPage() {
           </div>
 
           {/* Right column */}
-          <div style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="metrics-col metrics-col--right" style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
             {rightCol.map(o => <OrganCard key={o.name} organ={o} onClick={() => navigate(`/metrics/${o.name.toLowerCase()}`)} />)}
           </div>
 

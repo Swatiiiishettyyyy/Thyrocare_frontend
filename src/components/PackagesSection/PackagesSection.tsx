@@ -3,7 +3,7 @@ import type { PackagesSectionProps } from '../../types'
 import { TestCard } from '../TestCard'
 import type { TestCardProps } from '../../types'
 
-const PackagesSection = React.memo(function PackagesSection({ heading, subheading, cards }: PackagesSectionProps) {
+const PackagesSection = React.memo(function PackagesSection({ heading, subheading, cards, onViewAll }: PackagesSectionProps) {
   return (
     <section id="packages" className="page-section" style={{
       background: 'linear-gradient(to bottom, #101129 0%, #101129 340px, #ffffff 340px, #ffffff 100%)',
@@ -11,31 +11,27 @@ const PackagesSection = React.memo(function PackagesSection({ heading, subheadin
       marginTop: 40,
     }}>
       <div className="page-inner">
-        {/* Header row: left-aligned title + right "View All" button */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 40 }}>
-          <div style={{ maxWidth: 480 }}>
-            <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: 34, fontWeight: 700, color: '#fff', margin: '0 0 8px', lineHeight: 1.2 }}>
+        <div className="packages-section-header">
+          <div className="packages-section-header__text">
+            <h2 className="packages-section-header__title">
               {heading}
             </h2>
-            <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: 14, fontWeight: 400, color: '#9CA3AF', margin: 0, lineHeight: 1.6 }}>
+            <p className="packages-section-header__sub">
               {subheading}
             </p>
           </div>
-          <button style={{
-            background: '#8B5CF6', color: '#fff', border: 'none',
-            borderRadius: 50, padding: '12px 24px', cursor: 'pointer',
-            fontFamily: "'Poppins', sans-serif", fontSize: 14, fontWeight: 600,
-            whiteSpace: 'nowrap', alignSelf: 'center',
-          }}>
+          <button type="button" className="packages-section-cta" onClick={onViewAll}>
             View All Package
           </button>
         </div>
 
         {/* Cards */}
-        <div className="grid-3">
-          {cards.map((card, idx) => (
+        <div className="grid-3 packages-grid">
+          {(cards ?? []).map((card, idx) => (
             <TestCard
               key={idx}
+              thyrocareProductId={card.thyrocareProductId}
+              maxBeneficiaries={card.maxBeneficiaries}
               name={card.name}
               description={card.description}
               price={card.price}
@@ -43,9 +39,7 @@ const PackagesSection = React.memo(function PackagesSection({ heading, subheadin
               offerPercent={card.offerPercent}
               tests={card.tests}
               fasting={card.fasting}
-              turnaround={card.turnaround}
               type={card.type as TestCardProps['type']}
-              onAddToCart={() => {}}
             />
           ))}
         </div>

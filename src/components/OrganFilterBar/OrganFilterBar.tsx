@@ -1,31 +1,25 @@
 import React from 'react'
 import type { OrganFilterBarProps } from '../../types'
 
-const OrganFilterBar = React.memo(function OrganFilterBar({ organs, onOrganChange }: Omit<OrganFilterBarProps, 'activeOrganId'> & { activeOrganId?: string }) {
+const OrganFilterBar = React.memo(function OrganFilterBar({ organs, activeOrganId, onOrganChange }: OrganFilterBarProps) {
   return (
-    <div style={{ display: 'flex', alignItems: 'stretch', gap: 16, flexWrap: 'nowrap', justifyContent: 'center' }}>
+    <div className="organ-filter-grid">
       {organs.map((organ) => {
+        const isActive = organ.id === activeOrganId
         return (
           <button
             key={organ.id}
+            type="button"
+            aria-label={organ.label}
+            aria-pressed={isActive}
             onClick={() => onOrganChange(organ.id)}
-            style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
-              background: '#fff',
-              border: '1.5px solid #E5E7EB',
-              borderRadius: 16, padding: '24px 20px',
-              cursor: 'pointer', minWidth: 120,
-            }}
+            className={`organ-filter-btn${isActive ? ' shadow-card-purple' : ''}`}
           >
-            {/* Icon image directly, no circle background */}
             {organ.iconSrc
-              ? <img src={organ.iconSrc} alt={organ.label} style={{ width: 120, height: 120, objectFit: 'cover' }} />
-              : <span style={{ fontSize: 28 }}>🫀</span>
+              ? <img className="organ-filter-btn__icon" src={organ.iconSrc} alt="" />
+              : <span className="organ-filter-btn__emoji" aria-hidden>🫀</span>
             }
-            {/* Label centered */}
-            <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: 14, fontWeight: 600, color: '#111827', textAlign: 'center' ,margin:0}}>
-              {organ.label}
-            </span>
+            <span className="organ-filter-btn__label">{organ.label}</span>
           </button>
         )
       })}

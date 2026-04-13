@@ -28,13 +28,13 @@ export function Footer() {
       {/* Main section */}
       <div className="footer-main">
         {/* Brand col */}
-        <div style={{ minWidth: 260, flexShrink: 0 }}>
+        <div className="footer-brand">
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
             <img src={footerLogo} alt="Nucleotide" style={{ width: 140, height: 48, objectFit: 'contain' }} />
           </div>
           {/* Tagline */}
-          <p style={{ fontSize: 13, color: '#9CA3AF', lineHeight: 1.7, margin: '0 0 24px', maxWidth: 240 }}>
+          <p className="footer-brand-tagline" style={{ fontSize: 13, color: '#9CA3AF', lineHeight: 1.7, margin: '0 0 24px' }}>
             Decoding your DNA to reveal disease risk, drug response, vitamin needs, and cognitive insights for a healthier future.
           </p>
           {/* Social icons */}
@@ -82,26 +82,16 @@ export function Footer() {
       <div className="footer-bottom">
         <span style={{ fontSize: 13, color: '#6B7280' }}>© 2024 Nucleotide. All rights reserved.</span>
         {/* Email subscribe */}
-        <div style={{ display: 'flex', gap: 0 }}>
+        <div className="footer-subscribe">
           <input
             type="email"
             placeholder="Enter your email"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            style={{
-              padding: '12px 18px', borderRadius: '8px 0 0 8px',
-              border: '1px solid #2D3160', borderRight: 'none',
-              background: '#1B1F3B', color: '#fff', fontSize: 13,
-              outline: 'none', width: 220,
-              fontFamily: 'Poppins,sans-serif',
-            }}
+            className="footer-subscribe-input"
+            aria-label="Email for newsletter"
           />
-          <button style={{
-            padding: '12px 22px', borderRadius: '0 8px 8px 0',
-            border: 'none', background: '#8B5CF6',
-            color: '#fff', fontSize: 13, fontWeight: 600,
-            cursor: 'pointer', fontFamily: 'Poppins,sans-serif',
-          }}>
+          <button type="button" className="footer-subscribe-btn">
             Subscribe
           </button>
         </div>

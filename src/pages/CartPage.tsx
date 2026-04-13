@@ -1,8 +1,13 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { CartItem } from '../types'
+import type { CartGroup } from '../api/cart'
+import { cartLineKey } from '../utils/cartLineKey'
+import { parseMoney } from '../utils/money'
 import { Navbar } from '../components'
 import { CheckoutStepper, DEFAULT_STEPS } from '../components/CheckoutStepper'
 import { OrderSummaryCard } from '../components/OrderSummaryCard'
+import EmptyCartPage from './EmptyCartPage'
 
 const NAV_LINKS = [
   { label: 'Tests', href: '/' },
@@ -12,23 +17,55 @@ const NAV_LINKS = [
   { label: 'Orders', href: '#' },
 ]
 
-interface CartPageProps {
-  items: CartItem[]
-  onUpdateQty: (name: string, delta: number) => void
+function blockQtyIncrease(item: CartItem, groups: CartGroup[]): boolean {
+  if (item.thyrocareProductId == null) return false
+  const g = groups.find(x => x.thyrocare_product_id === item.thyrocareProductId)
+  if (!g?.group_id || !Array.isArray(g.member_ids) || g.member_ids.length === 0) return false
+  return item.quantity + 1 > g.member_ids.length
 }
 
-export default function CartPage({ items, onUpdateQty }: CartPageProps) {
+interface CartPageProps {
+  cartCount?: number
+  items: CartItem[]
+  groups?: CartGroup[]
+  onUpdateQty: (lineKey: string, delta: number) => void
+  onRemoveLine: (lineKey: string) => void
+  /** Before opening Address: rehydrate from `/cart/view` + active groups; server lines are created on Address Continue. */
+  onSyncCartBeforeAddress?: () => Promise<void>
+}
+
+export default function CartPage({
+  cartCount,
+  items,
+  groups = [],
+  onUpdateQty,
+  onRemoveLine,
+  onSyncCartBeforeAddress,
+}: CartPageProps) {
   const navigate = useNavigate()
-  const subtotal = items.length > 0 ? items.reduce((sum, i) => sum + parseInt(i.originalPrice) * i.quantity, 0) : 599
-  const total = items.length > 0 ? items.reduce((sum, i) => sum + parseInt(i.price) * i.quantity, 0) : 399
+  const [syncing, setSyncing] = useState(false)
+  const [syncError, setSyncError] = useState<string | null>(null)
+  const subtotal = items.length > 0 ? items.reduce((sum, i) => sum + parseMoney(i.originalPrice) * i.quantity, 0) : 0
+  const total = items.length > 0 ? items.reduce((sum, i) => sum + parseMoney(i.price) * i.quantity, 0) : 0
   const savings = subtotal - total
+
+  if (items.length === 0) return <EmptyCartPage />
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Poppins', sans-serif" }}>
-      <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" onCtaClick={() => navigate('/cart')} />
+      <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" cartCount={cartCount} hideSearchOnMobile onCtaClick={() => navigate('/cart')} />
 
       {/* Breadcrumb */}
-      <div style={{ padding: '14px 56px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div
+        className="cart-breadcrumb"
+        style={{
+          padding: '14px clamp(16px, 5vw, 56px)',
+          borderBottom: '1px solid #F3F4F6',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}
+      >
         <span style={{ fontSize: 14, color: '#6B7280', cursor: 'pointer' }} onClick={() => navigate('/')}>Tests</span>
         <span style={{ fontSize: 14, color: '#6B7280' }}>›</span>
         <span style={{ fontSize: 14, color: '#111827', fontWeight: 500 }}>Checkout</span>
@@ -50,8 +87,14 @@ export default function CartPage({ items, onUpdateQty }: CartPageProps) {
               Your cart is empty
             </div>
           ) : (
-            items.map((item) => (
-              <div key={item.name} style={{
+            items.map((item) => {
+              const lineKey = cartLineKey(item)
+              const increaseBlockedByMembers = blockQtyIncrease(item, groups)
+              const increaseBlockedByMax =
+                item.maxBeneficiaries !== undefined && item.quantity >= item.maxBeneficiaries
+              const plusDisabled = increaseBlockedByMembers || increaseBlockedByMax
+              return (
+              <div key={lineKey} className="cart-line" style={{
                 background: '#fff',
                 borderRadius: 20,
                 outline: '1px solid #E7E1FF',
@@ -59,7 +102,7 @@ export default function CartPage({ items, onUpdateQty }: CartPageProps) {
                 padding: '27px 34px',
                 marginBottom: 16,
               }}>
-                {/* Row 1: Name + type badge */}
+                {/* Row 1: Name + type badge + remove */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
                   <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 16, fontWeight: 500, color: '#161616', flex: 1 }}>{item.name}</span>
                   <span style={{
@@ -67,50 +110,126 @@ export default function CartPage({ items, onUpdateQty }: CartPageProps) {
                     background: '#E7E1FF', borderRadius: 122, padding: '4px 14px',
                     outline: '1px solid #E7E1FF', whiteSpace: 'nowrap',
                   }}>{item.type}</span>
+                  <button
+                    type="button"
+                    data-cart-item-id={item.cartItemId != null ? String(item.cartItemId) : undefined}
+                    aria-label={
+                      item.cartItemId != null
+                        ? `Remove line (cart item ${item.cartItemId})`
+                        : 'Remove from cart'
+                    }
+                    onClick={() => onRemoveLine(lineKey)}
+                    style={{
+                      fontFamily: 'Inter,sans-serif', fontSize: 13, color: '#DC2626',
+                      background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px',
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    Remove
+                  </button>
                 </div>
 
                 {/* Divider */}
                 <div style={{ height: 0, outline: '1px solid #E7E1FF', marginBottom: 20 }} />
 
                 {/* Row 2: No of Patients + Price */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+                <div className="cart-line-row2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div className="cart-line-patients" style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
                     <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, fontWeight: 400, color: '#828282' }}>No of Patients</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
-                      <button onClick={() => onUpdateQty(item.name, -1)} style={{
-                        width: 42, height: 42, borderRadius: '50%', border: 'none',
-                        background: 'linear-gradient(90deg, #101129 0%, #2A2C5B 100%)',
-                        color: '#fff', fontSize: 20, cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                      }}>−</button>
+                      <button
+                        onClick={() => onUpdateQty(lineKey, -1)}
+                        disabled={item.quantity <= 1}
+                        title={item.quantity <= 1 ? 'Minimum 1 patient' : undefined}
+                        style={{
+                          width: 42, height: 42, borderRadius: '50%', border: 'none',
+                          background: item.quantity <= 1 ? '#E7E1FF' : 'linear-gradient(90deg, #101129 0%, #2A2C5B 100%)',
+                          color: item.quantity <= 1 ? '#828282' : '#fff', fontSize: 20,
+                          cursor: item.quantity <= 1 ? 'not-allowed' : 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                        }}>−</button>
                       <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 20, fontWeight: 400, color: '#101129', minWidth: 12, textAlign: 'center' }}>{item.quantity}</span>
-                      <button onClick={() => onUpdateQty(item.name, 1)} style={{
-                        width: 42, height: 42, borderRadius: '50%', border: 'none',
-                        background: 'linear-gradient(90deg, #101129 0%, #2A2C5B 100%)',
-                        color: '#fff', fontSize: 20, cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                      }}>+</button>
+                      <button
+                        onClick={() => onUpdateQty(lineKey, 1)}
+                        disabled={plusDisabled}
+                        title={
+                          increaseBlockedByMembers
+                            ? 'Select more patients on the address step'
+                            : item.maxBeneficiaries
+                              ? `Max ${item.maxBeneficiaries} patients`
+                              : undefined
+                        }
+                        style={{
+                          width: 42, height: 42, borderRadius: '50%', border: 'none',
+                          background: plusDisabled
+                            ? '#E7E1FF'
+                            : 'linear-gradient(90deg, #101129 0%, #2A2C5B 100%)',
+                          color: plusDisabled ? '#828282' : '#fff',
+                          fontSize: 20, cursor: plusDisabled ? 'not-allowed' : 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                        }}>+</button>
                     </div>
+                    {item.maxBeneficiaries && (
+                      <span style={{ fontSize: 12, color: '#828282', fontFamily: 'Inter,sans-serif' }}>
+                        Max {item.maxBeneficiaries} patients
+                      </span>
+                    )}
                   </div>
                   {/* Price */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 28, fontWeight: 600, color: '#161616', lineHeight: 1 }}>₹{parseInt(item.price) * item.quantity}</span>
-                    <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 16, fontWeight: 500, color: '#828282', textDecoration: 'line-through' }}>₹{parseInt(item.originalPrice) * item.quantity}</span>
+                    <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 28, fontWeight: 600, color: '#161616', lineHeight: 1 }}>₹{Math.round(parseMoney(item.price) * item.quantity)}</span>
+                    <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 16, fontWeight: 500, color: '#828282', textDecoration: 'line-through' }}>₹{Math.round(parseMoney(item.originalPrice) * item.quantity)}</span>
                   </div>
                 </div>
               </div>
-            ))
+            )})
           )}
         </div>
 
         {/* Order Summary */}
-        <OrderSummaryCard
-          itemCount={items.length}
-          subtotal={subtotal}
-          savings={savings}
-          total={total}
-          onContinue={() => navigate('/address')}
-        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 380 }}>
+          {syncError && (
+            <div
+              role="alert"
+              style={{
+                fontSize: 13,
+                color: '#B91C1C',
+                fontFamily: 'Inter, sans-serif',
+                padding: '10px 12px',
+                background: '#FEF2F2',
+                borderRadius: 10,
+                border: '1px solid #FECACA',
+              }}
+            >
+              {syncError}
+            </div>
+          )}
+          <OrderSummaryCard
+            itemCount={items.length}
+            subtotal={subtotal}
+            savings={savings}
+            total={total}
+            onContinue={async () => {
+              if (items.some(i => !i.thyrocareProductId) || syncing) return
+              setSyncError(null)
+              if (onSyncCartBeforeAddress) {
+                setSyncing(true)
+                try {
+                  await onSyncCartBeforeAddress()
+                  navigate('/address')
+                } catch {
+                  setSyncError('Could not sync your cart with the server. Please try again.')
+                } finally {
+                  setSyncing(false)
+                }
+              } else {
+                navigate('/address')
+              }
+            }}
+            continueDisabled={syncing || items.some(i => !i.thyrocareProductId)}
+            continueLabel={syncing ? 'Syncing…' : 'Continue'}
+          />
+        </div>
 
       </div>
     </div>

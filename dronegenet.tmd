@@ -1,0 +1,67 @@
+# Orders: data sources & tracking (Nucleotide app)
+
+This note answers whether **Order Details** is fully dynamic from Thyrocare/order APIs, how it relates to **order listing**, and whether the **Order Tracking** column matches **order status**.
+
+## 1. Order listing (`OrdersPage`)
+
+- **API:** `GET /orders/list` via `fetchOrders()` in `src/api/orders.ts`.
+- **UI:** Each row shows `order_number`, `order_status` (mapped to labels like “In Progress”), member names, product names, `scheduled_date` from the first line’s `member_address_map[0]` (or falls back to `order_date`), and `total_amount`.
+- **Navigation:** Tapping a row goes to `/order-details` with `state: { order }` — the **same `Order` object** from the list response is the primary payload on the detail page (no second fetch of the full order for the shell).
+
+## 2. Order details (`OrderDetailsPage`)
+
+### What is driven by the **list / passed `Order`** (not Thyrocare detail alone)
+
+Most of the screen reads from `order` (from listing / route state):
+
+- Header: **order number**, **product names**, **status pill** (`statusLabel(order.order_status)`), members and phone from `member_address_map`.
+- **Collection address** from `member_address_map[0].address`.
+- **Patient Record**: members, tests, per-line `order_status` for “Complete” vs “In Analysis”, report button gating.
+- **Billing & Payment Summary**: payment fields, line items, subtotal, discount, total — all from `order`.
+
+So the detail page is **not** “100% from the Thyrocare order-details endpoint”; it is **list-shaped order data plus optional enrichment**.
+
+### What is driven by **Thyrocare order details**
+
+- **API:** `GET /thyrocare/orders/{thyrocare_order_id}/order-details` via `fetchOrderByThyrocareId()` (only if `initialOrder.thyrocare_order_id` is present).
+- **Used for:**
+  - **Appointment date:** prefers `thyrocareDetails.appointment_date`, then `patients[0].appointment_date`, else `member_address_map[0].scheduled_date`.
+  - **Order Tracking timeline:** if `thyrocareDetails.status_history` is a non-empty array, the UI builds steps from that history (labels/timestamps from `status` / `label` / `description` and `timestamp`).
+  - **Patient / report matching:** tries to align `thyrocareDetails.patients` with members (by name) for `lead_id` / `id` used by `downloadPatientReport`.
+
+### Fields loaded but not shown in the UI
+
+- `liveStatus` (`current_status_raw` fallback `order_status`) is computed in code but the **header badge still uses `order.order_status` only** — so if Thyrocare has a newer status than the list payload, the pill may **not** reflect it until the list is refreshed or the code is wired to `liveStatus`.
+- `phlebo` from Thyrocare is read but **not rendered** in the current component.
+
+## 3. Is “Order Tracking” consistent with order status?
+
+**Partially — with important caveats.**
+
+### When `status_history` exists (Thyrocare)
+
+- The UI maps each history entry to a step and sets **`done: true` for every step** in that list.
+- That means **all displayed milestones appear completed**, regardless of the current `order.order_status`. Consistency with status depends entirely on **what the backend puts in `status_history`** (e.g. if it only lists completed events, the UI will look “all green”; it does not infer “current” vs “future” steps from `CONFIRMED` / `COMPLETED`).
+
+### When `status_history` is missing or empty (fallback)
+
+- A **fixed five-step** timeline is used: Order Placed → Sample Collection → Lab Received → Processing → Report Ready.
+- Logic is **heuristic:**
+  - “Order Placed” uses `order.order_date`.
+  - “Sample Collection” shows a time if any `appointmentDate` exists.
+  - Last three steps are marked done only when `order.order_status === 'COMPLETED'`.
+- So for **`CONFIRMED`** orders without history, intermediate lab/processing steps may show as **not done** even if real-world progress differs — this is **not** granular Thyrocare tracking.
+
+## 4. Short answers
+
+| Question | Answer |
+|----------|--------|
+| Is all detail data from the order-details API? | **No.** Most fields come from the **`Order` from `/orders/list`** (passed via route state). Thyrocare **`/thyrocare/orders/.../order-details`** enriches appointment, tracking (when history exists), and patient/report IDs. |
+| Does listing use the Thyrocare module? | Listing hits **`/orders/list`** (app orders API). Thyrocare-specific paths are used on the detail page for **order-details** and **reports**. |
+| Is the right-hand tracking aligned with status? | **Only loosely.** With **`status_history`**, every shown step is rendered as completed. Without it, tracking is a **simple fallback** tied mainly to **appointment presence** and **`COMPLETED`** for the last three steps. The **status badge** uses **list `order_status`**, not necessarily Thyrocare `current_status_raw`. |
+
+## 5. Code references
+
+- Listing: `src/pages/OrdersPage.tsx` + `fetchOrders` in `src/api/orders.ts`.
+- Details + tracking construction: `src/pages/OrderDetailsPage.tsx` (effect: `fetchOrderByThyrocareId`; `trackingSteps` around the `status_history` branch vs fallback).
+- Thyrocare detail types: `ThyrocareOrderDetails` in `src/api/orders.ts`.

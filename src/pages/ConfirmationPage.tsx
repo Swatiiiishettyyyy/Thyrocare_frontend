@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { Navbar } from '../components'
 
 const NAV_LINKS = [
@@ -11,7 +11,15 @@ const NAV_LINKS = [
 
 export default function ConfirmationPage() {
   const navigate = useNavigate()
-  const orderId = '#NUC-' + Math.floor(1000000 + Math.random() * 9000000)
+  const location = useLocation()
+  const state = location.state as { orderId?: number | null; slotDay?: string; slotTime?: string; itemNames?: string[]; address?: string | null; amountPaid?: number } | null
+
+  const orderId = state?.orderId ? `#NUC-${state.orderId}` : null
+  const slotDay = state?.slotDay || null
+  const slotTime = state?.slotTime || null
+  const itemNames = state?.itemNames ?? []
+  const address = state?.address || null
+  const amountPaid = state?.amountPaid ?? null
 
   return (
     <div style={{
@@ -129,7 +137,7 @@ export default function ConfirmationPage() {
                   Order ID
                 </span>
                 <span style={{ color: '#161616', fontSize: 'clamp(16px, 1.5vw, 24px)', fontWeight: 500, lineHeight: 1.125 }}>
-                  {orderId}
+                  {orderId ?? '—'}
                 </span>
               </div>
               {/* Share icon */}
@@ -147,24 +155,53 @@ export default function ConfirmationPage() {
             {/* Divider */}
             <div style={{ height: 1, background: '#E7E1FF' }} />
 
-            {/* Appointment + Samples */}
+            {/* Products booked */}
+            {itemNames.length > 0 && (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ color: '#828282', fontSize: 'clamp(13px, 1.1vw, 18px)', fontWeight: 400 }}>Tests / Packages</span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {itemNames.map((name, i) => (
+                      <span key={i} style={{
+                        background: '#F5F3FF', borderRadius: 122, padding: '3px 12px',
+                        fontSize: 'clamp(12px, 1vw, 16px)', color: '#8B5CF6',
+                        fontFamily: 'Inter, sans-serif', border: '1px solid #E7E1FF',
+                      }}>{name}</span>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ height: 1, background: '#E7E1FF' }} />
+              </>
+            )}
+
+            {/* Appointment + Address + Amount */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 140 }}>
                 <span style={{ color: '#828282', fontSize: 'clamp(13px, 1.1vw, 20px)', fontWeight: 400, lineHeight: 1.45 }}>
                   Appointment
                 </span>
                 <span style={{ color: '#161616', fontSize: 'clamp(13px, 1.1vw, 20px)', fontWeight: 500, lineHeight: 1.3 }}>
-                  Sunday, 8th Feb<br />7:00 AM - 8:00 AM
+                  {slotDay || '—'}<br />{slotTime || ''}
                 </span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 140 }}>
                 <span style={{ color: '#828282', fontSize: 'clamp(13px, 1.1vw, 20px)', fontWeight: 400, lineHeight: 1.45 }}>
-                  Samples
+                  Collection
                 </span>
                 <span style={{ color: '#161616', fontSize: 'clamp(13px, 1.1vw, 20px)', fontWeight: 500, lineHeight: 1.3 }}>
-                  Home Collection
+                  {address || 'Home Collection'}
                 </span>
               </div>
+              {amountPaid !== null && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 120 }}>
+                  <span style={{ color: '#828282', fontSize: 'clamp(13px, 1.1vw, 20px)', fontWeight: 400, lineHeight: 1.45 }}>
+                    Amount Paid
+                  </span>
+                  <span style={{ color: '#161616', fontSize: 'clamp(13px, 1.1vw, 20px)', fontWeight: 500, lineHeight: 1.3 }}>
+                    ₹{amountPaid}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 

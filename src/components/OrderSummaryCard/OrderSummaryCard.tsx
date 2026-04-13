@@ -4,8 +4,9 @@ interface OrderSummaryCardProps {
   savings: number
   total: number
   onBack?: () => void
-  onContinue: () => void
+  onContinue: () => void | Promise<void>
   continueLabel?: string
+  continueDisabled?: boolean
 }
 
 export default function OrderSummaryCard({
@@ -16,6 +17,7 @@ export default function OrderSummaryCard({
   onBack,
   onContinue,
   continueLabel = 'Continue',
+  continueDisabled = false,
 }: OrderSummaryCardProps) {
   return (
     <div style={{
@@ -54,7 +56,7 @@ export default function OrderSummaryCard({
                 You Save
               </span>
               <span style={{ fontSize: 18, fontWeight: 500, color: '#41C9B3', fontFamily: 'Poppins, sans-serif', lineHeight: '26px' }}>
-                -₹{savings}
+                {savings > 0 ? `−₹${savings}` : '₹0'}
               </span>
             </div>
 
@@ -108,20 +110,20 @@ export default function OrderSummaryCard({
           </button>
         )}
 
-        <button onClick={onContinue} style={{
+        <button onClick={onContinue} disabled={continueDisabled} style={{
           height: 58,
           borderRadius: 8,
           border: 'none',
-          background: '#8B5CF6',
+          background: continueDisabled ? '#E7E1FF' : '#8B5CF6',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           gap: 10,
-          cursor: 'pointer',
+          cursor: continueDisabled ? 'not-allowed' : 'pointer',
           fontFamily: 'Poppins, sans-serif',
           fontSize: 18,
           fontWeight: 500,
-          color: 'white',
+          color: continueDisabled ? '#828282' : 'white',
           lineHeight: '26px',
         }}>
           {continueLabel} ›
@@ -130,7 +132,9 @@ export default function OrderSummaryCard({
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}>
           <span style={{ fontSize: 18 }}>✅</span>
           <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 18, fontWeight: 320, color: '#828282', lineHeight: '27px' }}>
-            You are saving ₹{savings} on this order
+            {savings > 0
+              ? `You are saving ₹${savings} on this order`
+              : 'No discount applied to this order'}
           </span>
         </div>
       </div>

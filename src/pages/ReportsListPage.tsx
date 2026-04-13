@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Navbar } from '../components'
+import emptyReportIllustration from '../assets/figma/empty-report/fi_4751509.svg'
 
 const NAV_LINKS = [
   { label: 'Tests', href: '/' },
@@ -10,12 +11,7 @@ const NAV_LINKS = [
   { label: 'Orders', href: '/orders' },
 ]
 
-const REPORTS = [
-  { initials: 'AS', name: 'Full Body Checkup – Basic', patient: 'Ananya Sharma -Self', status: 'Normal Range', statusColor: '#059669', statusBg: '#D1FAE5', statusIcon: '✅', date: 'Feb 7, 2026', type: 'Single Test', external: false },
-  { initials: 'AS', name: 'Full Body Checkup – Basic', patient: 'Ananya Sharma -Self', status: 'Needs Attention', statusColor: '#DC2626', statusBg: '#FEE2E2', statusIcon: '❗', date: 'Feb 7, 2026', type: 'Package', external: false },
-  { initials: 'AS', name: 'Complete Blood Count (CBC) with ESR', patient: 'Ananya Sharma -Self', status: 'Normal Range', statusColor: '#059669', statusBg: '#D1FAE5', statusIcon: '✅', date: 'Feb 7, 2026', type: 'Single Test', external: true },
-  { initials: 'AS', name: 'Complete Blood Count (CBC) with ESR', patient: 'Ananya Sharma -Self', status: 'Needs Attention', statusColor: '#DC2626', statusBg: '#FEE2E2', statusIcon: '❗', date: 'Feb 7, 2026', type: 'Single Test', external: false },
-]
+const REPORTS: any[] = []
 
 export default function ReportsListPage() {
   const navigate = useNavigate()
@@ -25,43 +21,58 @@ export default function ReportsListPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Poppins', sans-serif" }}>
-      <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" onCtaClick={() => navigate('/cart')} />
+      <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" hideSearchOnMobile onCtaClick={() => navigate('/cart')} />
 
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 40px' }}>
+      {/* Breadcrumb */}
+      <div
+        className="cart-breadcrumb"
+        style={{
+          padding: '14px clamp(16px, 5vw, 56px)',
+          borderBottom: '1px solid #F3F4F6',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}
+      >
+        <span style={{ fontSize: 14, color: '#6B7280', cursor: 'pointer' }} onClick={() => navigate('/')}>Tests</span>
+        <span style={{ fontSize: 14, color: '#6B7280' }}>›</span>
+        <span style={{ fontSize: 14, color: '#111827', fontWeight: 500 }}>Reports</span>
+      </div>
+
+      <div className="reports-list-inner">
 
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
+        <div className="reports-header-row">
           <div>
-            <h1 style={{ fontSize: 32, fontWeight: 500, color: '#111827', margin: '0 0 6px' }}>My Reports</h1>
+            <h1 className="reports-page-title">My Reports</h1>
             <p style={{ fontSize: 15, color: '#9CA3AF', margin: 0 }}>View, track, and understand your health data</p>
           </div>
-          <button onClick={() => navigate('/upload-report')} style={{ background: '#7C5CFC', color: '#fff', border: 'none', borderRadius: 10, padding: '11px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 13 }}>
-            📄 Upload Report
-          </button>
         </div>
 
         {/* Tabs + Filter row */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          {/* Tab group — outlined capsule container */}
-          <div style={{ display: 'flex', border: '1.5px solid #E5E7EB', borderRadius: 100, padding: '4px 6px', gap: 2, background: '#F9F9F9' }}>
-            {tabs.map(t => (
-              <button key={t} onClick={() => setActiveTab(t)} style={{
-                padding: '8px 22px', borderRadius: 100, fontSize: 14, fontWeight: activeTab === t ? 500 : 400,
-                cursor: 'pointer', border: 'none',
-                background: activeTab === t ? '#fff' : 'transparent',
-                color: activeTab === t ? '#7C5CFC' : '#6B7280',
-                boxShadow: activeTab === t ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
-                transition: 'all 0.15s ease',
-              }}>{t}</button>
-            ))}
+        <div className="reports-toolbar">
+          <div className="reports-tabs-scroller">
+            <div className="reports-tab-group" role="tablist" aria-label="Report type">
+              {tabs.map(t => (
+                <button
+                  key={t}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === t}
+                  onClick={() => setActiveTab(t)}
+                  className={`reports-tab-btn${activeTab === t ? ' reports-tab-btn--active' : ''}`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
           </div>
-          {/* Filter + Sorting */}
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button style={{ padding: '10px 20px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 400, cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div className="reports-filter-group">
+            <button type="button" className="reports-filter-btn">
               Filter
               <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
-            <button style={{ padding: '10px 20px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 400, cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button type="button" className="reports-filter-btn">
               Sorting
               <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
@@ -70,23 +81,16 @@ export default function ReportsListPage() {
 
         {/* Report list or empty state */}
         {REPORTS.length === 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 20px', gap: 40 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', gap: 24 }}>
             {/* Illustration */}
-            <div style={{ position: 'relative', width: 200, height: 195 }}>
-              <div style={{
-                width: 200, height: 195, borderRadius: '50%',
-                background: 'linear-gradient(180deg, #E7E1FF 0%, #fff 100%)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <svg width="80" height="80" viewBox="0 0 100 100" fill="none">
-                  <rect x="15" y="10" width="70" height="80" rx="8" fill="#101129"/>
-                  <rect x="25" y="25" width="50" height="6" rx="3" fill="#E7E1FF"/>
-                  <rect x="25" y="37" width="50" height="6" rx="3" fill="#E7E1FF"/>
-                  <rect x="25" y="49" width="35" height="6" rx="3" fill="#E7E1FF"/>
-                  <circle cx="72" cy="68" r="14" fill="#8B5CF6"/>
-                  <path d="M66 68l4 4 8-8" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
+            <div style={{
+              width: 200, height: 200,
+              background: 'linear-gradient(180deg, #E7E1FF 0%, #fff 100%)',
+              borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <img src={emptyReportIllustration} alt="No reports" style={{ width: 80, height: 80 }} />
             </div>
             {/* Text */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, maxWidth: 440, textAlign: 'center' }}>
@@ -96,16 +100,17 @@ export default function ReportsListPage() {
               </p>
             </div>
             {/* CTAs */}
-            <div style={{ display: 'flex', gap: 14, width: '100%', maxWidth: 440 }}>
-              <button onClick={() => navigate('/')} style={{
-                flex: 1, height: 52, background: '#8B5CF6', color: '#fff', border: 'none',
+            <div className="reports-empty-ctas" style={{ display: 'flex', gap: 14, width: '100%', maxWidth: 440 }}>
+              <button className="reports-empty-cta" onClick={() => navigate('/')} style={{
+                flex: 1, height: 56, background: '#8B5CF6', color: '#fff', border: 'none',
                 borderRadius: 10, fontFamily: 'Poppins,sans-serif', fontSize: 15, fontWeight: 500,
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                padding: '0 16px',
               }}>
                 Browse Tests
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M6 2l4 4-4 4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
-              <button onClick={() => navigate('/upload-report')} style={{
+              <button className="reports-empty-cta" onClick={() => navigate('/upload-report')} style={{
                 flex: 1, height: 52, background: '#fff', color: '#101129',
                 border: '1.5px solid #8B5CF6', borderRadius: 8,
                 fontFamily: 'Poppins,sans-serif', fontSize: 15, fontWeight: 500,

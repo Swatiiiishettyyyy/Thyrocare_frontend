@@ -1,25 +1,51 @@
-import React from 'react'
+import React, { useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { TestCardProps } from '../../types'
 import cartImg from '../../assets/figma/cart.png'
-import fileIcon from '../../assets/figma/file.svg'
 import iconsIcon from '../../assets/figma/icons.svg'
 
 const TestCard = React.memo(function TestCard({
   name, description, price, originalPrice, offerPercent,
-  tests, fasting, turnaround, type, onAddToCart,
+  tests, fasting, type,
+  thyrocareProductId, maxBeneficiaries,
 }: TestCardProps) {
+  const navigate = useNavigate()
+
+  const goToDetail = useCallback(() => {
+    const id = thyrocareProductId ?? encodeURIComponent(name)
+    navigate(`/test/${id}`, {
+      state: {
+        test: {
+          name,
+          description,
+          price,
+          originalPrice,
+          offerPercent,
+          tests,
+          fasting,
+          type,
+          thyrocareProductId,
+          maxBeneficiaries,
+        },
+      },
+    })
+  }, [navigate, name, description, price, originalPrice, offerPercent, tests, fasting, type, thyrocareProductId, maxBeneficiaries])
+
   return (
-    <article style={{
-      background: '#FFFFFF',
-      borderRadius: 20,
-      border: '1px solid #E7E1FF',
-      padding: 10,
-      display: 'flex',
-      flexDirection: 'column',
-      boxSizing: 'border-box',
-      height: '100%',
-      minHeight: 0,
-    }}>
+    <article
+      onClick={goToDetail}
+      style={{
+        background: '#FFFFFF',
+        borderRadius: 20,
+        border: '1px solid #E7E1FF',
+        padding: 10,
+        display: 'flex',
+        flexDirection: 'column',
+        boxSizing: 'border-box',
+        height: '100%',
+        minHeight: 0,
+        cursor: 'pointer',
+      }}>
       <div style={{
         background: 'linear-gradient(0deg, #E7E1FF 0%, #FFFFFF 100%)',
         borderRadius: 12,
@@ -28,7 +54,6 @@ const TestCard = React.memo(function TestCard({
         flex: 1,
         overflow: 'hidden',
       }}>
-        {/* Badge row — flush corners */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <span style={{
             background: 'linear-gradient(131deg, #101129 0%, #2A2C5B 100%)',
@@ -61,7 +86,6 @@ const TestCard = React.memo(function TestCard({
           </span>
         </div>
 
-        {/* Card content — less top/bottom, more left/right */}
         <div style={{ padding: '20px 20px 20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
           <h3 style={{
             fontFamily: 'Poppins,sans-serif', fontSize: 19, fontWeight: 500,
@@ -78,42 +102,26 @@ const TestCard = React.memo(function TestCard({
             {description}
           </p>
 
-          {/* Meta boxes */}
-          <div style={{ display: 'flex', gap: 10 }}>
-            <div style={{
-              flex: 1, minWidth: 0, background: '#fff', borderRadius: 10,
-              boxShadow: '0px 4px 24px rgba(136,107,249,0.12)',
-              padding: '10px 12px', display: 'flex', alignItems: 'flex-start', gap: 8,
-            }}>
-              {/* file.svg is 24×24 viewBox — render at 22px */}
-              <img src={fileIcon} alt="" width={22} height={22} style={{ display: 'block', flexShrink: 0, marginTop: 2 }} />
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 11, color: '#828282', lineHeight: 1.4, whiteSpace: 'nowrap' }}>Report Time:</div>
-                <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 12, color: '#161616', fontWeight: 600, lineHeight: 1.4 }}>{turnaround}</div>
-              </div>
-            </div>
-            <div style={{
-              flex: 1, minWidth: 0, background: '#fff', borderRadius: 10,
-              boxShadow: '0px 4px 24px rgba(136,107,249,0.12)',
-              padding: '10px 12px', display: 'flex', alignItems: 'flex-start', gap: 8,
-            }}>
-              {/* parameters icon from icons.svg */}
-              <img src={iconsIcon} alt="" width={22} height={22} style={{ display: 'block', flexShrink: 0, marginTop: 2 }} />
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 11, color: '#828282', lineHeight: 1.4, whiteSpace: 'nowrap' }}>Parameters</div>
-                <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 12, color: '#161616', fontWeight: 600, lineHeight: 1.4 }}>{tests}</div>
+          <div style={{
+            background: '#fff', borderRadius: 10,
+            boxShadow: '0px 4px 24px rgba(136,107,249,0.12)',
+            padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10,
+          }}>
+            <img src={iconsIcon} alt="" width={22} height={22} style={{ display: 'block', flexShrink: 0 }} />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 11, color: '#828282', lineHeight: 1.4 }}>Parameters</div>
+              <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 14, color: '#161616', fontWeight: 600, lineHeight: 1.4 }}>
+                {tests} {tests === 1 ? 'parameter' : 'parameters'}
               </div>
             </div>
           </div>
 
-          {/* Dashed divider */}
           <div style={{ margin: '20px 0 20px' }}>
             <svg width="100%" height="1" style={{ display: 'block' }}>
               <line x1="0" y1="0" x2="100%" y2="0" stroke="#8B5CF6" strokeWidth="1.5" strokeDasharray="5 5" />
             </svg>
           </div>
 
-          {/* Price + Button */}
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, flexWrap: 'nowrap' }}>
             <div>
               <div style={{ fontFamily: 'Poppins,sans-serif', fontSize: 24, fontWeight: 500, color: '#161616', lineHeight: 1 }}>
@@ -126,28 +134,34 @@ const TestCard = React.memo(function TestCard({
                 }}>
                   ₹{originalPrice}
                 </span>
-                <span style={{
-                  fontFamily: 'Poppins,sans-serif', fontSize: 11, fontWeight: 600,
-                  color: '#41C9B3', background: '#E6F6F3',
-                  border: '0.5px solid #41C9B3',
-                  borderRadius: 6, padding: '2px 7px',
-                  display: 'inline-flex', alignItems: 'center',
-                  whiteSpace: 'nowrap', flexShrink: 0,
-                }}>
-                  {offerPercent}
-                </span>
+                {offerPercent ? (
+                  <span style={{
+                    fontFamily: 'Poppins,sans-serif', fontSize: 11, fontWeight: 600,
+                    color: '#8B5CF6', background: '#E7E1FF',
+                    border: '0.5px solid #8B5CF6',
+                    borderRadius: 6, padding: '2px 7px',
+                    display: 'inline-flex', alignItems: 'center',
+                    whiteSpace: 'nowrap', flexShrink: 0,
+                  }}>
+                    {offerPercent}
+                  </span>
+                ) : null}
               </div>
             </div>
-            <button onClick={onAddToCart} style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              background: '#8B5CF6', color: '#fff', border: 'none',
-              borderRadius: 10, height: 48, padding: '0 24px',
-              cursor: 'pointer',
-              fontFamily: 'Poppins,sans-serif', fontSize: 14, fontWeight: 600,
-              whiteSpace: 'nowrap', flexShrink: 0,
-            }}>
+            <button
+              type="button"
+              onClick={e => { e.stopPropagation(); goToDetail() }}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                background: '#8B5CF6', color: '#fff', border: 'none',
+                borderRadius: 10, height: 48, padding: '0 20px',
+                cursor: 'pointer',
+                fontFamily: 'Poppins,sans-serif', fontSize: 14, fontWeight: 600,
+                whiteSpace: 'nowrap', flexShrink: 0,
+              }}
+            >
               <img src={cartImg} alt="" style={{ width: 15, height: 14, objectFit: 'contain' }} />
-              Add to Cart
+              Details
             </button>
           </div>
         </div>

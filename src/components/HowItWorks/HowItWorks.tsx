@@ -29,7 +29,7 @@ export default function HowItWorks() {
         </div>
 
         {/* Steps — badge overlaps top of card */}
-        <div className="grid-4">
+        <div className="grid-4 how-it-works-grid">
           {STEPS.map(step => (
             <div key={step.num} style={{ position: 'relative', paddingTop: 22 }}>
               {/* Badge — centered, overlapping top edge */}

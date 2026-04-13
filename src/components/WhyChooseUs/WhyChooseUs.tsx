@@ -29,7 +29,7 @@ export default function WhyChooseUs() {
           </p>
         </div>
 
-        <div className="grid-4">
+        <div className="grid-4 why-choose-grid">
           {FEATURES.map(f => (
             <div key={f.title} style={{
               padding: '24px 20px',

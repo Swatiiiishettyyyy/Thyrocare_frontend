@@ -48,9 +48,12 @@ export interface PackageCardProps {
   price: string
   originalPrice: string
   offerPercent: string
-  turnaround: string
+  /** @deprecated Optional; not shown on test cards */
+  turnaround?: string
   type: 'Package' | 'Single'
   onBook?: () => void
+  thyrocareProductId?: number
+  maxBeneficiaries?: number
 }
 
 // PackagesSection
@@ -58,10 +61,13 @@ export interface PackagesSectionProps {
   heading: string
   subheading: string
   cards: PackageCardProps[]
+  onViewAll?: () => void
 }
 
 // TestCard
 export interface TestCardProps {
+  thyrocareProductId?: number  // API product ID for cart
+  maxBeneficiaries?: number    // beneficiaries_max from API
   name: string
   description?: string
   price: string
@@ -69,9 +75,10 @@ export interface TestCardProps {
   offerPercent: string
   tests: number
   fasting: string
-  turnaround: string
+  /** @deprecated Removed from UI; optional for backward compatibility */
+  turnaround?: string
   type: 'Package' | 'Single'
-  onAddToCart?: () => void
+  quantity?: number
 }
 
 // Navbar
@@ -86,6 +93,8 @@ export interface NavbarProps {
   links: NavLink[]
   ctaLabel: string
   onCtaClick?: () => void
+  /** Hide the search row on mobile only (used for checkout/cart pages). */
+  hideSearchOnMobile?: boolean
 }
 
 // Footer
@@ -105,6 +114,9 @@ export interface FooterProps {
 
 // Cart
 export interface CartItem {
+  cartItemId?: number          // API cart item ID (for update/remove)
+  thyrocareProductId?: number  // for API add-to-cart
+  maxBeneficiaries?: number    // cap for No of Patients
   name: string
   type: 'Package' | 'Single'
   price: string

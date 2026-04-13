@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Navbar } from '../components'
-import heartIcon from '../assets/figma/Health metrics/Frame 1948760734.svg'
+import heartIcon from '../assets/figma/Health metrics/Heart.svg'
 
 const NAV_LINKS = [
   { label: 'Tests',    href: '/' },
@@ -64,7 +64,7 @@ function MiniChart({ data, color }: { data: number[]; color: string }) {
   )
 }
 
-export default function OrganDetailPage() {
+export default function OrganDetailPage({ cartCount }: { cartCount?: number } = {}) {
   const navigate = useNavigate()
   const { organ } = useParams<{ organ: string }>()
   const organName = organ ? organ.charAt(0).toUpperCase() + organ.slice(1) : 'Heart'
@@ -73,10 +73,28 @@ export default function OrganDetailPage() {
   const [activeTimeFilter, setActiveTimeFilter] = useState('Monthly')
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F9F9F9', fontFamily: 'Poppins, sans-serif' }}>
-      <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" onCtaClick={() => navigate('/cart')} />
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#F9F9F9', fontFamily: 'Poppins, sans-serif' }}>
+      <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" cartCount={cartCount} hideSearchOnMobile onCtaClick={() => navigate('/cart')} />
 
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 40px 60px', boxSizing: 'border-box' }}>
+      {/* Breadcrumb */}
+      <div
+        className="cart-breadcrumb"
+        style={{
+          padding: '14px clamp(16px, 5vw, 56px)',
+          borderBottom: '1px solid #F3F4F6',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}
+      >
+        <span style={{ fontSize: 14, color: '#6B7280', cursor: 'pointer' }} onClick={() => navigate('/')}>Tests</span>
+        <span style={{ fontSize: 14, color: '#6B7280' }}>›</span>
+        <span style={{ fontSize: 14, color: '#6B7280', cursor: 'pointer' }} onClick={() => navigate('/metrics')}>Health Metrics</span>
+        <span style={{ fontSize: 14, color: '#6B7280' }}>›</span>
+        <span style={{ fontSize: 14, color: '#111827', fontWeight: 500 }}>{organName}</span>
+      </div>
+
+      <div className="organ-detail-inner" style={{ flex: 1, width: '100%', maxWidth: 1200, margin: '0 auto', padding: '32px 40px 60px', boxSizing: 'border-box' }}>
 
         {/* Header card */}
         <div style={{
@@ -86,37 +104,41 @@ export default function OrganDetailPage() {
           marginBottom: 20,
         }}>
           {/* Organ name + status + score */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <img src={heartIcon} alt={organName} width={48} height={48} />
-              <span style={{ fontSize: 20, fontWeight: 500, color: '#161616' }}>{organName}</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ padding: '3px 10px', borderRadius: 100, background: '#FFF4EF', color: '#EA8C5A', fontSize: 15, fontFamily: 'Inter, sans-serif' }}>Monitor</span>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4 }}>
+          <div className="organ-detail-headerRow" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
+            {/* Left: icon | name+badge row, then score, then date */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {/* Row 1: icon + name + Monitor badge */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <img src={heartIcon} alt={organName} width={44} height={44} style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: 18, fontWeight: 500, color: '#161616' }}>{organName}</span>
+                <span style={{ padding: '2px 10px', borderRadius: 100, background: '#FFF4EF', color: '#EA8C5A', fontSize: 13, fontFamily: 'Inter, sans-serif' }}>Monitor</span>
+              </div>
+              {/* Row 2: score */}
+              <div className="organ-detail-scoreRow" style={{ display: 'flex', alignItems: 'flex-end', gap: 4, paddingLeft: 56 }}>
                 <span style={{ fontSize: 28, fontWeight: 500, color: '#161616', lineHeight: 1 }}>72</span>
                 <span style={{ fontSize: 14, color: '#828282', marginBottom: 2, fontFamily: 'Inter, sans-serif' }}>/100</span>
                 <svg width="16" height="10" viewBox="0 0 24 14" fill="none" style={{ marginBottom: 3 }}>
                   <path d="M1 13L12 2L23 13" stroke="#41C9B3" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
+              {/* Row 3: date */}
+              <span className="organ-detail-updated" style={{ fontSize: 12, color: '#828282', fontFamily: 'Inter, sans-serif', paddingLeft: 56 }}>Updated 15th Nov</span>
             </div>
-          </div>
-          <span style={{ fontSize: 13, color: '#828282', display: 'block', textAlign: 'right', fontFamily: 'Inter, sans-serif' }}>Updated 15th Nov</span>
 
-          {/* Insight banner */}
-          <div style={{
-            marginTop: 16, padding: '14px 18px',
-            background: 'linear-gradient(90deg, #101129 0%, #2A2C5B 100%)',
-            borderRadius: 16, display: 'flex', alignItems: 'flex-start', gap: 12,
-          }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
-              <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-7-7z" stroke="#8B5CF6" strokeWidth="1.8" strokeLinecap="round"/>
-              <path d="M13 2v7h7" stroke="#8B5CF6" strokeWidth="1.8" strokeLinecap="round"/>
-            </svg>
-            <span style={{ fontSize: 14, color: '#fff', fontFamily: 'Inter, sans-serif', lineHeight: 1.6 }}>
-              LDL has reduced by 12% over the last 3 months. HDL is improving.
-            </span>
+            {/* Right: insight banner */}
+            <div className="organ-detail-insight" style={{
+              flex: '0 0 340px', padding: '12px 14px',
+              background: 'linear-gradient(90deg, #101129 0%, #2A2C5B 100%)',
+              borderRadius: 14, display: 'flex', alignItems: 'flex-start', gap: 10,
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
+                <circle cx="12" cy="12" r="10" stroke="#8B5CF6" strokeWidth="1.8"/>
+                <path d="M12 8v4M12 16h.01" stroke="#8B5CF6" strokeWidth="1.8" strokeLinecap="round"/>
+              </svg>
+              <span style={{ fontSize: 13, color: '#fff', fontFamily: 'Inter, sans-serif', lineHeight: 1.6 }}>
+                LDL has reduced by 12% over the last 3 months. HDL is improving.
+              </span>
+            </div>
           </div>
         </div>
 
@@ -134,8 +156,8 @@ export default function OrganDetailPage() {
           </div>
 
           {/* Filter row */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', background: '#fff', boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)', borderRadius: 112, outline: '1px solid #E7E1FF', outlineOffset: -1, padding: 8 }}>
+          <div className="organ-detail-filterRow" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28, flexWrap: 'wrap' }}>
+            <div className="organ-detail-filterGroup" style={{ display: 'flex', background: '#fff', boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)', borderRadius: 112, outline: '1px solid #E7E1FF', outlineOffset: -1, padding: 8 }}>
               {['All(8)', 'Normal(7)', 'Needs Attention(2)'].map(f => (
                 <button key={f} onClick={() => setActiveParamFilter(f)} style={{
                   padding: '6px 16px', borderRadius: 47, border: 'none',
@@ -147,7 +169,7 @@ export default function OrganDetailPage() {
                 }}>{f}</button>
               ))}
             </div>
-            <div style={{ width: 1, height: 28, background: '#E7E1FF' }} />
+            <div className="organ-detail-filterDivider" style={{ width: 1, height: 28, background: '#E7E1FF' }} />
             {['LDL Cholesterol', 'HDL Cholesterol', 'Triglycerides', 'Total Cholesterol', 'hs-CRP'].map(f => (
               <button key={f} style={{
                 padding: '6px 14px', borderRadius: 36, border: 'none',
@@ -212,7 +234,7 @@ export default function OrganDetailPage() {
                   <div style={{ marginLeft: 48 }}>
                     <MiniChart data={p.data} color={chartColor} />
                     {/* X-axis labels */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+                    <div className="organ-detail-xlabels" style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
                       {DATES.map(d => (
                         <span key={d} style={{ fontSize: 12, color: '#828282', fontFamily: 'Poppins, sans-serif' }}>{d}</span>
                       ))}
