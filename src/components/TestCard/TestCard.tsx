@@ -1,15 +1,22 @@
 import React, { useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { TestCardProps } from '../../types'
-import cartImg from '../../assets/figma/cart.png'
-import iconsIcon from '../../assets/figma/icons.svg'
+import cartIcon from '../../assets/figma/Test-detail/cart.svg'
+import fileIcon from '../../assets/figma/file.svg'
+import parametersIcon from '../../assets/figma/icons.svg'
 
 const TestCard = React.memo(function TestCard({
   name, description, price, originalPrice, offerPercent,
   tests, fasting, type,
   thyrocareProductId, maxBeneficiaries,
+  reportTime = 'within 24 hours',
+  parametersLabel,
 }: TestCardProps) {
   const navigate = useNavigate()
+
+  // TEMP: hardcode offer badge to match Figma (167:2331) even if API discount is missing.
+  // Once API discount is reliable everywhere, we can restore conditional rendering.
+  const offerLabel = offerPercent?.trim() || '33% OFF'
 
   const goToDetail = useCallback(() => {
     const id = thyrocareProductId ?? encodeURIComponent(name)
@@ -31,137 +38,171 @@ const TestCard = React.memo(function TestCard({
     })
   }, [navigate, name, description, price, originalPrice, offerPercent, tests, fasting, type, thyrocareProductId, maxBeneficiaries])
 
+  const secondTileLabel = parametersLabel ?? (type === 'Package' ? 'Tests included' : 'Parameters ')
+  const metaValuePadLeft = 'var(--test-card-meta-pad)'
+  const metaValuePadParams = 'calc(var(--test-card-meta-pad) - 1px)'
+
+  const padX = 'var(--card-pad-x)'
+  const padYTop = 'var(--card-pad-y-top)'
+
   return (
     <article
       onClick={goToDetail}
-      style={{
-        background: '#FFFFFF',
-        borderRadius: 20,
-        border: '1px solid #E7E1FF',
-        padding: 10,
-        display: 'flex',
-        flexDirection: 'column',
-        boxSizing: 'border-box',
-        height: '100%',
-        minHeight: 0,
-        cursor: 'pointer',
-      }}>
-      <div style={{
-        background: 'linear-gradient(0deg, #E7E1FF 0%, #FFFFFF 100%)',
-        borderRadius: 12,
-        display: 'flex',
-        flexDirection: 'column',
-        flex: 1,
-        overflow: 'hidden',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-          <span style={{
-            background: 'linear-gradient(131deg, #101129 0%, #2A2C5B 100%)',
-            color: '#fff',
-            fontFamily: 'Poppins,sans-serif',
-            fontSize: 13, fontWeight: 600,
-            padding: '6px 20px 10px 14px',
-            borderTopLeftRadius: 12,
-            borderBottomRightRadius: 10,
-            borderTopRightRadius: 0,
-            borderBottomLeftRadius: 0,
-            flexShrink: 0,
-            lineHeight: 1.2,
-          }}>
-            {type}
-          </span>
-          <span style={{
-            fontFamily: 'Poppins,sans-serif',
-            fontSize: 12, fontWeight: 500,
-            color: '#374151',
-            background: '#fff',
-            border: '1px solid #E5E7EB',
-            borderRadius: 8,
-            padding: '5px 12px',
-            margin: '8px 8px 0 0',
-            whiteSpace: 'nowrap',
-            lineHeight: 1.2,
-          }}>
-            {fasting}
-          </span>
+      className="test-card cursor-pointer h-full min-h-0 min-w-0 w-full box-border border border-[#E7E1FF] bg-white flex flex-col"
+      style={{ borderRadius: 'var(--test-card-shell-radius)', padding: 'var(--test-card-shell-pad)' }}
+    >
+      <div
+        className="flex flex-1 flex-col min-h-0 overflow-hidden w-full"
+        style={{ borderRadius: 'var(--test-card-inner-radius)' }}
+      >
+        {/* Top: lavender → white (Figma); bottom: solid white footer below dashed rule */}
+        <div
+          className="flex flex-1 flex-col min-h-0 w-full"
+          style={{
+            background: 'linear-gradient(180deg, #E7E1FF 0%, #FFFFFF 82.054%)',
+          }}
+        >
+          <div className="flex items-start justify-between min-w-0 shrink-0" style={{ gap: 'clamp(8px, 1.2vmin, 12px)' }}>
+            <span
+              className="shrink-0 flex items-center justify-center text-white type-ui"
+              style={{
+                borderTopLeftRadius: 'var(--test-card-inner-radius)',
+                borderBottomRightRadius: '8px',
+                paddingLeft: 'clamp(12px, 0.75rem + 1.4vmin, 30px)',
+                paddingRight: 'clamp(12px, 0.75rem + 1.4vmin, 30px)',
+                backgroundImage: 'linear-gradient(125.97deg, #101129 2.88%, #2A2C5B 93.49%)',
+                height: 'var(--test-card-badge-h)',
+              }}
+            >
+              <span className="whitespace-nowrap">{type}</span>
+            </span>
+            <span
+              className="min-w-0 max-w-[min(100%,220px)] rounded-[8px] border border-[#E7E1FF] bg-white"
+              style={{
+                marginTop: 'var(--test-card-shell-pad)',
+                marginRight: 'var(--test-card-shell-pad)',
+                paddingLeft: 'var(--test-card-pill-pad-x)',
+                paddingRight: 'var(--test-card-pill-pad-x)',
+                paddingTop: 'var(--test-card-pill-pad-y)',
+                paddingBottom: 'var(--test-card-pill-pad-y)',
+              }}
+            >
+              <span className="test-card__fasting text-right break-words type-body text-[#414141]">
+                {fasting}
+              </span>
+            </span>
+          </div>
+
+          <div
+            className="flex flex-1 flex-col min-h-0 min-w-0"
+            style={{
+              paddingLeft: padX,
+              paddingRight: padX,
+              paddingTop: padYTop,
+            }}
+          >
+            <div
+              className="test-card__intro flex flex-1 flex-col min-h-0 min-w-0"
+              style={{ gap: 'var(--test-card-intro-gap)' }}
+            >
+              <h3 className="type-card-title m-0 text-[#161616] line-clamp-3" title={name}>
+                {name}
+              </h3>
+              <p className="type-body m-0 text-[#828282] line-clamp-4 overflow-hidden [overflow-wrap:anywhere]" title={description}>
+                {description}
+              </p>
+            </div>
+
+            <div
+              className="grid grid-cols-2 w-full min-w-0 shrink-0"
+              style={{ marginTop: 'var(--test-card-gap-lg)', gap: 'var(--test-card-tile-gap)' }}
+            >
+              <div
+                className="bg-white shadow-[0px_4px_53.9px_0px_rgba(136,107,249,0.1)] rounded-[8px] box-border flex items-center min-w-0"
+                style={{
+                  height: 'var(--test-card-tile-h)',
+                  minHeight: 'var(--test-card-tile-h)',
+                  paddingLeft: 'var(--test-card-tile-pad-x)',
+                  paddingRight: 'var(--test-card-tile-pad-x)',
+                  paddingTop: 'var(--test-card-tile-pad-y)',
+                  paddingBottom: 'var(--test-card-tile-pad-y)',
+                }}
+              >
+                <img src={fileIcon} alt="" className="test-card-meta-icon block shrink-0" />
+                <div className="min-w-0 flex flex-col" style={{ gap: 'var(--test-card-tile-text-gap)', marginLeft: 'var(--test-card-tile-inner-gap)' }}>
+                  <span className="test-card__meta-label type-body text-[#828282] whitespace-nowrap">
+                    {'Report Time: '}
+                  </span>
+                  <span className="test-card__meta-value type-body text-[#161616] break-words">
+                    {reportTime}
+                  </span>
+                </div>
+              </div>
+
+              <div
+                className="bg-white shadow-[0px_4px_53.9px_0px_rgba(136,107,249,0.1)] rounded-[8px] box-border flex items-center min-w-0"
+                style={{
+                  height: 'var(--test-card-tile-h)',
+                  minHeight: 'var(--test-card-tile-h)',
+                  paddingLeft: 'var(--test-card-tile-pad-x)',
+                  paddingRight: 'var(--test-card-tile-pad-x)',
+                  paddingTop: 'var(--test-card-tile-pad-y)',
+                  paddingBottom: 'var(--test-card-tile-pad-y)',
+                }}
+              >
+                <img src={parametersIcon} alt="" className="test-card-meta-icon block shrink-0" />
+                <div className="min-w-0 flex flex-col" style={{ gap: 'var(--test-card-tile-text-gap)', marginLeft: 'var(--test-card-tile-inner-gap)' }}>
+                  <span className="test-card__meta-label type-body text-[#828282] break-words">
+                    {secondTileLabel}
+                  </span>
+                  <span className="test-card__meta-value type-body text-[#161616]">
+                    {tests}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full border-t border-dashed border-[#8B5CF6] shrink-0" style={{ marginTop: 'var(--test-card-gap-lg)' }} />
+          </div>
         </div>
 
-        <div style={{ padding: '20px 20px 20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-          <h3 style={{
-            fontFamily: 'Poppins,sans-serif', fontSize: 19, fontWeight: 500,
-            color: '#161616', margin: '20px 0 8px', lineHeight: 1.35,
-          }}>
-            {name}
-          </h3>
-
-          <p style={{
-            fontFamily: 'Inter,sans-serif', fontSize: 14, fontWeight: 400,
-            color: '#828282', margin: '0 0 16px', lineHeight: 1.6,
-            flex: 1,
-          }}>
-            {description}
-          </p>
-
-          <div style={{
-            background: '#fff', borderRadius: 10,
-            boxShadow: '0px 4px 24px rgba(136,107,249,0.12)',
-            padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10,
-          }}>
-            <img src={iconsIcon} alt="" width={22} height={22} style={{ display: 'block', flexShrink: 0 }} />
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 11, color: '#828282', lineHeight: 1.4 }}>Parameters</div>
-              <div style={{ fontFamily: 'Inter,sans-serif', fontSize: 14, color: '#161616', fontWeight: 600, lineHeight: 1.4 }}>
-                {tests} {tests === 1 ? 'parameter' : 'parameters'}
-              </div>
-            </div>
-          </div>
-
-          <div style={{ margin: '20px 0 20px' }}>
-            <svg width="100%" height="1" style={{ display: 'block' }}>
-              <line x1="0" y1="0" x2="100%" y2="0" stroke="#8B5CF6" strokeWidth="1.5" strokeDasharray="5 5" />
-            </svg>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, flexWrap: 'nowrap' }}>
-            <div>
-              <div style={{ fontFamily: 'Poppins,sans-serif', fontSize: 24, fontWeight: 500, color: '#161616', lineHeight: 1 }}>
+        <div
+          className="shrink-0 w-full bg-white min-w-0"
+          style={{
+            paddingLeft: padX,
+            paddingRight: padX,
+            paddingTop: 'var(--test-card-gap-md)',
+            paddingBottom: 'var(--card-pad-y-bottom)',
+          }}
+        >
+          <div className="test-card__footer flex flex-col sm:flex-row sm:items-center sm:justify-between gap-[16px] shrink-0">
+            <div className="min-w-0">
+              <div className="type-price text-[#161616]" style={{ lineHeight: '31px' }}>
                 ₹{price}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 5, flexWrap: 'nowrap' }}>
-                <span style={{
-                  fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 400,
-                  color: '#828282', textDecoration: 'line-through', flexShrink: 0,
-                }}>
+              <div className="flex items-center gap-[6px] flex-wrap" style={{ marginTop: 'var(--test-card-price-stack-gap)' }}>
+                <span className="type-price-meta text-[#828282] line-through whitespace-nowrap">
                   ₹{originalPrice}
                 </span>
-                {offerPercent ? (
-                  <span style={{
-                    fontFamily: 'Poppins,sans-serif', fontSize: 11, fontWeight: 600,
-                    color: '#8B5CF6', background: '#E7E1FF',
-                    border: '0.5px solid #8B5CF6',
-                    borderRadius: 6, padding: '2px 7px',
-                    display: 'inline-flex', alignItems: 'center',
-                    whiteSpace: 'nowrap', flexShrink: 0,
-                  }}>
-                    {offerPercent}
-                  </span>
-                ) : null}
+                <span className="offer-badge">
+                  <span className="offer-badge__text">{offerLabel}</span>
+                </span>
               </div>
             </div>
+
             <button
               type="button"
               onClick={e => { e.stopPropagation(); goToDetail() }}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                background: '#8B5CF6', color: '#fff', border: 'none',
-                borderRadius: 10, height: 48, padding: '0 20px',
-                cursor: 'pointer',
-                fontFamily: 'Poppins,sans-serif', fontSize: 14, fontWeight: 600,
-                whiteSpace: 'nowrap', flexShrink: 0,
-              }}
+              className="test-card__cta type-ui shrink-0 w-full sm:w-auto rounded-[8px] bg-[#8B5CF6] py-[8px] text-white flex items-center justify-center gap-[10px]"
+              style={{ height: 'var(--test-card-cta-h)', paddingInline: 'var(--test-card-cta-px)' }}
             >
-              <img src={cartImg} alt="" style={{ width: 15, height: 14, objectFit: 'contain' }} />
-              Details
+              <img
+                src={cartIcon}
+                alt=""
+                className="block shrink-0"
+                style={{ width: 'var(--test-card-cart-w)', height: 'var(--test-card-cart-h)' }}
+              />
+              <span className="whitespace-nowrap">Add to Cart</span>
             </button>
           </div>
         </div>

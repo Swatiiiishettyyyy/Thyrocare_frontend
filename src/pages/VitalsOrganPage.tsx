@@ -66,6 +66,7 @@ export default function VitalsOrganPage({ cartCount }: { cartCount?: number }) {
             <span style={{ color: '#101129' }}>{activeOrgan.label}</span>
           </div>
           <select
+            className="vitals-organ-select"
             style={DROPDOWN}
             value={activeOrgan.id}
             onChange={e => navigate(`/vitals/${e.target.value}`)}

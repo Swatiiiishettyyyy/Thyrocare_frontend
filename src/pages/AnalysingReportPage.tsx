@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Navbar } from '../components'
+import { Navbar, UploadReportStepper } from '../components'
+import breadcrumbChevron from '../assets/figma/upload-report/Vector.svg'
 
 const NAV_LINKS = [
-  { label: 'Tests', href: '/' }, { label: 'Packages', href: '/' },
-  { label: 'Reports', href: '/reports' }, { label: 'Metrics', href: '/metrics' }, { label: 'Orders', href: '/orders' },
-]
-
-const steps = [
-  { num: 1, label: 'Upload', done: true },
-  { num: 2, label: 'Report Details', done: true },
-  { num: 3, label: 'Review', active: true },
+  { label: 'Tests', href: '/' },
+  { label: 'Packages', href: '/packages' },
+  { label: 'Reports', href: '/reports' },
+  { label: 'Metrics', href: '/metrics' },
+  { label: 'Orders', href: '/orders' },
 ]
 
 export default function AnalysingReportPage() {
@@ -40,32 +38,13 @@ export default function AnalysingReportPage() {
         {/* Breadcrumb */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32 }}>
           <span onClick={() => navigate('/reports')} style={{ fontSize: 13, color: '#9CA3AF', cursor: 'pointer' }}>Reports</span>
-          <span style={{ fontSize: 13, color: '#9CA3AF' }}>›</span>
+          <img src={breadcrumbChevron} alt="" style={{ width: 8, height: 12, display: 'block' }} />
           <span style={{ fontSize: 13, color: '#1B1F3B', fontWeight: 600 }}>Upload Report</span>
         </div>
 
         {/* Stepper */}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 40 }}>
-          {steps.map((step, i) => (
-            <React.Fragment key={step.num}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: '50%',
-                  background: step.done ? '#7C5CFC' : '#EDE9FE',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: step.done ? 18 : 15, fontWeight: 500,
-                  color: step.done ? '#fff' : '#9CA3AF',
-                  border: step.active ? '2px solid #7C5CFC' : 'none',
-                }}>
-                  {step.done ? '✓' : step.num}
-                </div>
-                <span style={{ fontSize: 13, color: step.done || step.active ? '#7C5CFC' : '#9CA3AF', fontWeight: step.active ? 600 : 400 }}>{step.label}</span>
-              </div>
-              {i < steps.length - 1 && (
-                <div style={{ width: 100, height: 1.5, background: step.done ? '#7C5CFC' : '#E5E7EB', margin: '0 8px 20px' }} />
-              )}
-            </React.Fragment>
-          ))}
+        <div style={{ marginBottom: 40 }}>
+          <UploadReportStepper currentStep={3} />
         </div>
 
         {/* Loading card */}

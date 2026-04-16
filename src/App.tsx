@@ -39,6 +39,14 @@ import { cartLineKey, findExistingLineForAdd, memberIdsForQuantity } from './uti
 
 const CHECKOUT_PATHS = ['/cart', '/address', '/timeslot', '/payment']
 
+function ScrollToTopOnRouteChange() {
+  const location = useLocation()
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [location.pathname])
+  return null
+}
+
 export default function App() {
   const location = useLocation()
   const { session, update, upsertGroup, clearSession } = useCheckoutSession()
@@ -353,6 +361,7 @@ export default function App() {
 
   return (
     <>
+      <ScrollToTopOnRouteChange />
       {showCheckoutSyncBanner && (
         <div
           role="alert"

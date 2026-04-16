@@ -213,7 +213,7 @@ export function filterByOrganId(products: ThyrocareProduct[], organId: string): 
 const CONDITION_ALIASES: Record<string, string[]> = {
   STD: ['std', 'sexually transmitted', 'sti', 'venereal'],
   'Monsoon Fever': ['monsoon', 'monsoon fever', 'dengue', 'viral fever', 'chikungunya'],
-  Allergy: ['allergy', 'allergies', 'allergic', 'ige', 'igg', 'histamine'],
+  Allergy: ['allergy', 'allergies', 'allergic', 'allergen', 'ige', 'immunoglobulin e'],
   Cancer: ['cancer', 'oncology', 'tumor', 'tumour'],
 }
 

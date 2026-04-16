@@ -1,7 +1,6 @@
 import { useMemo, useCallback, useEffect } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { Navbar, Footer } from '../components'
-import { TestCard } from '../components/TestCard'
+import { Navbar, Footer, TestCard } from '../components'
 import { useProductCatalog } from '../hooks/useProductCatalog'
 import { filterComprehensive, toTestCard, type ComprehensiveAgeBand } from '../api/products'
 

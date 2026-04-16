@@ -1,7 +1,6 @@
-import { useMemo, useEffect, useState } from 'react'
+import { useMemo, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Navbar, Footer } from '../components'
-import { TestCard } from '../components/TestCard'
+import { Navbar, Footer, TestCard } from '../components'
 import { useProductCatalog } from '../hooks/useProductCatalog'
 import {
   filterComprehensive, toTestCard,
@@ -50,14 +49,81 @@ const DROPDOWN: React.CSSProperties = {
   backgroundPosition: 'right 12px center',
 }
 
+const DROPDOWN_BTN: React.CSSProperties = {
+  ...DROPDOWN,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: 10,
+  outline: 'none',
+}
+
+const OVERLAY: React.CSSProperties = {
+  position: 'fixed',
+  inset: 0,
+  background: 'transparent',
+  zIndex: 200,
+}
+
 export default function MenHealthSegmentPage({ cartCount }: { cartCount?: number }) {
   const { segment: segmentParam } = useParams<{ segment: string }>()
   const navigate = useNavigate()
   const { products, ready, error } = useProductCatalog()
   const [visibleCount, setVisibleCount] = useState(6)
+  const [showGenderModal, setShowGenderModal] = useState(false)
+  const [showAgeModal, setShowAgeModal] = useState(false)
   const LOAD_STEP = 6
+  const genderBtnRef = useRef<HTMLButtonElement | null>(null)
+  const ageBtnRef = useRef<HTMLButtonElement | null>(null)
+  const [genderPopover, setGenderPopover] = useState<{ top: number; left: number; width: number } | null>(null)
+  const [agePopover, setAgePopover] = useState<{ top: number; left: number; width: number } | null>(null)
 
   const active = segmentFromSlug(segmentParam)
+
+  function openAnchored(el: HTMLButtonElement | null, set: (v: { top: number; left: number; width: number }) => void) {
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    const width = Math.max(210, Math.round(r.width))
+    set({
+      top: Math.round(r.bottom + 8),
+      left: Math.round(r.left),
+      width,
+    })
+  }
+
+  function openGenderPopover() {
+    openAnchored(genderBtnRef.current, setGenderPopover)
+    setShowGenderModal(true)
+  }
+
+  function openAgePopover() {
+    openAnchored(ageBtnRef.current, setAgePopover)
+    setShowAgeModal(true)
+  }
+
+  useLayoutEffect(() => {
+    if (!showGenderModal) return
+    openAnchored(genderBtnRef.current, setGenderPopover)
+  }, [showGenderModal])
+
+  useLayoutEffect(() => {
+    if (!showAgeModal) return
+    openAnchored(ageBtnRef.current, setAgePopover)
+  }, [showAgeModal])
+
+  useEffect(() => {
+    if (!showGenderModal && !showAgeModal) return
+    function onReflow() {
+      if (showGenderModal) openAnchored(genderBtnRef.current, setGenderPopover)
+      if (showAgeModal) openAnchored(ageBtnRef.current, setAgePopover)
+    }
+    window.addEventListener('scroll', onReflow, true)
+    window.addEventListener('resize', onReflow)
+    return () => {
+      window.removeEventListener('scroll', onReflow, true)
+      window.removeEventListener('resize', onReflow)
+    }
+  }, [showGenderModal, showAgeModal])
 
   useEffect(() => {
     if (!active) navigate('/men-health/under-25', { replace: true })
@@ -96,7 +162,8 @@ export default function MenHealthSegmentPage({ cartCount }: { cartCount?: number
         cartCount={cartCount}
       />
 
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 clamp(16px, 3vw, 40px) 60px', boxSizing: 'border-box' }}>
+      <main className="page-section women-health-main">
+      <div className="page-inner" style={{ boxSizing: 'border-box' }}>
 
         {/* Breadcrumb + dropdowns */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 0 28px', flexWrap: 'wrap', gap: 12 }}>
@@ -106,12 +173,28 @@ export default function MenHealthSegmentPage({ cartCount }: { cartCount?: number
             <span style={{ color: '#101129' }}>Men ({active.label})</span>
           </div>
           <div style={{ display: 'flex', gap: 12 }}>
-            <select style={DROPDOWN} value="men" onChange={e => e.target.value === 'women' && navigate('/women-health/under-25')}>
-              {GENDER_OPTIONS.map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
-            </select>
-            <select style={DROPDOWN} value={active.slug} onChange={e => navigate(`/men-health/${e.target.value}`)}>
-              {AGE_SEGMENTS.map(s => <option key={s.slug} value={s.slug}>{s.label}</option>)}
-            </select>
+            <button
+              type="button"
+              ref={genderBtnRef}
+              style={{ ...DROPDOWN_BTN, minWidth: 210 }}
+              onClick={openGenderPopover}
+              aria-haspopup="dialog"
+              aria-expanded={showGenderModal}
+            >
+              <span>Gender</span>
+              <span aria-hidden style={{ width: 12 }} />
+            </button>
+            <button
+              type="button"
+              ref={ageBtnRef}
+              style={{ ...DROPDOWN_BTN, minWidth: 210 }}
+              onClick={openAgePopover}
+              aria-haspopup="dialog"
+              aria-expanded={showAgeModal}
+            >
+              <span>Age Group</span>
+              <span aria-hidden style={{ width: 12 }} />
+            </button>
           </div>
         </div>
 
@@ -154,6 +237,180 @@ export default function MenHealthSegmentPage({ cartCount }: { cartCount?: number
         )}
 
       </div>
+      </main>
+
+      {/* Gender Modal (Figma node 281:2597) */}
+      {showGenderModal && (
+        <div style={OVERLAY} onClick={() => setShowGenderModal(false)}>
+          <div
+            role="dialog"
+            aria-label="Gender"
+            style={{
+              background: '#fff',
+              borderRadius: 20,
+              padding: '9px 11px 19px',
+              width: genderPopover?.width ?? 210,
+              maxWidth: 'calc(100vw - 16px)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 21,
+              boxSizing: 'border-box',
+              position: 'fixed',
+              top: genderPopover?.top ?? 120,
+              left: genderPopover?.left ?? 16,
+              boxShadow: '0px 20px 50px rgba(0,0,0,0.12)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div
+              style={{
+                background: '#E7E1FF',
+                border: '1px solid #E7E1FF',
+                borderRadius: 10,
+                height: 67,
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              <span
+                style={{
+                  position: 'absolute',
+                  left: 27,
+                  top: 26,
+                  fontFamily: 'Poppins, sans-serif',
+                  fontSize: 20,
+                  fontWeight: 500,
+                  lineHeight: '26px',
+                  color: '#101129',
+                }}
+              >
+                Gender
+              </span>
+            </div>
+
+            <div style={{ paddingInline: 25, display: 'flex', flexDirection: 'column', gap: 18 }}>
+              <button
+                type="button"
+                onClick={() => setShowGenderModal(false)}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  padding: 0,
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  fontFamily: 'Poppins, sans-serif',
+                  fontSize: 20,
+                  fontWeight: 500,
+                  lineHeight: '26px',
+                  color: '#101129',
+                }}
+              >
+                Male
+              </button>
+              <div style={{ height: 1, width: '100%', background: '#8B5CF6' }} />
+              <button
+                type="button"
+                onClick={() => navigate(`/women-health/${active.slug}`)}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  padding: 0,
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  fontFamily: 'Poppins, sans-serif',
+                  fontSize: 20,
+                  fontWeight: 500,
+                  lineHeight: '26px',
+                  color: '#828282',
+                }}
+              >
+                Female
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Age Group Modal (Figma node 281:2607) */}
+      {showAgeModal && (
+        <div style={OVERLAY} onClick={() => setShowAgeModal(false)}>
+          <div
+            role="dialog"
+            aria-label="Age Group"
+            style={{
+              background: '#fff',
+              borderRadius: 20,
+              padding: '9px 11px 19px',
+              width: agePopover?.width ?? 210,
+              maxWidth: 'calc(100vw - 16px)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 21,
+              boxSizing: 'border-box',
+              position: 'fixed',
+              top: agePopover?.top ?? 120,
+              left: agePopover?.left ?? 16,
+              boxShadow: '0px 20px 50px rgba(0,0,0,0.12)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div
+              style={{
+                background: '#E7E1FF',
+                border: '1px solid #E7E1FF',
+                borderRadius: 10,
+                height: 67,
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              <span
+                style={{
+                  position: 'absolute',
+                  left: 27,
+                  top: 26,
+                  fontFamily: 'Poppins, sans-serif',
+                  fontSize: 20,
+                  fontWeight: 500,
+                  lineHeight: '26px',
+                  color: '#101129',
+                }}
+              >
+                Age Group
+              </span>
+            </div>
+
+            <div style={{ paddingInline: 25, display: 'flex', flexDirection: 'column', gap: 18 }}>
+              {AGE_SEGMENTS.map(s => {
+                const isActive = s.slug === active.slug
+                return (
+                  <div key={s.slug} style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                    <button
+                      type="button"
+                      onClick={() => { setShowAgeModal(false); navigate(`/men-health/${s.slug}`) }}
+                      style={{
+                        border: 'none',
+                        background: 'transparent',
+                        padding: 0,
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        fontFamily: 'Poppins, sans-serif',
+                        fontSize: 20,
+                        fontWeight: 500,
+                        lineHeight: '26px',
+                        color: isActive ? '#101129' : '#828282',
+                      }}
+                    >
+                      {s.label}
+                    </button>
+                    {isActive && <div style={{ height: 1, width: '100%', background: '#8B5CF6' }} />}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

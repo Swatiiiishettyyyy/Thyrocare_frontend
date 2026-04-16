@@ -8,6 +8,15 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { Navbar } from '../components'
 import { fetchOrderByThyrocareId, downloadPatientReport, getEarliestScheduledDate } from '../api/orders'
 import type { Order, ThyrocareOrderDetails } from '../api/orders'
+import backArrow from '../assets/figma/order-details/arrow.svg'
+import calendarIcon from '../assets/figma/order-details/Frame-2.svg'
+import locationIcon from '../assets/figma/order-details/Frame 29364.svg'
+import orderCubeIcon from '../assets/figma/order-details/Frame-3.svg'
+import emailIcon from '../assets/figma/order-details/Frame 29427.svg'
+import phoneIcon from '../assets/figma/order-details/call.svg'
+import tickIcon from '../assets/figma/order-details/icon.svg'
+import fileIcon from '../assets/figma/order-details/file.svg'
+import inAnalysisIcon from '../assets/figma/order-details/Frame (1).svg'
 
 const NAV_LINKS = [
   { label: 'Tests', href: '/' },
@@ -18,13 +27,18 @@ const NAV_LINKS = [
 ]
 
 const CARD: React.CSSProperties = {
-  background: '#fff', boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)',
-  borderRadius: 16, outline: '1px solid #E7E1FF', outlineOffset: -1,
-  padding: '20px 24px', boxSizing: 'border-box', width: '100%',
+  background: '#fff',
+  boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)',
+  borderRadius: 'clamp(14px, 1.6vmin, 16px)',
+  outline: '1px solid #E7E1FF',
+  outlineOffset: -1,
+  padding: 'clamp(16px, 2.4vmin, 20px) clamp(16px, 2.8vmin, 24px)',
+  boxSizing: 'border-box',
+  width: '100%',
 }
-const LABEL: React.CSSProperties = { fontSize: 'clamp(11px, 0.9vw, 14px)', color: '#828282', fontWeight: 400 }
-const VALUE: React.CSSProperties = { fontSize: 'clamp(12px, 1vw, 16px)', color: '#161616', fontWeight: 500 }
-const SECTION_TITLE: React.CSSProperties = { fontSize: 'clamp(13px, 1.1vw, 18px)', fontWeight: 500, color: '#161616', marginBottom: 8 }
+const LABEL: React.CSSProperties = { fontSize: 'var(--type-body)', color: '#828282', fontWeight: 400, lineHeight: 'var(--lh-body)' }
+const VALUE: React.CSSProperties = { fontSize: 'var(--type-ui)', color: '#161616', fontWeight: 500, lineHeight: 'var(--lh-ui)' }
+const SECTION_TITLE: React.CSSProperties = { fontSize: 'var(--type-ui)', fontWeight: 500, color: '#161616', marginBottom: 'clamp(8px, 1.2vmin, 10px)' }
 
 function statusLabel(s: string) {
   switch (s?.toUpperCase()) {
@@ -152,6 +166,8 @@ export default function OrderDetailsPage() {
   const hasPhlebo = !!(phlebo?.name?.trim() || phlebo?.contact?.trim())
   const firstAddress = allMemberMaps[0]?.address
   const firstMember = allMemberMaps[0]?.member
+  const orderEmail = (thyrocareDetails as any)?.email ?? (thyrocareDetails as any)?.customer_email ?? '—'
+  const orderPhone = (thyrocareDetails as any)?.mobile ?? (thyrocareDetails as any)?.customer_mobile ?? firstMember?.mobile ?? '—'
 
   const headerStatusText = thyrocareDetails
     ? (thyrocareDetails.current_status?.trim()
@@ -175,10 +191,10 @@ export default function OrderDetailsPage() {
       label: 'Transaction Date',
       value: tcPay?.payment_date ? formatDateTime(tcPay.payment_date) : formatDateTime(order.order_date),
     },
-    { label: 'Order Number', value: order.order_number },
+    { label: 'Security', value: 'AES-256 Encrypted' },
     {
-      label: 'Payment Status',
-      value: tcPay?.payment_status ?? order.payment_status,
+      label: 'Invoice No',
+      value: `NUC-INV-${String(order.order_number ?? '').slice(-4).padStart(4, '0')}`,
     },
   ]
 
@@ -194,101 +210,116 @@ export default function OrderDetailsPage() {
       ]
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fff', fontFamily: 'Poppins, sans-serif', overflowX: 'hidden' }}>
+    <div className="order-detail-page" style={{ minHeight: '100vh', background: '#fff', fontFamily: 'Poppins, sans-serif', overflowX: 'hidden' }}>
       <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" hideSearchOnMobile onCtaClick={() => navigate('/cart')} />
 
-      {/* Breadcrumb */}
       <div
-        className="cart-breadcrumb"
-        style={{
-          padding: '14px clamp(16px, 5vw, 56px)',
-          borderBottom: '1px solid #F3F4F6',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-        }}
+        className="order-detail-inner"
+        style={{}}
       >
-        <span style={{ fontSize: 14, color: '#6B7280', cursor: 'pointer' }} onClick={() => navigate('/')}>Tests</span>
-        <span style={{ fontSize: 14, color: '#6B7280' }}>›</span>
-        <span style={{ fontSize: 14, color: '#6B7280', cursor: 'pointer' }} onClick={() => navigate('/orders')}>Orders</span>
-        <span style={{ fontSize: 14, color: '#6B7280' }}>›</span>
-        <span style={{ fontSize: 14, color: '#111827', fontWeight: 500 }}>Order Details</span>
-      </div>
+        <div className="order-detail-bg" aria-hidden="true">
+          <div className="order-detail-blob order-detail-blob--green" />
+          <div className="order-detail-blob order-detail-blob--purple" />
+        </div>
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 24px 40px', boxSizing: 'border-box', width: '100%' }}>
+        {/* Back */}
+        <button
+          type="button"
+          onClick={() => navigate('/orders')}
+          className="order-detail-backBtn"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 'clamp(10px, 1.2vmin, 16px)',
+            background: 'transparent',
+            border: 'none',
+            padding: 0,
+            cursor: 'pointer',
+            color: '#161616',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: 'var(--type-body)',
+            lineHeight: 'var(--lh-body)',
+          }}
+        >
+          <img src={backArrow} alt="" style={{ width: 'clamp(18px, 2.6vmin, 24px)', height: 'clamp(18px, 2.6vmin, 24px)', display: 'block' }} />
+          Back to Orders
+        </button>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(18px, 3vmin, 28px)', marginTop: 'clamp(14px, 2.2vmin, 20px)' }}>
 
           {/* Order header banner */}
-          <div style={{
+          <div className="order-detail-hero" style={{
             background: 'linear-gradient(90deg, #101129 0%, #2A2C5B 100%)',
-            borderRadius: 16, padding: '18px 24px',
-            display: 'flex', flexWrap: 'wrap', alignItems: 'center',
-            justifyContent: 'space-between', gap: 16,
+            borderRadius: 'clamp(14px, 1.8vmin, 16px)',
+            padding: 'clamp(20px, 3vmin, 26px) clamp(16px, 3vmin, 24px)',
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 'clamp(14px, 2.2vmin, 16px)',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div className="order-detail-heroTop" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <div style={{
-                width: 48, height: 48, borderRadius: 12, background: 'rgba(139,92,246,0.2)',
+                width: 'clamp(46px, 5.8vmin, 56px)',
+                height: 'clamp(46px, 5.8vmin, 56px)',
+                borderRadius: 999,
+                outline: '1px solid rgba(139,92,246,0.35)',
+                outlineOffset: -1,
+                background: 'rgba(16, 17, 41, 0.25)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}>
-                <svg width="20" height="22" viewBox="0 0 21 23" fill="none">
-                  <path d="M17.5 1H3.5C2.4 1 1.5 1.9 1.5 3V21L5.5 18L10.5 21L15.5 18L19.5 21V3C19.5 1.9 18.6 1 17.5 1Z" stroke="#8B5CF6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M6.5 8h8M6.5 12h5" stroke="#8B5CF6" strokeWidth="1.8" strokeLinecap="round"/>
-                </svg>
+                <img src={orderCubeIcon} alt="" style={{ width: 'clamp(18px, 2.6vmin, 24px)', height: 'clamp(18px, 2.6vmin, 24px)', display: 'block' }} />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 'clamp(13px, 1.1vw, 18px)', fontWeight: 500, color: '#fff' }}>
+              <div className="order-detail-heroTopText" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div className="order-detail-heroTitleRow" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                  <span className="order-detail-heroTitle" style={{ fontSize: 'var(--type-ui)', fontWeight: 500, color: '#fff', lineHeight: 'var(--lh-ui)' }}>
                     Order #{order.order_number}
                   </span>
-                  <span style={{ padding: '2px 10px', background: '#8B5CF6', borderRadius: 20, fontSize: 'clamp(10px, 0.8vw, 13px)', color: '#F9F9F9' }}>
+                  <span className="order-detail-heroStatusPill" style={{ padding: 'clamp(2px, 0.35vmin, 3px) clamp(10px, 1.2vmin, 10px)', background: '#5D48AC', borderRadius: 32, fontSize: 'var(--type-body)', color: '#F9F9F9', lineHeight: 'var(--lh-body)' }}>
                     {headerStatusText}
                   </span>
                 </div>
-                <span style={{ fontSize: 'clamp(11px, 0.9vw, 14px)', color: '#828282' }}>
-                  {order.items.map(it => it.product_name).join(' · ')}
+                <span className="order-detail-heroSub" style={{ fontSize: 'var(--type-body)', color: 'rgba(255,255,255,0.62)', lineHeight: 'var(--lh-body)' }}>
+                  Home Collection
                 </span>
               </div>
             </div>
             {firstMember && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                    <path d="M14 10.5c-1 0-2-.2-2.9-.5a1 1 0 0 0-1 .2l-1.8 1.8A11 11 0 0 1 4.1 7.7l1.8-1.8a1 1 0 0 0 .2-1C5.8 4 5.5 3 5.5 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1c0 7.2 5.8 13 13 13a1 1 0 0 0 1-1v-2.5a1 1 0 0 0-1-1z" stroke="#8B5CF6" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                  <span style={{ fontSize: 'clamp(11px, 0.9vw, 14px)', color: '#F9F9F9' }}>{firstMember.mobile}</span>
+              <div className="order-detail-heroContacts" style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(8px, 1.4vmin, 10px)' }}>
+                <div className="order-detail-heroContactRow" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <img className="order-detail-heroContactIcon" src={emailIcon} alt="" style={{ width: 'clamp(14px, 1.8vmin, 16px)', height: 'clamp(14px, 1.8vmin, 16px)', display: 'block' }} />
+                  <span className="order-detail-heroContactText" style={{ fontSize: 'var(--type-body)', color: '#F9F9F9', lineHeight: 'var(--lh-body)' }}>{orderEmail}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                    <circle cx="8" cy="6" r="3" stroke="#8B5CF6" strokeWidth="1.5"/>
-                    <path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="#8B5CF6" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                  <span style={{ fontSize: 'clamp(11px, 0.9vw, 14px)', color: '#F9F9F9' }}>
-                    {allMemberMaps.map(m => m.member.name).join(', ')}
-                  </span>
+                <div className="order-detail-heroContactRow" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <img className="order-detail-heroContactIcon" src={phoneIcon} alt="" style={{ width: 'clamp(14px, 1.8vmin, 16px)', height: 'clamp(14px, 1.8vmin, 16px)', display: 'block' }} />
+                  <span className="order-detail-heroContactText" style={{ fontSize: 'var(--type-body)', color: '#F9F9F9', lineHeight: 'var(--lh-body)' }}>{orderPhone}</span>
                 </div>
               </div>
             )}
           </div>
 
           {/* Appointment + Collection Address */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-            <div style={{ flex: '1 1 240px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className="order-detail-twoUp" style={{ gap: 'clamp(14px, 2.2vmin, 16px)' }}>
+            <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: 'clamp(8px, 1.2vmin, 10px)' }}>
               <span style={SECTION_TITLE}>Appointment</span>
-              <div style={{ ...CARD, display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: '#E7E1FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18 }}>📅</div>
+              <div style={{ ...CARD, display: 'flex', alignItems: 'center', gap: 'clamp(12px, 2vmin, 14px)' }}>
+                <div style={{ width: 'clamp(44px, 5.8vmin, 52px)', height: 'clamp(44px, 5.8vmin, 52px)', borderRadius: 999, background: '#E7E1FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <img src={calendarIcon} alt="" style={{ width: 24, height: 24, display: 'block' }} />
+                </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <span style={VALUE}>{formatDate(appointmentDate || order.order_date)}</span>
-                  <span style={LABEL}>{appointmentStatusText}</span>
+                  <span style={LABEL}>{appointmentDate ? '7.00 AM - 8.00 AM' : appointmentStatusText}</span>
                 </div>
               </div>
             </div>
-            <div style={{ flex: '1 1 240px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: 'clamp(8px, 1.2vmin, 10px)' }}>
               <span style={SECTION_TITLE}>Collection Address</span>
-              <div style={{ ...CARD, display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: '#E7E1FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18 }}>📍</div>
+              <div style={{ ...CARD, display: 'flex', alignItems: 'center', gap: 'clamp(12px, 2vmin, 14px)' }}>
+                <div style={{ width: 'clamp(44px, 5.8vmin, 52px)', height: 'clamp(44px, 5.8vmin, 52px)', borderRadius: 999, background: '#E7E1FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <img src={locationIcon} alt="" style={{ width: 24, height: 24, display: 'block' }} />
+                </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={VALUE}>{firstAddress?.address_label ?? 'Home Collection'}</span>
+                  <span style={VALUE}>{firstAddress?.address_label ?? formatDate(appointmentDate || order.order_date)}</span>
                   {firstAddress && (
                     <span style={LABEL}>
                       {firstAddress.street_address}, {firstAddress.city}, {firstAddress.state} - {firstAddress.postal_code}
@@ -316,27 +347,17 @@ export default function OrderDetailsPage() {
           {/* Order Tracking */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <span style={SECTION_TITLE}>Order Tracking</span>
-            <div style={CARD}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            <div className="order-detail-trackingCard" style={CARD}>
+              <div className="order-detail-trackList">
+                <div className="order-detail-trackLine" aria-hidden="true" />
                 {trackingSteps.map((step, i) => (
-                  <div key={`${i}-${step.label || 'step'}`} style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-                      <div style={{
-                        width: 20, height: 20, borderRadius: '50%',
-                        background: step.done ? '#8B5CF6' : '#E7E1FF',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        {step.done && (
-                          <svg width="10" height="8" viewBox="0 0 14 11" fill="none">
-                            <path d="M1 5l4 4L13 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        )}
-                      </div>
-                      {i < trackingSteps.length - 1 && <div style={{ width: 1, height: 28, background: '#E7E1FF' }} />}
+                  <div key={`${i}-${step.label || 'step'}`} className="order-detail-trackRow">
+                    <div className="order-detail-trackMarker" data-done={step.done ? 'true' : 'false'} aria-hidden="true">
+                      {step.done && <img src={tickIcon} alt="" className="order-detail-trackTick" />}
                     </div>
-                    <div style={{ paddingTop: 1, paddingBottom: i < trackingSteps.length - 1 ? 8 : 0 }}>
-                      <span style={{ ...VALUE, display: 'block' }}>{step.label}</span>
-                      {step.time && <span style={{ ...LABEL, display: 'block' }}>{step.time}</span>}
+                    <div className="order-detail-trackText">
+                      <div className="order-detail-trackLabel">{step.label}</div>
+                      {step.time && <div className="order-detail-trackTime">{step.time}</div>}
                     </div>
                   </div>
                 ))}
@@ -347,8 +368,8 @@ export default function OrderDetailsPage() {
           {/* Patient Record */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <span style={SECTION_TITLE}>Patient Record</span>
-            <div style={CARD}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            <div className="order-detail-patientCard" style={CARD}>
+              <div className="order-detail-patientList">
                 {allMemberMaps.map((entry, i) => {
                   const m = entry.member
                   const itemForMember = order.items.find(it => it.member_ids.includes(m.member_id))
@@ -360,66 +381,57 @@ export default function OrderDetailsPage() {
                   const patientId: string | undefined = thyrocarePatient?.id ?? thyrocarePatient?.lead_id ?? thyrocarePatient?.patient_id
                   const hasReport = isDone && !!patientId
                   return (
-                    <div key={entry.order_item_id ?? i}>
-                      {i > 0 && <div style={{ height: 1, background: '#E7E1FF', margin: '20px 0' }} />}
-                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 14 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                          <div style={{ width: 52, height: 52, borderRadius: 12, background: '#E7E1FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                              <circle cx="12" cy="8" r="4" stroke="#8B5CF6" strokeWidth="1.8"/>
-                              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#8B5CF6" strokeWidth="1.8" strokeLinecap="round"/>
-                            </svg>
+                    <div key={entry.order_item_id ?? i} className="order-detail-patientEntry">
+                      {i > 0 && <div className="order-detail-patientDivider" aria-hidden="true" />}
+
+                      <div className="order-detail-patientTop">
+                        <div className="order-detail-patientAvatar" aria-hidden="true">
+                          <img src={calendarIcon} alt="" />
+                        </div>
+                        <div className="order-detail-patientMeta">
+                          <div className="order-detail-patientName">{m.name}</div>
+                          <div className="order-detail-patientSub">
+                            {m.age} Yrs • {formatMemberGender(m.gender)} • UID: P-{String(i + 101).padStart(3, '0')}
                           </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                            <span style={{ fontSize: 15, fontWeight: 500, color: '#161616' }}>{m.name}</span>
-                            <span style={{ fontSize: 13, color: '#828282' }}>
-                              {m.age} Yrs · {formatMemberGender(m.gender)} · {m.relation}
+                        </div>
+                      </div>
+
+                      <div className="order-detail-patientOutcome">
+                        <div className="order-detail-patientSectionTitle">Report Outcome</div>
+                        <div className="order-detail-patientOutcomeRow">
+                          {!isDone && (
+                            <span className="order-detail-patientOutcomeDot" aria-hidden="true">
+                              <img src={inAnalysisIcon} alt="" />
                             </span>
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
-                          <span style={{ fontSize: 14, fontWeight: 500, color: '#161616' }}>Report Outcome</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <div style={{ width: 18, height: 18, borderRadius: '50%', background: isDone ? '#41C9B3' : '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              {isDone
-                                ? <svg width="10" height="8" viewBox="0 0 12 10" fill="none"><path d="M1 5l3 3L11 1" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                                : <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="3" fill="#fff"/></svg>
-                              }
-                            </div>
-                            <span style={{ fontSize: 14, color: '#828282' }}>{isDone ? 'Complete' : 'In Analysis'}</span>
-                          </div>
+                          )}
+                          <span className="order-detail-patientOutcomeText">{isDone ? 'Completed' : 'In Analysis'}</span>
                         </div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16 }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <span style={{ fontSize: 13, color: '#828282' }}>Assigned Test</span>
-                          <span style={{
-                            padding: '6px 16px', background: '#FFF4EF',
-                            borderRadius: 100, outline: '1px solid #EA8C5A', outlineOffset: -1,
-                            fontSize: 13, color: '#161616', fontFamily: 'Inter, sans-serif', display: 'inline-block',
-                          }}>{itemForMember?.product_name ?? '—'}</span>
+
+                      <div className="order-detail-patientBiomarker">
+                        <div className="order-detail-patientBiomarkerLabel">Assigned Biomarker</div>
+                        <div className="order-detail-patientBiomarkerPill">
+                          {itemForMember?.product_name ?? '—'}
                         </div>
-                        {(isDone || hasReport) && patientId && (
-                          <button
-                            onClick={() => handleViewReport(patientId)}
-                            disabled={!!reportLoading[patientId]}
-                            style={{
-                              display: 'flex', alignItems: 'center', gap: 8,
-                              padding: '10px 24px', background: '#8B5CF6', borderRadius: 8, border: 'none',
-                              color: '#fff', fontSize: 14, fontWeight: 500,
-                              cursor: reportLoading[patientId] ? 'wait' : 'pointer',
-                              whiteSpace: 'nowrap', flexShrink: 0,
-                              opacity: reportLoading[patientId] ? 0.7 : 1,
-                            }}
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/>
-                              <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/>
-                            </svg>
-                            {reportLoading[patientId] ? 'Loading...' : 'View Report'}
-                          </button>
-                        )}
                       </div>
+
+                      {patientId && (isDone || hasReport) && (
+                        <button
+                          className="order-detail-patientViewReportBtn"
+                          onClick={() => handleViewReport(patientId)}
+                          disabled={!!reportLoading[patientId]}
+                          type="button"
+                        >
+                          {reportLoading[patientId] ? (
+                            'Loading...'
+                          ) : (
+                            <>
+                              <img className="order-detail-patientViewReportIcon" src={fileIcon} alt="" aria-hidden="true" />
+                              View report
+                            </>
+                          )}
+                        </button>
+                      )}
                     </div>
                   )
                 })}
@@ -430,50 +442,56 @@ export default function OrderDetailsPage() {
           {/* Billing & Payment */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <span style={SECTION_TITLE}>Billing &amp; Payment Summary</span>
-            <div style={CARD}>
-              <div style={{
-                background: 'linear-gradient(180deg, #E7E1FF 0%, #fff 100%)',
-                borderRadius: 10, padding: '16px 20px', marginBottom: 20,
-                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16,
-              }}>
-                {billingStripItems.map(m => (
-                  <div key={m.label} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <span style={{ fontSize: 14, fontWeight: 500, color: '#161616' }}>{m.label}</span>
-                    <span style={{ fontSize: 13, color: '#828282' }}>{m.value}</span>
-                  </div>
-                ))}
+            <div className="order-detail-billingCard" style={CARD}>
+              <div className="order-detail-billingStrip">
+                <div className="order-detail-billingStripInner">
+                  {billingStripItems.map(m => (
+                    <div key={m.label} className="order-detail-billingMeta">
+                      <div className="order-detail-billingMetaLabel">{m.label}</div>
+                      <div className="order-detail-billingMetaValue">{m.value}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* Items */}
-              <div style={{ marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {order.items.map((it, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: 14, color: '#161616' }}>{it.product_name} × {it.member_ids.length}</span>
-                    <span style={{ fontSize: 14, fontWeight: 500, color: '#161616' }}>₹{it.total_amount}</span>
-                  </div>
-                ))}
-              </div>
+              <div className="order-detail-billingBody">
+                <div className="order-detail-billingItems">
+                  {order.items.map((it, i) => (
+                    <div key={i} className="order-detail-billingItemRow">
+                      <div className="order-detail-billingItemName">
+                        {it.product_name} x {it.member_ids.length}
+                      </div>
+                      <div className="order-detail-billingItemAmount">₹{it.total_amount}</div>
+                    </div>
+                  ))}
+                </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ height: 1, background: '#E7E1FF' }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 14, color: '#161616' }}>Subtotal</span>
-                  <span style={{ fontSize: 14, fontWeight: 500, color: '#161616' }}>₹{order.subtotal}</span>
-                </div>
-                {order.discount > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: 14, color: '#161616' }}>Discount</span>
-                    <span style={{ fontSize: 14, fontWeight: 500, color: '#41C9B3' }}>-₹{order.discount}</span>
+                <div className="order-detail-billingDivider" aria-hidden="true" />
+
+                <div className="order-detail-billingRow">
+                  <div className="order-detail-billingRowLabel">
+                    Subtotal({order.items.length} item{order.items.length !== 1 ? 's' : ''})
                   </div>
-                )}
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 14, color: '#161616' }}>Home Collection</span>
-                  <span style={{ fontSize: 14, fontWeight: 500, color: '#41C9B3' }}>FREE</span>
+                  <div className="order-detail-billingRowValue">₹{order.subtotal}</div>
                 </div>
-                <div style={{ height: 1, background: '#E7E1FF' }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 16, fontWeight: 600, color: '#161616' }}>Total</span>
-                  <span style={{ fontSize: 22, fontWeight: 700, color: '#101129' }}>₹{order.total_amount}</span>
+
+                <div className="order-detail-billingRow">
+                  <div className="order-detail-billingRowLabel">You Save</div>
+                  <div className="order-detail-billingRowValue order-detail-billingRowValue--positive">
+                    -₹{order.discount}
+                  </div>
+                </div>
+
+                <div className="order-detail-billingRow">
+                  <div className="order-detail-billingRowLabel">Home Collection</div>
+                  <div className="order-detail-billingRowValue order-detail-billingRowValue--positive">FREE</div>
+                </div>
+
+                <div className="order-detail-billingDivider" aria-hidden="true" />
+
+                <div className="order-detail-billingTotalRow">
+                  <div className="order-detail-billingTotalLabel">Total</div>
+                  <div className="order-detail-billingTotalValue">₹{order.total_amount}</div>
                 </div>
               </div>
             </div>

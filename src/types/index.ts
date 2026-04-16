@@ -36,31 +36,11 @@ export interface OrganFilterBarProps {
   onOrganChange: (id: string) => void
 }
 
-// PackageCard
-export type PackageType = 'Package' | 'Single'
-
-export interface PackageCardProps {
-  name: string
-  badge?: string
-  description: string
-  tests: number
-  fasting: string
-  price: string
-  originalPrice: string
-  offerPercent: string
-  /** @deprecated Optional; not shown on test cards */
-  turnaround?: string
-  type: 'Package' | 'Single'
-  onBook?: () => void
-  thyrocareProductId?: number
-  maxBeneficiaries?: number
-}
-
 // PackagesSection
 export interface PackagesSectionProps {
   heading: string
   subheading: string
-  cards: PackageCardProps[]
+  cards: TestCardProps[]
   onViewAll?: () => void
 }
 
@@ -75,6 +55,10 @@ export interface TestCardProps {
   offerPercent: string
   tests: number
   fasting: string
+  /** Report turnaround copy for the left info tile (Figma). */
+  reportTime?: string
+  /** Right info tile label: "Parameters" vs "Tests included" for packages. */
+  parametersLabel?: string
   /** @deprecated Removed from UI; optional for backward compatibility */
   turnaround?: string
   type: 'Package' | 'Single'
@@ -95,6 +79,11 @@ export interface NavbarProps {
   onCtaClick?: () => void
   /** Hide the search row on mobile only (used for checkout/cart pages). */
   hideSearchOnMobile?: boolean
+  /**
+   * Force which nav item is highlighted (e.g. on detail pages).
+   * Use hrefs from `links` such as `/` or `/packages`.
+   */
+  activeHrefOverride?: string
 }
 
 // Footer

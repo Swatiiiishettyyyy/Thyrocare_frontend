@@ -49,7 +49,7 @@ function OrganCard({ organ, onClick }: { organ: typeof ORGANS[0]; onClick: () =>
       background: '#fff',
       boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)',
       borderRadius: 20,
-      padding: '20px 16px 14px',
+      padding: '24px 16px 20px',
       display: 'flex', flexDirection: 'column', gap: 10,
       cursor: 'pointer',
     }}>
@@ -120,7 +120,7 @@ export default function HealthMetricsPage({ cartCount }: { cartCount?: number } 
 
       {/* Breadcrumb */}
       <div
-        className="cart-breadcrumb"
+        className="cart-breadcrumb metrics-breadcrumb"
         style={{
           padding: '14px clamp(16px, 5vw, 56px)',
           borderBottom: '1px solid #F3F4F6',
@@ -138,22 +138,31 @@ export default function HealthMetricsPage({ cartCount }: { cartCount?: number } 
 
         {/* Header */}
         <div className="metrics-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
-          <div>
-            <h1 className="metrics-title" style={{ fontSize: 28, fontWeight: 500, color: '#161616', margin: '0 0 6px', lineHeight: 1.1 }}>Health Metrics</h1>
-            <p style={{ fontSize: 15, color: '#828282', margin: 0, fontFamily: 'Poppins, sans-serif' }}>Track your organ health over time with smart insights.</p>
+          <div className="metrics-headerLeft" style={{ minWidth: 0, flex: '1 1 auto' }}>
+            <div className="metrics-titleRow" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+              <h1 className="metrics-title" style={{ fontSize: 28, fontWeight: 500, color: '#161616', margin: 0, lineHeight: 1.1 }}>
+                Health Metrics
+              </h1>
+              <button className="metrics-selfBtn" style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '8px 34px', background: '#fff',
+                boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)',
+                borderRadius: 8, outline: '1px solid #E7E1FF', outlineOffset: -1,
+                border: 'none', cursor: 'pointer',
+                minWidth: 140,
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <span style={{ fontSize: 15, fontWeight: 500, color: '#161616' }}>Self</span>
+                <svg width="10" height="6" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+                  <path d="M1 1l5 5 5-5" stroke="#161616" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+            <p className="metrics-subtitle" style={{ fontSize: 15, color: '#828282', margin: '6px 0 0', fontFamily: 'Poppins, sans-serif' }}>
+              Track your organ health over time with smart insights.
+            </p>
           </div>
-          <button className="metrics-selfBtn" style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: '12px 24px', background: '#fff',
-            boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)',
-            borderRadius: 8, outline: '1px solid #E7E1FF', outlineOffset: -1,
-            border: 'none', cursor: 'pointer',
-          }}>
-            <span style={{ fontSize: 15, fontWeight: 500, color: '#161616' }}>Self</span>
-            <svg width="10" height="6" viewBox="0 0 12 8" fill="none">
-              <path d="M1 1l5 5 5-5" stroke="#161616" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-          </button>
         </div>
 
         {/* Filter tabs */}
@@ -166,14 +175,21 @@ export default function HealthMetricsPage({ cartCount }: { cartCount?: number } 
           {FILTERS.map(f => {
             const isActive = activeFilter === f
             return (
-              <button key={f} onClick={() => setActiveFilter(f)} style={{
+              <button
+                key={f}
+                onClick={() => setActiveFilter(f)}
+                className={`metrics-filterBtn ${isActive ? 'is-active' : ''}`}
+                style={{
                 padding: '8px 20px', borderRadius: 47, border: 'none',
                 background: isActive ? '#fff' : 'transparent',
                 boxShadow: isActive ? '0px 4px 27.3px rgba(0,0,0,0.05)' : 'none',
                 outline: isActive ? '1px solid #E7E1FF' : 'none', outlineOffset: -1,
                 color: isActive ? '#8B5CF6' : '#161616',
                 fontSize: 14, cursor: 'pointer', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap',
-              }}>{f}</button>
+              }}
+              >
+                {f}
+              </button>
             )
           })}
         </div>
@@ -186,7 +202,7 @@ export default function HealthMetricsPage({ cartCount }: { cartCount?: number } 
         </div>
 
         {/* Desktop 3-column layout: left cards | body | right cards */}
-        <div className="metrics-layout" style={{ display: 'flex', gap: 20, alignItems: 'center', justifyContent: 'center' }}>
+        <div className="metrics-layout" style={{ display: 'flex', gap: 20, alignItems: 'center', justifyContent: 'flex-start' }}>
 
           {/* Left column */}
           <div className="metrics-col metrics-col--left" style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -194,7 +210,16 @@ export default function HealthMetricsPage({ cartCount }: { cartCount?: number } 
           </div>
 
           {/* Body illustration — fixed center, vertically centered */}
-          <div className="metrics-body" style={{ width: 300, flexShrink: 0, position: 'relative', alignSelf: 'center' }}>
+          <div
+            className="metrics-body"
+            style={{
+              width: 340,
+              flexShrink: 0,
+              position: 'relative',
+              alignSelf: 'center',
+              marginInline: 28,
+            }}
+          >
             <img src={bodyImg} alt="Body" style={{ width: '100%', display: 'block', borderRadius: 16, objectFit: 'contain' }} />
             <div style={{
               position: 'absolute', bottom: 0, left: 0, right: 0, height: 100,

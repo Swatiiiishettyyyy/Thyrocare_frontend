@@ -8,6 +8,9 @@ import { Navbar } from '../components'
 import { fetchOrders, getEarliestScheduledDate } from '../api/orders'
 import type { Order } from '../api/orders'
 import noOrdersIllustration from '../assets/figma/No_orders/fi_17569011.svg'
+import orderIconGreen from '../assets/figma/order-listing/Frame.svg'
+import orderIconPurple from '../assets/figma/order-listing/Frame-2.svg'
+import chevronRight from '../assets/figma/order-listing/Frame-1.svg'
 
 const NAV_LINKS = [
   { label: 'Tests', href: '/' },
@@ -29,7 +32,7 @@ function statusStyle(status: string): { color: string; bg: string; border: strin
 function statusLabel(status: string): string {
   switch (status?.toUpperCase()) {
     case 'CONFIRMED': return 'In Progress'
-    case 'COMPLETED': return 'Completed'
+    case 'COMPLETED': return 'Complete'
     case 'CANCELLED': return 'Cancelled'
     default: return status ?? 'Unknown'
   }
@@ -63,7 +66,55 @@ export default function OrdersPage() {
   })
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fff', fontFamily: 'Poppins, sans-serif', overflowX: 'hidden' }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        fontFamily: 'Poppins, sans-serif',
+        overflowX: 'hidden',
+        background: '#fff',
+        position: 'relative',
+      }}
+    >
+      {/* Full-screen blobs background (not a tint/gradient image) */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          pointerEvents: 'none',
+          zIndex: 0,
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            left: 'clamp(-420px, -28vw, -260px)',
+            top: 'clamp(80px, 18vh, 220px)',
+            width: 'clamp(520px, 60vw, 980px)',
+            height: 'clamp(420px, 50vw, 860px)',
+            background: '#41C9B3',
+            opacity: 0.22,
+            filter: 'blur(clamp(120px, 16vw, 220px))',
+            borderRadius: 9999,
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            right: 'clamp(-460px, -30vw, -280px)',
+            top: 'clamp(-40px, 6vh, 140px)',
+            width: 'clamp(560px, 64vw, 1040px)',
+            height: 'clamp(460px, 54vw, 920px)',
+            background: '#8B5CF6',
+            opacity: 0.22,
+            filter: 'blur(clamp(120px, 16vw, 220px))',
+            borderRadius: 9999,
+          }}
+        />
+      </div>
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
       <Navbar
         logoSrc="/favicon.svg"
         logoAlt="Nucleotide"
@@ -73,43 +124,60 @@ export default function OrdersPage() {
         onCtaClick={() => navigate('/cart')}
       />
 
-      {/* Breadcrumb */}
       <div
-        className="cart-breadcrumb"
+        className="orders-inner"
         style={{
-          padding: '14px clamp(16px, 5vw, 56px)',
-          borderBottom: '1px solid #F3F4F6',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
+          width: '100%',
+          maxWidth: 'var(--page-inner-w)',
+          margin: '0 auto',
+          padding: 'calc(var(--pad-section-y) * 0.55) var(--pad-section-x) calc(var(--pad-section-y) * 0.7)',
+          boxSizing: 'border-box',
+          position: 'relative',
+          background: 'transparent',
         }}
       >
-        <span style={{ fontSize: 14, color: '#6B7280', cursor: 'pointer' }} onClick={() => navigate('/')}>Tests</span>
-        <span style={{ fontSize: 14, color: '#6B7280' }}>›</span>
-        <span style={{ fontSize: 14, color: '#111827', fontWeight: 500 }}>Orders</span>
-      </div>
-
-      <div className="orders-inner" style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px', boxSizing: 'border-box', width: '100%' }}>
-
         {/* Header */}
-        <div className="orders-header" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: 'clamp(15px, 1.3vw, 20px)', fontWeight: 500, color: '#161616' }}>Order Management</span>
-            <span style={{ fontSize: 'clamp(11px, 0.9vw, 14px)', color: '#828282' }}>Track and manage your diagnostic appointments.</span>
+        <div className="orders-header" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 'clamp(12px, 1.8vmin, 18px)', marginBottom: 'clamp(18px, 3vmin, 28px)', position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(6px, 1.2vmin, 10px)', maxWidth: 'min(520px, 100%)' }}>
+            <span style={{ fontSize: 'var(--type-subhead)', fontWeight: 500, color: '#161616', letterSpacing: '-0.02em', lineHeight: 'var(--lh-snug)' }}>
+              Order Management
+            </span>
+            <span className="orders-subtitle" style={{ fontSize: 'var(--type-lead)', color: '#828282', lineHeight: 'var(--lh-body)' }}>
+              Track and manage your diagnostic appointments.
+            </span>
           </div>
-          <div className="orders-tabs" style={{ display: 'flex', background: '#fff', boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)', borderRadius: 100, outline: '1px solid #E7E1FF', outlineOffset: -1, padding: 8, gap: 0 }}>
+
+          <div className="orders-tabs" style={{ display: 'flex', background: '#fff', boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)', borderRadius: 999, outline: '1px solid #E7E1FF', outlineOffset: -1, padding: 'clamp(10px, 1.8vmin, 14px)', gap: 'clamp(8px, 1.4vmin, 10px)' }}>
             {tabs.map(t => {
               const isActive = activeTab === t
               return (
-                <button key={t} onClick={() => setActiveTab(t)} style={{
-                  padding: '6px clamp(12px, 1.5vw, 22px)', borderRadius: 100, border: 'none',
-                  background: isActive ? '#fff' : 'transparent',
+                <button
+                  key={t}
+                  onClick={() => setActiveTab(t)}
+                  className={[
+                    'orders-tabBtn',
+                    t === 'All' ? 'orders-tabBtn--all' : t === 'Active' ? 'orders-tabBtn--active' : 'orders-tabBtn--completed',
+                    isActive ? 'is-active' : '',
+                  ].filter(Boolean).join(' ')}
+                  style={{
+                  padding: 'clamp(8px, 1.3vmin, 10px) clamp(16px, 2.1vmin, 28px)',
+                  borderRadius: 999,
+                  border: 'none',
+                  background: '#fff',
                   boxShadow: isActive ? '0px 4px 27.3px rgba(0,0,0,0.05)' : 'none',
-                  outline: isActive ? '1px solid #E7E1FF' : 'none', outlineOffset: -1,
+                  outline: isActive ? '1px solid #E7E1FF' : 'none',
+                  outlineOffset: -1,
                   color: isActive ? '#8B5CF6' : '#161616',
-                  fontSize: 'clamp(11px, 0.9vw, 14px)', fontWeight: 500,
-                  cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Poppins, sans-serif',
-                }}>{t}</button>
+                  fontSize: 'var(--type-ui)',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  fontFamily: 'Poppins, sans-serif',
+                  lineHeight: 'var(--lh-ui)',
+                }}
+                >
+                  {t}
+                </button>
               )
             })}
           </div>
@@ -119,10 +187,23 @@ export default function OrdersPage() {
         {loading ? (
           <p style={{ color: '#828282', fontSize: 14, fontFamily: 'Inter, sans-serif' }}>Loading orders...</p>
         ) : filtered.length === 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 40, padding: '60px 20px' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 'clamp(18px, 3vmin, 28px)',
+              padding: 'clamp(28px, 5vmin, 44px) 0',
+              minHeight: 'min(520px, calc(100vh - 240px))',
+              width: '100%',
+              boxSizing: 'border-box',
+            }}
+          >
             {/* Illustration */}
             <div style={{
-              width: 'clamp(200px, 28vw, 400px)', aspectRatio: '1',
+              width: 'clamp(160px, 22vw, 300px)',
+              aspectRatio: '1',
               background: 'linear-gradient(180deg, #E7E1FF 0%, #fff 100%)',
               borderRadius: '50%',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -131,32 +212,46 @@ export default function OrdersPage() {
             </div>
             {/* Text */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, maxWidth: 470, textAlign: 'center' }}>
-              <h2 style={{ margin: 0, fontSize: 'clamp(22px, 2vw, 32px)', fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif' }}>
+              <h2 style={{ margin: 0, fontSize: 'var(--type-subhead)', fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif', lineHeight: 1.15, letterSpacing: '-0.03em' }}>
                 No Orders Yet
               </h2>
-              <p style={{ margin: 0, fontSize: 'clamp(14px, 1.2vw, 20px)', color: '#414141', fontFamily: 'Poppins, sans-serif', fontWeight: 400, lineHeight: 1.45 }}>
+              <p
+                className="orders-empty-subtitle"
+                style={{
+                  margin: '0 auto',
+                  fontSize: 'var(--type-body)',
+                  color: '#414141',
+                  fontFamily: 'Poppins, sans-serif',
+                  fontWeight: 400,
+                  lineHeight: 'var(--lh-body)',
+                  maxWidth: 'min(72ch, 100%)',
+                  textAlign: 'center',
+                  width: '100%',
+                }}
+              >
                 You haven't booked any tests or packages. Your orders will appear here once you make a booking.
               </p>
             </div>
             {/* CTA */}
             <button
               onClick={() => navigate('/packages')}
+              className="orders-empty-cta"
               style={{
-                width: '100%', maxWidth: 470, height: 58,
+                width: '100%',
+                maxWidth: 470,
+                minHeight: 'clamp(52px, 6vmin, 58px)',
                 background: '#8B5CF6', border: 'none', borderRadius: 10,
-                color: '#fff', fontSize: 'clamp(14px, 1.2vw, 20px)', fontWeight: 500,
+                color: '#fff', fontSize: 'var(--type-ui)', fontWeight: 500,
                 fontFamily: 'Poppins, sans-serif', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
               }}
             >
               Explore Packages
-              <svg width="12" height="20" viewBox="0 0 12 20" fill="none">
-                <path d="M2 2l8 8-8 8" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              <img src={chevronRight} alt="" style={{ width: 'clamp(16px, 2vmin, 18px)', height: 'clamp(16px, 2vmin, 18px)', display: 'block', filter: 'brightness(0) invert(1)' }} />
             </button>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(12px, 1.8vmin, 16px)', position: 'relative', zIndex: 1 }}>
             {filtered.map((order, i) => {
               const st = statusStyle(order.order_status)
               const allMembers = order.items.flatMap(item =>
@@ -167,77 +262,160 @@ export default function OrdersPage() {
               const scheduledDate = getEarliestScheduledDate(order)
 
               return (
-                <div key={i} onClick={() => navigate('/order-details', { state: { order } })} style={{
-                  background: '#fff', boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)',
-                  borderRadius: 16, outline: '1px solid #E7E1FF', outlineOffset: -1,
-                  padding: '20px 32px', display: 'flex', flexWrap: 'wrap',
-                  alignItems: 'center', justifyContent: 'space-between',
-                  gap: 12, cursor: 'pointer', boxSizing: 'border-box', width: '100%',
-                }}>
-                  {/* Left */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: '1 1 220px', minWidth: 0 }}>
-                    <div style={{
-                      width: 44, height: 44, borderRadius: 12, background: st.bg,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                    }}>
-                      <svg width="18" height="20" viewBox="0 0 21 23" fill="none">
-                        <path d="M17.5 1H3.5C2.4 1 1.5 1.9 1.5 3V21L5.5 18L10.5 21L15.5 18L19.5 21V3C19.5 1.9 18.6 1 17.5 1Z" stroke={st.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M6.5 8h8M6.5 12h5" stroke={st.color} strokeWidth="1.8" strokeLinecap="round"/>
-                      </svg>
+                <div
+                  key={i}
+                  className="orders-card"
+                  onClick={() => navigate('/order-details', { state: { order } })}
+                  style={{
+                    background: '#fff',
+                    boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)',
+                    borderRadius: 'clamp(16px, 2.4vmin, 20px)',
+                    outline: '1px solid #E7E1FF',
+                    outlineOffset: -1,
+                    padding: 'clamp(18px, 4.6vw, 22px) clamp(18px, 6.8vw, 28px)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 'clamp(14px, 4vw, 20px)',
+                    cursor: 'pointer',
+                    boxSizing: 'border-box',
+                    width: '100%',
+                  }}
+                >
+                  <div
+                    className="orders-card-icon"
+                    style={{
+                      width: 'clamp(34px, 10.5vw, 40px)',
+                      height: 'clamp(34px, 10.5vw, 40px)',
+                      borderRadius: 999,
+                      background: st.bg,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <img
+                      src={order.order_status?.toUpperCase() === 'COMPLETED' ? orderIconGreen : orderIconPurple}
+                      alt=""
+                      style={{
+                        width: 'clamp(18px, 5.6vw, 24px)',
+                        height: 'clamp(18px, 5.6vw, 24px)',
+                        display: 'block',
+                      }}
+                    />
+                  </div>
+
+                  <div className="orders-card-top" style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
+                    <div className="orders-card-topRow" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(12px, 4.2vw, 17px)', flexWrap: 'wrap' }}>
+                      <div
+                        className="orders-card-orderNo"
+                        style={{
+                          fontFamily: 'Poppins, sans-serif',
+                          fontWeight: 500,
+                          fontSize: 'clamp(15px, 4.8vw, 18px)',
+                          color: '#161616',
+                          letterSpacing: '-0.02em',
+                          lineHeight: '20px',
+                        }}
+                      >
+                        #{order.order_number}
+                      </div>
+                      <div
+                        className="orders-card-status"
+                        style={{
+                          height: 'clamp(24px, 7.8vw, 28px)',
+                          padding: 'clamp(2px, 0.9vw, 3px) clamp(8px, 2.6vw, 10px)',
+                          background: st.bg,
+                          borderRadius: 32,
+                          border: `0.8px solid ${st.border}`,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxSizing: 'border-box',
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontFamily: 'Poppins, sans-serif',
+                            fontWeight: 400,
+                            fontSize: 'clamp(12px, 3.6vw, 13px)',
+                            color: st.color,
+                            whiteSpace: 'nowrap',
+                            lineHeight: '20px',
+                          }}
+                        >
+                          {statusLabel(order.order_status)}
+                        </span>
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 'clamp(13px, 1.1vw, 16px)', fontWeight: 500, color: '#161616' }}>
-                          #{order.order_number}
-                        </span>
-                        <span style={{
-                          padding: '2px 8px', background: st.bg, borderRadius: 20,
-                          outline: `1px solid ${st.border}`, outlineOffset: -1,
-                          fontSize: 'clamp(10px, 0.8vw, 13px)', color: st.color, whiteSpace: 'nowrap',
-                        }}>{statusLabel(order.order_status)}</span>
-                        {order.payment_status && (
-                          <span style={{ fontSize: 'clamp(10px, 0.8vw, 12px)', color: '#828282', whiteSpace: 'nowrap' }}>
-                            Payment: {order.payment_status}
-                          </span>
-                        )}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 'clamp(10px, 0.8vw, 13px)', color: '#828282' }}>
-                          {uniqueMembers.join(', ')}
-                        </span>
-                        <div style={{ width: 1, height: 14, background: '#8B5CF6', flexShrink: 0 }} />
-                        <span style={{ fontSize: 'clamp(10px, 0.8vw, 13px)', color: '#101129' }}>{productNames}</span>
-                      </div>
+
+                    <div className="orders-card-subRow" style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flexWrap: 'nowrap' }}>
+                      <span
+                        style={{
+                          fontFamily: 'Poppins, sans-serif',
+                          fontWeight: 400,
+                          fontSize: 'clamp(12px, 3.6vw, 13px)',
+                          color: '#828282',
+                          lineHeight: '20px',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {uniqueMembers.join(', ')}
+                      </span>
+                      <div style={{ width: 1, height: 'clamp(14px, 4.4vw, 20px)', background: '#E7E1FF', flexShrink: 0 }} />
+                      <span
+                        style={{
+                          fontFamily: 'Poppins, sans-serif',
+                          fontWeight: 400,
+                          fontSize: 'clamp(12px, 3.6vw, 13px)',
+                          color: '#101129',
+                          lineHeight: '20px',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          minWidth: 0,
+                        }}
+                      >
+                        {productNames}
+                      </span>
                     </div>
                   </div>
 
-                  {/* Right */}
-                  <div className="orders-card-right" style={{ display: 'flex', alignItems: 'center', gap: 24, flexShrink: 0 }}>
-                    <div className="orders-card-rightMeta" style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-                      <div className="orders-card-metaCol orders-card-dateCol" style={{ display: 'flex', flexDirection: 'column', gap: 4, textAlign: 'right' }}>
-                        <span style={{ fontSize: 'clamp(10px, 0.8vw, 13px)', fontWeight: 500, color: '#828282' }}>
+                  <div className="orders-card-bottomRow" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(12px, 4vw, 16px)' }}>
+                    <div style={{ display: 'flex', gap: 'clamp(18px, 14vw, 58px)', alignItems: 'flex-start', flex: '1 1 auto', minWidth: 0 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0 }}>
+                        <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, fontSize: 'clamp(12px, 3.6vw, 13px)', color: '#828282', lineHeight: '20px' }}>
                           {scheduledDate ? 'Appointment' : 'Ordered'}
-                        </span>
-                        <span style={{ fontSize: 'clamp(10px, 0.8vw, 13px)', color: '#161616', lineHeight: 1.4 }}>
-                          {scheduledDate ? formatDate(scheduledDate) : formatDate(order.order_date)}
-                        </span>
+                        </div>
+                        <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 400, fontSize: 'clamp(12px, 3.6vw, 13px)', color: '#161616', lineHeight: '20px' }}>
+                          <div>{scheduledDate ? formatDate(scheduledDate) : formatDate(order.order_date)}</div>
+                        </div>
                       </div>
-                      <div className="orders-card-metaCol" style={{ display: 'flex', flexDirection: 'column', gap: 4, textAlign: 'right' }}>
-                        <span style={{ fontSize: 'clamp(10px, 0.8vw, 13px)', fontWeight: 500, color: '#828282' }}>Total</span>
-                        <span style={{ fontSize: 'clamp(14px, 1.3vw, 20px)', fontWeight: 600, color: '#161616' }}>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'center' }}>
+                        <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, fontSize: 'clamp(12px, 3.6vw, 13px)', color: '#828282', lineHeight: '20px' }}>
+                          Total
+                        </div>
+                        <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: 'clamp(15px, 4.8vw, 18px)', color: '#161616', letterSpacing: '-0.035em', lineHeight: '31px' }}>
                           ₹{order.total_amount}
-                        </span>
+                        </div>
                       </div>
                     </div>
-                    <svg width="8" height="14" viewBox="0 0 12 20" fill="none" style={{ flexShrink: 0 }}>
-                      <path d="M2 2l8 8-8 8" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
+
+                    <img
+                      src={chevronRight}
+                      alt=""
+                      style={{ width: 'clamp(20px, 6.8vw, 24px)', height: 'clamp(20px, 6.8vw, 24px)', display: 'block', flexShrink: 0 }}
+                    />
                   </div>
                 </div>
               )
             })}
           </div>
         )}
+      </div>
       </div>
     </div>
   )

@@ -20,7 +20,7 @@ export default function OrderSummaryCard({
   continueDisabled = false,
 }: OrderSummaryCardProps) {
   return (
-    <div style={{
+    <div className="order-summary-card" style={{
       background: 'linear-gradient(0deg, #E7E1FF 0%, white 100%)',
       boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)',
       borderRadius: 18,
@@ -36,35 +36,35 @@ export default function OrderSummaryCard({
     }}>
       {/* Summary rows */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-        <span style={{ fontSize: 21, fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif', lineHeight: '27px' }}>
+        <span className="order-summary-title" style={{ fontSize: 21, fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif', lineHeight: '27px' }}>
           Order Summary
         </span>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 18, fontWeight: 400, color: '#414141', fontFamily: 'Poppins, sans-serif', lineHeight: '29px' }}>
+              <span className="order-summary-rowLabel" style={{ fontSize: 18, fontWeight: 400, color: '#414141', fontFamily: 'Poppins, sans-serif', lineHeight: '29px' }}>
                 Subtotal({itemCount} item{itemCount !== 1 ? 's' : ''})
               </span>
-              <span style={{ fontSize: 18, fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif', lineHeight: '26px' }}>
+              <span className="order-summary-rowValue" style={{ fontSize: 18, fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif', lineHeight: '26px' }}>
                 ₹{subtotal}
               </span>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 18, fontWeight: 400, color: '#414141', fontFamily: 'Poppins, sans-serif', lineHeight: '29px' }}>
+              <span className="order-summary-rowLabel" style={{ fontSize: 18, fontWeight: 400, color: '#414141', fontFamily: 'Poppins, sans-serif', lineHeight: '29px' }}>
                 You Save
               </span>
-              <span style={{ fontSize: 18, fontWeight: 500, color: '#41C9B3', fontFamily: 'Poppins, sans-serif', lineHeight: '26px' }}>
+              <span className="order-summary-rowValue order-summary-rowValue--green" style={{ fontSize: 18, fontWeight: 500, color: '#41C9B3', fontFamily: 'Poppins, sans-serif', lineHeight: '26px' }}>
                 {savings > 0 ? `−₹${savings}` : '₹0'}
               </span>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 18, fontWeight: 400, color: '#414141', fontFamily: 'Poppins, sans-serif', lineHeight: '29px' }}>
+              <span className="order-summary-rowLabel" style={{ fontSize: 18, fontWeight: 400, color: '#414141', fontFamily: 'Poppins, sans-serif', lineHeight: '29px' }}>
                 Home Collection
               </span>
-              <span style={{ fontSize: 18, fontWeight: 500, color: '#41C9B3', fontFamily: 'Poppins, sans-serif', lineHeight: '26px' }}>
+              <span className="order-summary-rowValue order-summary-rowValue--green" style={{ fontSize: 18, fontWeight: 500, color: '#41C9B3', fontFamily: 'Poppins, sans-serif', lineHeight: '26px' }}>
                 FREE
               </span>
             </div>
@@ -76,10 +76,10 @@ export default function OrderSummaryCard({
 
         {/* Total */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: 18, fontWeight: 400, color: '#414141', fontFamily: 'Poppins, sans-serif', lineHeight: '29px' }}>
+          <span className="order-summary-totalLabel" style={{ fontSize: 18, fontWeight: 400, color: '#414141', fontFamily: 'Poppins, sans-serif', lineHeight: '29px' }}>
             Total
           </span>
-          <span style={{ fontSize: 24, fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif', lineHeight: '27px' }}>
+          <span className="order-summary-totalValue" style={{ fontSize: 24, fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif', lineHeight: '27px' }}>
             ₹{total}
           </span>
         </div>
@@ -110,7 +110,7 @@ export default function OrderSummaryCard({
           </button>
         )}
 
-        <button onClick={onContinue} disabled={continueDisabled} style={{
+        <button onClick={onContinue} disabled={continueDisabled} className="order-summary-continueBtn" style={{
           height: 58,
           borderRadius: 8,
           border: 'none',
@@ -129,9 +129,13 @@ export default function OrderSummaryCard({
           {continueLabel} ›
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}>
-          <span style={{ fontSize: 18 }}>✅</span>
-          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 18, fontWeight: 320, color: '#828282', lineHeight: '27px' }}>
+        <div className="order-summary-savingsRow" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}>
+          <span className="order-summary-savingsIcon" aria-hidden="true" style={{ width: 16, height: 16, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M20 7L10.5 16.5L4 10" stroke="#41C9B3" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </span>
+          <span className="order-summary-savingsText" style={{ fontFamily: 'Inter, sans-serif', fontSize: 18, fontWeight: 320, color: '#828282', lineHeight: '27px' }}>
             {savings > 0
               ? `You are saving ₹${savings} on this order`
               : 'No discount applied to this order'}

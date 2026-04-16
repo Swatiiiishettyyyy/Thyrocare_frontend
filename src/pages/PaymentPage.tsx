@@ -66,10 +66,10 @@ const SUMMARY_LIKE_CARD: React.CSSProperties = {
   borderRadius: 18,
   outline: '1px solid #E7E1FF',
   outlineOffset: '-1px',
-  padding: '22px 20px',
+  padding: 'clamp(16px, 1.2vw, 18px) clamp(16px, 1.4vw, 20px)',
   display: 'flex',
   flexDirection: 'column',
-  gap: 20,
+  gap: 16,
   width: '100%',
   maxWidth: 380,
   boxSizing: 'border-box',
@@ -95,6 +95,7 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
   const navigate = useNavigate()
   const { groups, netPayableAmount, thyrocarePricing } = session
   const firstGroup = groups[0]
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth <= 768)
   /** Slot may live on any group after set-appointment (we use first that has both fields). */
   const slotGroup =
     groups.find(g => String(g.appointment_date ?? '').trim() && String(g.appointment_start_time ?? '').trim()) ??
@@ -158,6 +159,12 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
 
   useEffect(() => {
     fetchMembers().then(setMembers).catch(() => setMembers([]))
+  }, [])
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
   }, [])
 
   useEffect(() => {
@@ -282,6 +289,24 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
   return (
     <div style={{ minHeight: '100vh', background: '#fff', fontFamily: 'Poppins, sans-serif', overflowX: 'hidden' }}>
       <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" cartCount={cartCount} hideSearchOnMobile onCtaClick={() => navigate('/cart')} />
+
+      {/* Breadcrumb (matches Figma mobile checkout) */}
+      <div
+        className="cart-breadcrumb"
+        style={{
+          padding: '14px clamp(16px, 5vw, 56px)',
+          borderBottom: '1px solid #F3F4F6',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          flexWrap: 'wrap',
+        }}
+      >
+        <span style={{ fontSize: 12, color: '#828282', cursor: 'pointer' }} onClick={() => navigate('/')}>Tests</span>
+        <span style={{ fontSize: 12, color: '#828282' }}>›</span>
+        <span style={{ fontSize: 12, color: '#101129', fontWeight: 400 }}>Checkout</span>
+      </div>
+
       <CheckoutStepper activeStep={3} />
 
       <div className="checkout-layout" style={{
@@ -293,58 +318,55 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
         {/* Left column */}
         <div className="payment-leftcol" style={{ flex: '1 1 300px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 28 }}>
 
-          <span style={{ fontSize: 'clamp(12px, 1vw, 18px)', color: '#828282', fontFamily: 'Inter, sans-serif' }}>
-            Tests &rsaquo; <span style={{ color: '#101129' }}>Checkout</span>
-          </span>
-
           {/* Order Summary card */}
-          <div className="payment-card" style={SUMMARY_LIKE_CARD}>
-            <span style={SUMMARY_LIKE_TITLE}>Order Summary</span>
-            <div style={{ minHeight: 80 }}>
-              {items.length === 0 ? (
-                <span style={{ fontSize: 'clamp(14px, 1.05vw, 19px)', color: '#828282', fontFamily: 'Inter, sans-serif' }}>No items in cart</span>
-              ) : items.map((item, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <span style={{ fontSize: 'clamp(14px, 1.05vw, 19px)', color: '#414141', fontFamily: 'Poppins, sans-serif' }}>{item.name}</span>
-                  <span style={{ fontSize: 'clamp(14px, 1.05vw, 19px)', fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif' }}>₹{Math.round(parseMoney(item.price) * item.quantity)}</span>
-                </div>
-              ))}
-              {groups.length > 0 && (
-                <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #F3F4F6' }}>
-                  <div style={{ fontSize: 'clamp(14px, 1.05vw, 17px)', fontWeight: 600, color: '#101129', fontFamily: 'Poppins, sans-serif', marginBottom: 10 }}>
-                    Patients
+          <div className="payment-card" style={CARD}>
+            <div className="payment-card-header" style={SECTION_HEADER}>Order Summary</div>
+            <div className="payment-card-body" style={{ padding: '16px 20px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {items.length > 0 && (
+                <>
+                  <div style={{ fontSize: 12, color: '#161616', fontFamily: 'Poppins, sans-serif', lineHeight: '20px' }}>
+                    {items[0].name} x {items[0].quantity}
                   </div>
-                  {groups.map(g => (
-                    <div key={g.group_id} style={{ marginBottom: 12 }}>
-                      <div style={{ fontSize: 13, color: '#828282', fontFamily: 'Inter, sans-serif', marginBottom: 4 }}>{g.product_name}</div>
-                      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 'clamp(13px, 1.02vw, 16px)', color: '#414141', fontFamily: 'Inter, sans-serif', lineHeight: 1.5 }}>
-                        {g.member_ids.length === 0 ? (
-                          <li>—</li>
-                        ) : (
-                          g.member_ids.map(mid => <li key={mid}>{memberLabel(mid)}</li>)
-                        )}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
+                  <div style={{ height: 0, borderTop: '1px solid #E7E1FF' }} />
+                </>
               )}
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#161616', fontFamily: 'Poppins, sans-serif', lineHeight: '20px' }}>
+                <span>Subtotal({items.length} item{items.length !== 1 ? 's' : ''})</span>
+                <span>₹{subtotal}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontFamily: 'Poppins, sans-serif', lineHeight: '20px' }}>
+                <span style={{ color: '#161616' }}>You Save</span>
+                <span style={{ color: '#41C9B3' }}>{savings > 0 ? `-₹${savings}` : '₹0'}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontFamily: 'Poppins, sans-serif', lineHeight: '20px' }}>
+                <span style={{ color: '#161616' }}>Home Collection</span>
+                <span style={{ color: '#41C9B3' }}>FREE</span>
+              </div>
+
+              <div style={{ height: 0, borderTop: '1px solid #E7E1FF', marginTop: 2 }} />
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif', lineHeight: '20px', letterSpacing: '-0.32px' }}>
+                <span>Total</span>
+                <span>₹{total}</span>
+              </div>
             </div>
           </div>
 
           {/* Collection Detail card */}
-          <div className="payment-card" style={SUMMARY_LIKE_CARD}>
-            <span style={SUMMARY_LIKE_TITLE}>Collection Detail</span>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
+          <div className="payment-card" style={CARD}>
+            <div className="payment-card-header" style={SECTION_HEADER}>Contact Details</div>
+            <div className="payment-card-body" style={{ padding: '16px 20px 18px', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 18 }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
                   <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z" fill="#8B5CF6"/>
                 </svg>
                 <div>
-                  <div style={{ fontSize: 'clamp(15px, 1.15vw, 21px)', color: '#161616', fontFamily: 'Poppins, sans-serif' }}>
+                  <div style={{ fontSize: 12, color: '#161616', fontFamily: 'Poppins, sans-serif', lineHeight: '20px' }}>
                     {address?.address_label ?? 'Home Collection'}
                   </div>
                   {address ? (
-                    <div style={{ fontSize: 'clamp(13px, 1.02vw, 19px)', color: '#828282', fontFamily: 'Inter, sans-serif', lineHeight: 1.5, marginTop: 2 }}>
+                    <div style={{ fontSize: 12, color: '#828282', fontFamily: 'Inter, sans-serif', lineHeight: '20px', marginTop: 2 }}>
                       {address.street_address}{address.landmark ? `, ${address.landmark}` : ''}<br />
                       {address.locality}, {address.city}, {address.state} - {address.postal_code}
                     </div>
@@ -365,10 +387,10 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
                   <path d="M8 2v4M16 2v4M2 10h20" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round"/>
                 </svg>
                 <div>
-                  <div style={{ fontSize: 'clamp(13px, 1.02vw, 19px)', color: '#828282', fontFamily: 'Inter, sans-serif', lineHeight: 1.5 }}>
+                  <div style={{ fontSize: 12, color: '#161616', fontFamily: 'Poppins, sans-serif', lineHeight: '20px' }}>
                     {slotDay || '—'}
                   </div>
-                  <div style={{ fontSize: 'clamp(13px, 1.02vw, 19px)', color: '#828282', fontFamily: 'Inter, sans-serif', lineHeight: 1.5 }}>
+                  <div style={{ fontSize: 12, color: '#828282', fontFamily: 'Inter, sans-serif', lineHeight: '20px' }}>
                     {slotTime || '—'}
                   </div>
                 </div>
@@ -381,10 +403,26 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
               {error}
             </div>
           )}
+
+          {/* Mobile: show action panel at bottom like Figma */}
+          {isMobile && (
+            <div className="payment-mobile-actions">
+              <OrderSummaryCard
+                itemCount={items.length}
+                subtotal={subtotal}
+                savings={savings}
+                total={total}
+                onBack={() => navigate('/timeslot')}
+                onContinue={handlePlaceOrder}
+                continueLabel={placing ? 'Placing...' : 'Continue'}
+                continueDisabled={placing}
+              />
+            </div>
+          )}
         </div>
 
         {/* Sidebar */}
-        <div className="checkout-summary" style={{ flex: '0 1 380px', width: '100%', maxWidth: 380, boxSizing: 'border-box' }}>
+        <div className="checkout-summary payment-desktop-sidebar" style={{ flex: '0 1 380px', width: '100%', maxWidth: 380, boxSizing: 'border-box' }}>
           <OrderSummaryCard
             itemCount={items.length}
             subtotal={subtotal}

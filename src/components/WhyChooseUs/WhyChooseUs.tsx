@@ -18,46 +18,32 @@ const FEATURES = [
 
 export default function WhyChooseUs() {
   return (
-    <section className="page-section" style={{ background: '#fff' }}>
+    <section className="page-section home-section--whychoose" style={{ background: '#fff' }}>
       <div className="page-inner">
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, marginBottom: 40 }}>
-          <h2 style={{ fontFamily: 'Poppins,sans-serif', fontSize: 36, fontWeight: 500, color: '#101129', margin: 0, textAlign: 'center' }}>
+        <div className="home-section-header">
+          <h2 className="type-section" style={{ color: '#101129', margin: 0, textAlign: 'center' }}>
             Why Choose Nucleotide
           </h2>
-          <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 15, fontWeight: 400, color: '#828282', margin: 0, textAlign: 'center' }}>
+          <p className="type-lead" style={{ color: '#828282', margin: 0, textAlign: 'center', maxWidth: 'min(720px, 100%)' }}>
             Built to make lab testing simple, reliable, and easy to understand.
           </p>
         </div>
 
         <div className="grid-4 why-choose-grid">
           {FEATURES.map(f => (
-            <div key={f.title} style={{
-              padding: '24px 20px',
-              background: 'linear-gradient(360deg, #E7E1FF 0%, #fff 100%)',
-              borderRadius: 20,
-              outline: '1px solid #E7E1FF',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 16,
-            }}>
+            <div key={f.title} className="why-choose-card">
               {/* Dark navy circle with white icon */}
-              <div style={{
-                width: 56, height: 56, borderRadius: '50%',
-                background: 'linear-gradient(90deg, #101129 0%, #2A2C5B 100%)',
-                boxShadow: '0px 4px 24px rgba(136,107,249,0.23)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-              }}>
+              <div className="why-choose-icon">
                 {f.isImg
                   ? <img src={f.icon!} alt="" width={24} height={24} style={{ filter: 'brightness(0) invert(1)' }} />
                   : <CompareIcon />
                 }
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ fontFamily: 'Poppins,sans-serif', fontSize: 17, fontWeight: 500, color: '#101129', lineHeight: 1.3 }}>
+              <div className="why-choose-text">
+                <div className="type-subhead" style={{ color: '#101129' }}>
                   {f.title}
                 </div>
-                <div style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 400, color: '#828282', lineHeight: 1.6 }}>
+                <div className="type-lead" style={{ color: '#828282' }}>
                   {f.desc}
                 </div>
               </div>

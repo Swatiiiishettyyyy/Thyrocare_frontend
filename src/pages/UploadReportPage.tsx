@@ -1,16 +1,17 @@
 import React, { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Navbar } from '../components'
+import { Navbar, UploadReportStepper } from '../components'
+import uploadIcon from '../assets/figma/upload-report/UPLOAD.svg'
+import backChevron from '../assets/figma/upload-report/Frame-1.svg'
+import chevronRightWhite from '../assets/figma/upload-report/Frame.svg'
+import breadcrumbChevron from '../assets/figma/upload-report/Vector.svg'
 
 const NAV_LINKS = [
-  { label: 'Tests', href: '/' }, { label: 'Packages', href: '/' },
-  { label: 'Reports', href: '/reports' }, { label: 'Metrics', href: '/metrics' }, { label: 'Orders', href: '/orders' },
-]
-
-const steps = [
-  { num: 1, label: 'Upload', active: true },
-  { num: 2, label: 'Report Details', active: false },
-  { num: 3, label: 'Review', active: false },
+  { label: 'Tests', href: '/' },
+  { label: 'Packages', href: '/packages' },
+  { label: 'Reports', href: '/reports' },
+  { label: 'Metrics', href: '/metrics' },
+  { label: 'Orders', href: '/orders' },
 ]
 
 export default function UploadReportPage() {
@@ -25,101 +26,248 @@ export default function UploadReportPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Poppins', sans-serif" }}>
-      <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" onCtaClick={() => navigate('/cart')} />
+    <div style={{ minHeight: '100vh', background: '#fff', fontFamily: 'Poppins, sans-serif', overflowX: 'hidden' }}>
+      <Navbar
+        logoSrc="/favicon.svg"
+        logoAlt="Nucleotide"
+        links={NAV_LINKS}
+        ctaLabel="My Cart"
+        hideSearchOnMobile
+        activeHrefOverride="/reports"
+        onCtaClick={() => navigate('/cart')}
+      />
 
-      <div style={{ maxWidth: 700, margin: '0 auto', padding: '32px 40px 60px' }}>
-
+      <div
+        style={{
+          maxWidth: 'var(--page-inner-w)',
+          margin: '0 auto',
+          padding: 'calc(var(--pad-section-y) * 0.45) var(--pad-section-x) calc(var(--pad-section-y) * 0.8)',
+          boxSizing: 'border-box',
+          width: '100%',
+        }}
+      >
         {/* Breadcrumb */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32 }}>
-          <span onClick={() => navigate('/reports')} style={{ fontSize: 13, color: '#9CA3AF', cursor: 'pointer' }}>Reports</span>
-          <span style={{ fontSize: 13, color: '#9CA3AF' }}>›</span>
-          <span style={{ fontSize: 13, color: '#1B1F3B', fontWeight: 600 }}>Upload Report</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 'clamp(18px, 2.8vmin, 30px)' }}>
+          <button type="button" onClick={() => navigate('/reports')} style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: 'var(--type-body)', color: '#828282' }}>
+            Reports
+          </button>
+          <img src={breadcrumbChevron} alt="" style={{ width: 8, height: 12, display: 'block' }} />
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 'var(--type-body)', color: '#101129', fontWeight: 500 }}>Upload Report</span>
         </div>
 
-        {/* Stepper */}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 40 }}>
-          {steps.map((step, i) => (
-            <React.Fragment key={step.num}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: '50%',
-                  background: step.active ? '#7C5CFC' : '#EDE9FE',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 16, fontWeight: 500,
-                  color: step.active ? '#fff' : '#9CA3AF',
-                }}>{step.num}</div>
-                <span style={{ fontSize: 13, color: step.active ? '#7C5CFC' : '#9CA3AF', fontWeight: step.active ? 600 : 400 }}>{step.label}</span>
-              </div>
-              {i < steps.length - 1 && (
-                <div style={{ width: 100, height: 1.5, background: '#E5E7EB', margin: '0 8px 20px' }} />
-              )}
-            </React.Fragment>
-          ))}
+        {/* Stepper (Figma 716:4889 component) */}
+        <div style={{ marginBottom: 'clamp(18px, 3vmin, 30px)' }}>
+          <UploadReportStepper currentStep={1} />
         </div>
 
-        {/* Upload card */}
-        <div style={{ background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 20, padding: '40px 40px 32px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#111827', textAlign: 'center', margin: '0 0 8px' }}>Upload Your Lab Report</h2>
-          <p style={{ fontSize: 14, color: '#9CA3AF', textAlign: 'center', margin: '0 0 28px' }}>Upload reports from any lab to track and compare your health metrics over time.</p>
-
-          {/* Drop zone */}
+        {/* Main card */}
+        <div className="upload-report-center" style={{ display: 'flex', justifyContent: 'center' }}>
           <div
-            onDrop={handleDrop}
-            onDragOver={e => e.preventDefault()}
+            className="upload-report-card"
             style={{
-              border: `2px dashed ${file ? '#10B981' : '#C4B5FD'}`,
-              borderRadius: 14, padding: '40px 20px',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
-              marginBottom: 28, background: file ? '#F0FDF9' : '#FAFAFA',
+              width: 'min(920px, 100%)',
+              background: '#fff',
+              borderRadius: 'clamp(16px, 2.2vmin, 20px)',
+              boxShadow: '0px 4px 156.2px rgba(136, 107, 249, 0.23)',
+              padding: 'clamp(16px, 2.6vmin, 32px)',
+              boxSizing: 'border-box',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'clamp(18px, 3.2vmin, 32px)',
             }}
           >
-            {file ? (
-              <>
-                <div style={{ fontSize: 16, fontWeight: 500, color: '#111827' }}>{file.name}</div>
-                <div style={{ fontSize: 13, color: '#9CA3AF' }}>{(file.size / 1024 / 1024).toFixed(2)} MB</div>
-                <div style={{ fontSize: 12, color: '#9CA3AF' }}>Max file size: 10 MB</div>
-                <button onClick={() => setFile(null)} style={{
-                  background: '#fff', color: '#374151', border: '1.5px solid #E5E7EB',
-                  borderRadius: 10, padding: '10px 32px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                }}>Remove</button>
-              </>
-            ) : (
-              <>
-                <div style={{ width: 52, height: 52, borderRadius: '50%', background: '#EDE9FE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>⬆</div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 16, fontWeight: 500, color: '#111827', marginBottom: 4 }}>Drag & drop your report here</div>
-                  <div style={{ fontSize: 13, color: '#9CA3AF' }}>or click to browse files</div>
-                </div>
-                <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
-                  {['PDF', 'JPG', 'PNG'].map(f => (
-                    <span key={f} style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>{f}</span>
-                  ))}
-                </div>
-                <div style={{ fontSize: 12, color: '#9CA3AF' }}>Max file size: 10 MB</div>
-                <button onClick={() => fileInputRef.current?.click()} style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  background: '#fff', color: '#7C5CFC', border: '1.5px solid #7C5CFC',
-                  borderRadius: 10, padding: '10px 24px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                }}>⬆ Browse Files</button>
-                <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
-              </>
-            )}
-          </div>
+            <div className="upload-report-cardHeader" style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 1.8vmin, 14px)', alignItems: 'center', textAlign: 'center' }}>
+              <div className="upload-report-cardTitle" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: 'var(--type-subhead)', lineHeight: 1.15, letterSpacing: '-0.03em', color: '#101129' }}>
+                Upload Your Lab Report
+              </div>
+              <div className="upload-report-cardSubtitle" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: 'var(--type-body)', lineHeight: 'var(--lh-body)', color: '#414141', maxWidth: 720 }}>
+                Upload reports from any lab to track and compare your health metrics over time.
+              </div>
+            </div>
 
-          {/* Back + Continue */}
-          <div style={{ display: 'flex', gap: 16 }}>
-            <button onClick={() => navigate('/reports')} style={{
-              flex: 1, padding: '14px', borderRadius: 12, border: '1.5px solid #E5E7EB',
-              background: '#fff', color: '#374151', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-            }}>‹ Back</button>
-            <button style={{
-              flex: 1, padding: '14px', borderRadius: 12, border: 'none',
-              background: '#7C5CFC', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-            }} onClick={() => navigate('/upload-report-details')}>Continue ›</button>
+            {/* Drop zone */}
+            <div
+              className="upload-report-dropzone"
+              onDrop={handleDrop}
+              onDragOver={e => e.preventDefault()}
+              onClick={() => (file ? undefined : fileInputRef.current?.click())}
+              role="button"
+              tabIndex={0}
+              style={{
+                border: `3px dashed ${file ? '#41C9B3' : '#E7E1FF'}`,
+                borderRadius: 'clamp(16px, 2.2vmin, 20px)',
+                padding: 'clamp(18px, 2.8vmin, 26px)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 'clamp(16px, 2.8vmin, 22px)',
+                cursor: 'pointer',
+                background: file ? '#E6F6F3' : 'transparent',
+              }}
+            >
+              {file ? (
+                <>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                    <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, fontSize: 'var(--type-ui)', color: '#161616', textAlign: 'center' }}>
+                      {file.name}
+                    </div>
+                    <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 'var(--type-body)', color: '#414141', textAlign: 'center' }}>
+                      {(file.size / 1024 / 1024).toFixed(2)} MB
+                    </div>
+                  </div>
+
+                  <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 'var(--type-body)', color: '#414141', textAlign: 'center' }}>
+                    Max file size: 10 MB
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setFile(null)
+                    }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      height: 'clamp(48px, 6vmin, 58px)',
+                      padding: '0 clamp(22px, 4vw, 34px)',
+                      borderRadius: 'clamp(8px, 1vmin, 10px)',
+                      border: 'none',
+                      background: '#fff',
+                      cursor: 'pointer',
+                      fontFamily: 'Poppins, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'var(--type-ui)',
+                      color: '#101129',
+                      minWidth: 202,
+                    }}
+                  >
+                    Remove
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(10px, 1.8vmin, 13px)', width: '100%' }}>
+                    <div className="upload-report-dropzoneIcon" style={{ width: 'clamp(54px, 7vmin, 66px)', height: 'clamp(54px, 7vmin, 66px)', borderRadius: 999, background: '#E7E1FF', display: 'grid', placeItems: 'center' }}>
+                      <img src={uploadIcon} alt="" style={{ width: 24, height: 24, display: 'block' }} />
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, textAlign: 'center' }}>
+                      <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, fontSize: 'var(--type-ui)', color: '#161616' }}>
+                        Drag &amp; drop your report here
+                      </div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: 'var(--type-body)', color: '#414141' }}>
+                        or click to browse files
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                    <div className="upload-report-fileChips" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+                      {['PDF', 'JPG', 'PNG'].map(ext => (
+                        <div key={ext} className="upload-report-fileChip" style={{ background: '#F9F9F9', borderRadius: 10, padding: '10px', fontFamily: 'Poppins, sans-serif', fontWeight: 500, fontSize: 'var(--type-ui)', color: '#161616', lineHeight: 'var(--lh-ui)' }}>
+                          {ext}
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 'var(--type-body)', color: '#414141', textAlign: 'center' }}>
+                      Max file size: 10 MB
+                    </div>
+                  </div>
+
+                  <button
+                    className="upload-report-browseBtn"
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      fileInputRef.current?.click()
+                    }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 10,
+                      height: 'clamp(48px, 6vmin, 58px)',
+                      padding: '0 clamp(22px, 4vw, 34px)',
+                      borderRadius: 'clamp(8px, 1vmin, 10px)',
+                      border: '1px solid #8B5CF6',
+                      background: '#fff',
+                      cursor: 'pointer',
+                      fontFamily: 'Poppins, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'var(--type-ui)',
+                      color: '#101129',
+                      minWidth: 202,
+                    }}
+                  >
+                    <img src={uploadIcon} alt="" style={{ width: 24, height: 24, display: 'block' }} />
+                    Browse Files
+                  </button>
+                </>
+              )}
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                style={{ display: 'none' }}
+                onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])}
+              />
+            </div>
+
+            {/* Bottom actions */}
+            <div style={{ display: 'flex', gap: 'clamp(12px, 2.2vmin, 20px)', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => navigate('/reports')}
+                style={{
+                  flex: '1 1 280px',
+                  minHeight: 'clamp(48px, 6vmin, 58px)',
+                  borderRadius: 'clamp(8px, 1vmin, 10px)',
+                  border: '1px solid #8B5CF6',
+                  background: '#fff',
+                  cursor: 'pointer',
+                  fontFamily: 'Poppins, sans-serif',
+                  fontWeight: 500,
+                  fontSize: 'var(--type-ui)',
+                  color: '#101129',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 10,
+                }}
+              >
+                <img src={backChevron} alt="" style={{ width: 18, height: 18, display: 'block' }} />
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/upload-report-details')}
+                style={{
+                  flex: '1 1 280px',
+                  minHeight: 'clamp(48px, 6vmin, 58px)',
+                  borderRadius: 'clamp(8px, 1vmin, 10px)',
+                  border: 'none',
+                  background: '#8B5CF6',
+                  cursor: 'pointer',
+                  fontFamily: 'Poppins, sans-serif',
+                  fontWeight: 500,
+                  fontSize: 'var(--type-ui)',
+                  color: '#fff',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 10,
+                }}
+              >
+                Continue
+                <img src={chevronRightWhite} alt="" style={{ width: 18, height: 18, display: 'block' }} />
+              </button>
+            </div>
           </div>
         </div>
-
       </div>
     </div>
   )

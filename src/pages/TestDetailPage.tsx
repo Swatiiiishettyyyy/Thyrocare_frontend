@@ -8,9 +8,18 @@ import { fetchProductById, toTestCard, type ThyrocareProduct } from '../api/prod
 import parametersIcon from '../assets/figma/Test-detail/Frame-3.svg'
 import nablIcon from '../assets/figma/Test-detail/Vector-1.svg'
 import cartIcon from '../assets/figma/Test-detail/cart.svg'
+import fileIcon from '../assets/figma/file.svg'
+import fastingReqIcon from '../assets/figma/Test-detail/Vector-5.svg'
+import homeCollectionIcon from '../assets/figma/Test-detail/Vector-6.svg'
+import postpaidIcon from '../assets/figma/Test-detail/Vector-4.svg'
+import rupeeIcon from '../assets/figma/Test-detail/Vector-3.svg'
 import bestTimeIcon from '../assets/figma/Best_time_sample.svg'
 import doIcon from '../assets/figma/Do.svg'
 import dontIcon from '../assets/figma/Dont.svg'
+import aboutIconChecks from '../assets/figma/Test-detail/Frame.svg'
+import aboutIconWho from '../assets/figma/Test-detail/Vector-7.svg'
+import aboutIconWhy from '../assets/figma/Test-detail/Frame-1.svg'
+import aboutBulletCheck from '../assets/figma/Test-detail/Vector.svg'
 
 const NAV_LINKS = [
   { label: 'Tests', href: '/' },
@@ -20,7 +29,7 @@ const NAV_LINKS = [
   { label: 'Orders', href: '/orders' },
 ]
 
-const TABS = ['About', 'Parameters'] as const
+const TABS = ['About', 'Parameters', 'Preparation'] as const
 
 function findProduct(products: ThyrocareProduct[], idParam: string | undefined): ThyrocareProduct | undefined {
   if (!idParam || products.length === 0) return undefined
@@ -59,6 +68,11 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
   const location = useLocation()
   const { id } = useParams<{ id: string }>()
   const stateTest = (location.state as { test?: TestCardProps } | null)?.test
+
+  // Ensure the details page always opens from the top on navigation / id change.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [id])
 
   const { products, ready: catalogReady } = useProductCatalog()
 
@@ -186,8 +200,12 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
 
   function submitAddToCart() {
     if (!onAddToCart) return
+    if (!card) return
     onAddToCart({
       ...card,
+      name: card.name || 'Test',
+      price: card.price || '0',
+      originalPrice: card.originalPrice || card.price || '0',
       maxBeneficiaries: product?.beneficiaries_max ?? maxBeneficiaries,
       thyrocareProductId: product?.id ?? thyrocareProductId,
       quantity: qty,
@@ -206,9 +224,20 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
     || description
     || 'No description available for this test.'
 
+  const heroSubtitle = shortDesc || description || 'A quick overview of your overall health and immunity.'
+
   return (
     <div style={{ minHeight: '100vh', background: '#fff', fontFamily: 'Poppins, sans-serif', overflowX: 'hidden' }}>
-      <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" cartCount={cartCount} hideSearchOnMobile onCtaClick={() => navigate('/cart')} />
+      <Navbar
+        logoSrc="/favicon.svg"
+        logoAlt="Nucleotide"
+        links={NAV_LINKS}
+        ctaLabel="My Cart"
+        cartCount={cartCount}
+        hideSearchOnMobile
+        activeHrefOverride={type === 'Package' ? '/packages' : '/'}
+        onCtaClick={() => navigate('/cart')}
+      />
 
       {/* Breadcrumb */}
       <div
@@ -222,12 +251,25 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
           flexWrap: 'wrap',
         }}
       >
-        <span style={{ fontSize: 14, color: '#6B7280', cursor: 'pointer' }} onClick={() => navigate('/')}>Tests</span>
+        <span
+          style={{ fontSize: 14, color: '#6B7280', cursor: 'pointer' }}
+          onClick={() => navigate(type === 'Package' ? '/packages' : '/')}
+        >
+          {type === 'Package' ? 'Packages' : 'Tests'}
+        </span>
         <span style={{ fontSize: 14, color: '#6B7280' }}>›</span>
         <span style={{ fontSize: 14, color: '#111827', fontWeight: 500 }}>{name}</span>
       </div>
 
-      <div className="test-detail-wrapper" style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px 40px' : '0 24px 60px', boxSizing: 'border-box' }}>
+      <div
+        className="test-detail-wrapper"
+        style={{
+          maxWidth: isMobile ? '100%' : 1320,
+          margin: '0 auto',
+          padding: isMobile ? '0 12px 20px' : '0 24px 72px',
+          boxSizing: 'border-box',
+        }}
+      >
 
         {detailError && catalogProduct && (
           <p style={{
@@ -238,66 +280,151 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
           </p>
         )}
 
-        <div className="test-detail-breadcrumb" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 0 20px', color: '#828282', fontSize: 14, fontFamily: 'Inter, sans-serif' }}>
-          <span onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>Tests</span>
-          <svg width="8" height="12" viewBox="0 0 8 12" fill="none"><path d="M1 1l6 5-6 5" stroke="#828282" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          <span style={{ color: '#101129' }}>{name}</span>
-        </div>
-
-        <div className="test-detail-heroWrap" style={{ position: 'relative' }}>
+        <div
+          className="test-detail-heroWrap"
+          style={{
+            position: 'relative',
+            /* Reserve space for the absolute pricing card so the feature row lines up */
+            paddingBottom: isMobile ? 0 : 'clamp(110px, 14vmin, 170px)',
+          }}
+        >
           <div className="test-detail-hero" style={{
             background: 'linear-gradient(90deg, #101129 0%, #2A2C5B 100%)',
             borderRadius: 20,
-            padding: isMobile ? '20px' : '36px 40px',
+            padding: isMobile ? '22px' : 'clamp(24px, 2.8vmin, 36px)',
             display: 'flex',
             flexDirection: isMobile ? 'column' : 'row',
-            gap: isMobile ? 16 : 32,
+            gap: isMobile ? 16 : 28,
             alignItems: 'flex-start',
             position: 'relative',
-            overflow: isMobile ? 'hidden' : 'visible',
-            marginBottom: isMobile ? 0 : 40,
+            overflow: 'hidden',
+            /* Keep pills directly under the hero (card can overlap via heroWrap paddingBottom). */
+            marginBottom: 0,
           }}>
-            <div style={{
+            <div className="test-detail-typeRibbon" style={{
               position: 'absolute', top: 0, right: 0,
-              background: '#E7E1FF', borderTopRightRadius: 20, borderBottomLeftRadius: 16,
-              padding: '8px 20px', zIndex: 3,
-              fontFamily: 'Poppins, sans-serif', fontSize: 15, fontWeight: 500, color: '#101129',
-            }}>{type}</div>
+              background: '#E7E1FF',
+              /* Let the hero's rounded corner clip the outer edge */
+              borderTopRightRadius: 0,
+              borderBottomRightRadius: 0,
+              /* Sharp top-left + bottom-right like Figma */
+              borderTopLeftRadius: 0,
+              borderBottomLeftRadius: 20,
+              minHeight: 'clamp(46px, 5.2vmin, 59px)',
+              minWidth: 'clamp(150px, 16vw, 223px)',
+              padding: 'clamp(8px, 1.1vmin, 12px) clamp(12px, 1.6vmin, 20px)',
+              zIndex: 3,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontFamily: 'Poppins, sans-serif',
+              fontSize: 'clamp(14px, 1.6vmin, 20px)',
+              fontWeight: 500,
+              color: '#101129',
+              boxSizing: 'border-box',
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+            }}>{type === 'Single' ? 'Single Test' : type}</div>
 
             <div className="test-detail-info" style={{
-              flex: '1 1 400px', display: 'flex', flexDirection: 'column', gap: 24,
-              paddingRight: isMobile ? 0 : 340,
+              flex: '1 1 400px', display: 'flex', flexDirection: 'column', gap: isMobile ? 18 : 20,
+              /* Reserve space for the pricing card so tiles don't wrap */
+              paddingRight: isMobile ? 0 : 'clamp(280px, 26vw, 420px)',
+              /* More room above fasting + below meta tiles (Figma-like) */
+              paddingTop: isMobile ? 0 : 'clamp(10px, 1.6vmin, 16px)',
+              paddingBottom: isMobile ? 0 : 'clamp(12px, 2vmin, 20px)',
               width: isMobile ? '100%' : undefined,
             }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <span style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
-                borderRadius: 100, padding: '4px 14px',
-                fontFamily: 'Inter, sans-serif', fontSize: 14, color: '#E7E1FF',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 'clamp(8px, 1vmin, 10px)',
+                background: 'linear-gradient(90deg, #101129 0%, #2A2C5B 81%)',
+                borderRadius: 999,
+                padding: 'clamp(4px, 0.8vmin, 6px) clamp(12px, 1.6vmin, 14px)',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: 'clamp(13px, 1.5vmin, 18px)',
                 alignSelf: 'flex-start',
+                marginTop: isMobile ? 0 : 'clamp(10px, 1.8vmin, 18px)',
               }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#41C9B3', flexShrink: 0 }} />
-                {fasting}
+                <img src={fastingReqIcon} alt="" width={18} height={18} style={{ display: 'block' }} />
+                <span style={{
+                  background: 'linear-gradient(180deg, #E7E1FF 0%, #FFFFFF 82%)',
+                  WebkitBackgroundClip: 'text',
+                  backgroundClip: 'text',
+                  color: 'transparent',
+                  lineHeight: 1.6,
+                  whiteSpace: 'nowrap',
+                }}>
+                  {fasting}
+                </span>
               </span>
-              <h1 style={{ margin: 0, color: '#fff', fontSize: 'clamp(24px, 3vw, 42px)', fontWeight: 500, lineHeight: 1.25 }}>
+              <h1
+              className="test-detail-mobileTitle"
+              style={{
+                margin: 0,
+                color: '#fff',
+                fontSize: isMobile ? 'clamp(18px, 4.8vw, 22px)' : 'clamp(22px, 2.6vw, 40px)',
+                fontWeight: isMobile ? 700 : 500,
+                lineHeight: 1.25,
+                letterSpacing: isMobile ? '0.02em' : undefined,
+              }}
+              >
                 {name}
               </h1>
-              <p style={{ margin: 0, color: '#B4B4C6', fontSize: 15, fontFamily: 'Inter, sans-serif', lineHeight: 1.6 }}>
-                {description}
+              <p
+              className="test-detail-mobileSubtitle"
+              style={{
+                margin: 0,
+                color: isMobile ? '#A8A8B8' : '#828282',
+                fontSize: isMobile ? 13 : 'clamp(14px, 1.25vw, 16px)',
+                fontFamily: 'Inter, sans-serif',
+                lineHeight: 1.5,
+                maxWidth: 560,
+                opacity: isMobile ? 1 : 0.95,
+                fontWeight: 400,
+              }}
+              >
+                {heroSubtitle}
               </p>
             </div>
 
-            <div className="test-detail-statsRow" style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+            <div className="test-detail-statsRow" style={{ display: 'flex', gap: 17, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
               <div style={{
-                flex: '1 1 200px', borderRadius: 10, border: '1px solid #2A2C5B',
-                padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10,
+                flex: '0 0 260px',
+                borderRadius: 10,
+                border: '1px solid #2A2C5B',
+                padding: 'clamp(10px, 1.4vmin, 12px) clamp(12px, 1.7vmin, 16px)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'clamp(8px, 1.1vmin, 10px)',
+                height: 83,
+                boxSizing: 'border-box',
               }}>
-                <img src={parametersIcon} alt="" width={22} height={22} />
-                <div>
+                <img src={fileIcon} alt="" width={20} height={20} style={{ display: 'block' }} />
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ color: '#828282', fontSize: 13, fontFamily: 'Inter, sans-serif' }}>Report Time:</div>
+                  <div style={{ color: '#fff', fontSize: 14, fontWeight: 500 }}>within 24 hours</div>
+                </div>
+              </div>
+
+              <div style={{
+                flex: '0 0 261px',
+                borderRadius: 10,
+                border: '1px solid #2A2C5B',
+                padding: 'clamp(10px, 1.4vmin, 12px) clamp(12px, 1.7vmin, 16px)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'clamp(8px, 1.1vmin, 10px)',
+                height: 83,
+                boxSizing: 'border-box',
+              }}>
+                <img src={parametersIcon} alt="" width={20} height={20} style={{ display: 'block' }} />
+                <div style={{ minWidth: 0 }}>
                   <div style={{ color: '#828282', fontSize: 13, fontFamily: 'Inter, sans-serif' }}>Parameters</div>
                   <div style={{ color: '#fff', fontSize: 14, fontWeight: 500 }}>
-                    {paramCount} {paramCount === 1 ? 'parameter' : 'parameters'}
+                    {paramCount}
                   </div>
                 </div>
               </div>
@@ -307,92 +434,281 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
 
           <div className="test-detail-card" style={{
             position: isMobile ? 'static' : 'absolute',
-            top: isMobile ? undefined : 44,
-            right: isMobile ? undefined : 20,
-            width: isMobile ? '100%' : 300,
-            borderRadius: 16,
+            /* Push the whole card down so CTA sits outside the hero */
+            top: isMobile ? undefined : 'clamp(102px, 11.2vmin, 160px)',
+            /* Move slightly left inside the ribbon/hero */
+            right: isMobile ? undefined : 'clamp(22px, 3.2vmin, 36px)',
+            /* Smaller card, ribbon unchanged */
+            width: isMobile ? '100%' : 'clamp(268px, 22.5vw, 340px)',
+            borderRadius: 'clamp(14px, 1.6vmin, 16px)',
             background: 'linear-gradient(180deg, #E7E1FF 0%, #fff 100%)',
-            padding: '16px',
-            display: 'flex', flexDirection: 'column', gap: 12,
+            padding: 'clamp(9px, 1.4vmin, 11px)',
+            display: 'flex',
+            flexDirection: 'column',
+            /* Match screenshot spacing while still compact */
+            gap: 'clamp(18px, 4.2vmin, 38px)',
             boxShadow: isMobile ? 'none' : '0 8px 40px rgba(139,92,246,0.18)',
             zIndex: 2,
             boxSizing: 'border-box',
           }}>
-            <div style={{ background: '#fff', borderRadius: 10, padding: '16px 16px 12px' }}>
-              <div style={{ color: '#828282', fontSize: 16, fontWeight: 500, marginBottom: 8 }}>Price</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 40, fontWeight: 500, color: '#101129', lineHeight: 1 }}>₹{price}</span>
-                <span style={{ fontSize: 20, color: '#828282', textDecoration: 'line-through' }}>₹{originalPrice}</span>
-                {offerPercent ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(14px, 2.2vmin, 21px)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(8px, 1.2vmin, 11px)', paddingLeft: 'clamp(2px, 0.5vmin, 6px)' }}>
+                <div style={{
+                  color: '#828282',
+                  fontSize: 'clamp(14px, 1.55vmin, 16px)',
+                  fontWeight: 500,
+                  fontFamily: 'Poppins, sans-serif',
+                  letterSpacing: '-0.02em',
+                }}>
+                  Price
+                </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(10px, 1.6vmin, 12px)', flexWrap: 'nowrap' }}>
                   <span style={{
-                    background: '#E6F6F3', color: '#41C9B3', border: '1px solid #41C9B3',
-                    borderRadius: 6, padding: '3px 10px', fontSize: 16, fontWeight: 500,
-                  }}>{offerPercent}</span>
-                ) : null}
+                    fontSize: 'clamp(26px, 3vw, 40px)',
+                    fontWeight: 500,
+                    color: '#101129',
+                    lineHeight: 1.1,
+                    fontFamily: 'Poppins, sans-serif',
+                    letterSpacing: '-0.03em',
+                  }}>
+                    ₹{price}
+                  </span>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(8px, 1.6vmin, 12px)', flexWrap: 'nowrap' }}>
+                    <span style={{
+                      fontSize: 'clamp(14px, 1.55vmin, 18px)',
+                      color: '#828282',
+                      textDecoration: 'line-through',
+                      fontFamily: 'Poppins, sans-serif',
+                      letterSpacing: '-0.02em',
+                    }}>
+                      ₹{originalPrice}
+                    </span>
+
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px solid #41C9B3',
+                        background: '#E6F6F3',
+                        borderRadius: 'clamp(4px, 0.6vmin, 5px)',
+                        padding: 'clamp(5px, 0.9vmin, 7px) clamp(8px, 1.1vmin, 12px)',
+                        minHeight: 'clamp(26px, 3.3vmin, 32px)',
+                        minWidth: 'clamp(86px, 10vmin, 120px)',
+                        color: '#41C9B3',
+                        fontSize: 'clamp(12px, 1.45vmin, 14px)',
+                        fontWeight: 500,
+                        fontFamily: 'Poppins, sans-serif',
+                        letterSpacing: '-0.02em',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {offerPercent?.trim() || '33% OFF'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{
+                background: '#fff',
+                borderRadius: 10,
+                padding: 'clamp(8px, 1.2vmin, 12px) clamp(14px, 1.9vmin, 20px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                minHeight: 'clamp(66px, 8.8vmin, 83px)', /* Figma ~83 */
+                boxSizing: 'border-box',
+              }}>
+                <span style={{
+                  color: '#828282',
+                  fontSize: 'clamp(13px, 1.55vmin, 16px)',
+                  fontFamily: 'Inter, sans-serif',
+                  lineHeight: 1.4,
+                }}>
+                  No of Patients
+                </span>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(18px, 5vmin, 48px)' }}>
+                  <button
+                    type="button"
+                    onClick={() => setQty(q => Math.max(minPatients, q - 1))}
+                    disabled={qty <= minPatients}
+                    aria-label="Decrease patients"
+                    style={{
+                      width: 'clamp(40px, 5.1vmin, 48px)',
+                      height: 'clamp(40px, 5.1vmin, 48px)',
+                      borderRadius: '999px',
+                      background: qty <= minPatients ? '#E7E1FF' : 'linear-gradient(90deg, #101129 0%, #2A2C5B 81%)',
+                      border: 'none',
+                      color: qty <= minPatients ? '#828282' : '#fff',
+                      fontSize: 'clamp(20px, 3.8vmin, 28px)',
+                      cursor: qty <= minPatients ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      lineHeight: 1,
+                    }}
+                  >
+                    −
+                  </button>
+
+                  <span style={{
+                    fontSize: 'clamp(16px, 2.1vmin, 20px)',
+                    fontWeight: 400,
+                    color: '#101129',
+                    minWidth: 18,
+                    textAlign: 'center',
+                    fontFamily: 'Poppins, sans-serif',
+                  }}>
+                    {qty}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => setQty(q => Math.min(maxPatients, q + 1))}
+                    aria-label="Increase patients"
+                    style={{
+                      width: 'clamp(40px, 5.1vmin, 48px)',
+                      height: 'clamp(40px, 5.1vmin, 48px)',
+                      borderRadius: '999px',
+                      background: 'linear-gradient(90deg, #101129 0%, #2A2C5B 81%)',
+                      border: 'none',
+                      color: '#fff',
+                      fontSize: 'clamp(20px, 3.8vmin, 28px)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      lineHeight: 1,
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
               </div>
             </div>
 
-            {product ? (
-              <p style={{ margin: 0, fontSize: 13, color: '#828282', fontFamily: 'Inter, sans-serif' }}>
-                {minPatients === maxPatients
-                  ? `${maxPatients} patient${maxPatients === 1 ? '' : 's'} per booking`
-                  : `${minPatients}–${maxPatients} patients per booking`}
-              </p>
-            ) : null}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 1.6vmin, 13px)' }}>
+              <button type="button" onClick={submitAddToCart} style={{
+                minHeight: isMobile ? 52 : 'clamp(46px, 5.8vmin, 54px)',
+                background: isMobile
+                  ? 'linear-gradient(180deg, #A78BFA 0%, #8B5CF6 45%, #7C3AED 100%)'
+                  : '#8B5CF6',
+                border: isMobile ? '1px solid rgba(255,255,255,0.12)' : 'none',
+                borderRadius: isMobile ? 12 : 'clamp(8px, 1vmin, 10px)',
+                color: '#fff',
+                fontSize: 'clamp(14px, 1.65vmin, 16px)',
+                fontWeight: isMobile ? 600 : 500,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 10,
+                padding: isMobile ? '14px 20px' : 'clamp(8px, 1.2vmin, 12px) clamp(14px, 2vmin, 20px)',
+                boxShadow: isMobile
+                  ? '0 4px 18px rgba(124, 58, 237, 0.38), inset 0 1px 0 rgba(255,255,255,0.2)'
+                  : undefined,
+                /* Let the button "hang" below the card */
+                marginBottom: 'calc(-1 * clamp(18px, 3vmin, 28px))',
+                position: 'relative',
+                zIndex: 3,
+                width: isMobile ? '100%' : undefined,
+                boxSizing: 'border-box',
+              }}>
+                <img src={cartIcon} alt="" width={24} height={22} style={{ display: 'block' }} />
+                Add to Cart
+              </button>
 
-            <div style={{
-              background: '#fff', borderRadius: 10, border: '1px solid #E7E1FF',
-              padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            }}>
-              <span style={{ color: '#828282', fontSize: 15, fontFamily: 'Inter, sans-serif' }}>No of Patients</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-                <button
-                  type="button"
-                  onClick={() => setQty(q => Math.max(minPatients, q - 1))}
-                  disabled={qty <= minPatients}
-                  style={{
-                    width: 40, height: 40, borderRadius: '50%',
-                    background: qty <= minPatients ? '#E7E1FF' : 'linear-gradient(90deg, #101129 0%, #2A2C5B 100%)',
-                    border: 'none', color: qty <= minPatients ? '#828282' : '#fff', fontSize: 22,
-                    cursor: qty <= minPatients ? 'not-allowed' : 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>−</button>
-                <span style={{ fontSize: 18, fontWeight: 500, color: '#101129', minWidth: 20, textAlign: 'center' }}>{qty}</span>
-                <button type="button" onClick={() => setQty(q => Math.min(maxPatients, q + 1))} style={{
-                  width: 40, height: 40, borderRadius: '50%',
-                  background: 'linear-gradient(90deg, #101129 0%, #2A2C5B 100%)',
-                  border: 'none', color: '#fff', fontSize: 22, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>+</button>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 9,
+                flexWrap: 'wrap',
+                marginTop: 'clamp(18px, 3vmin, 28px)', /* keep NABL text readable under the hanging button */
+              }}>
+                <img src={nablIcon} alt="" width={22} height={21} style={{ display: 'block' }} />
+                <span style={{ color: '#828282', fontSize: 'clamp(12px, 1.45vmin, 14px)', fontFamily: 'Inter, sans-serif' }}>
+                  NABL certified labs • Safe home collection
+                </span>
               </div>
-            </div>
-
-            <button type="button" onClick={submitAddToCart} style={{
-              height: 52, background: '#8B5CF6', border: 'none', borderRadius: 8,
-              color: '#fff', fontSize: 18, fontWeight: 500, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-            }}>
-              <img src={cartIcon} alt="" width={22} height={20} />
-              Add to Cart
-            </button>
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <img src={nablIcon} alt="" width={20} height={19} />
-              <span style={{ color: '#828282', fontSize: 13, fontFamily: 'Inter, sans-serif' }}>
-                NABL certified labs
-              </span>
             </div>
           </div>
         </div>
 
-        <div style={{ borderRadius: 20, border: '1px solid #E7E1FF', overflow: 'hidden', marginTop: isMobile ? 24 : 0 }}>
-          <div className="test-detail-tabs" style={{ display: 'flex', borderBottom: '1px solid #E7E1FF', background: '#fff', padding: '0 32px' }}>
+        <div
+          className="test-detail-pills"
+          style={{
+            display: 'flex',
+            gap: isMobile ? 0 : 'clamp(18px, 4.2vmin, 58px)', /* mobile gap controlled in responsive.css */
+            alignItems: 'center',
+            justifyContent: isMobile ? 'center' : 'flex-start',
+            flexWrap: 'nowrap',
+            width: isMobile ? '100%' : undefined,
+            boxSizing: 'border-box',
+            padding: isMobile ? '14px 0 18px' : '18px 0 22px',
+            paddingLeft: isMobile ? 0 : 'clamp(24px, 2.8vmin, 36px)',
+            /*
+              Keep this row visually *right under* the blue hero,
+              without changing the vertical placement of the sections below.
+            */
+            marginTop: isMobile ? 0 : 'calc(-1 * clamp(110px, 14vmin, 170px))',
+            /* Allow tabs to sit closer — right under pricing card */
+            marginBottom: isMobile ? 0 : 'clamp(34px, 5.2vmin, 72px)',
+            color: '#101129',
+            fontFamily: 'Poppins, sans-serif',
+          }}
+        >
+          {[
+            { icon: homeCollectionIcon, text: 'Home Collection' },
+            { icon: postpaidIcon, text: 'Postpaid Available' },
+            { icon: rupeeIcon, text: '₹50 Cashback' },
+          ].map(item => (
+            <div
+              key={item.text}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: isMobile ? 2 : 'clamp(8px, 1.2vmin, 10px)',
+                flexShrink: 0,
+              }}
+            >
+              <img
+                src={item.icon}
+                alt=""
+                width={24}
+                height={24}
+                style={{
+                  display: 'block',
+                  width: isMobile ? 'clamp(12px, 3.4vw, 15px)' : 'clamp(20px, 2.8vmin, 28px)',
+                  height: 'auto',
+                  flexShrink: 0,
+                }}
+              />
+              <span
+                style={{
+                  fontSize: isMobile ? 'clamp(10px, 2.75vw, 11px)' : 'clamp(14px, 2vmin, 20px)',
+                  color: '#101129',
+                  lineHeight: isMobile ? 1.25 : 1.45,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {item.text}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="test-detail-tabsCard" style={{ borderRadius: 20, border: '1px solid #E7E1FF', overflow: 'hidden', marginTop: isMobile ? 24 : 0 }}>
+          <div className="test-detail-tabs" style={{ display: 'flex', justifyContent: 'center', borderBottom: '1px solid #E7E1FF', background: '#fff', padding: isMobile ? '0 12px' : '0 20px' }}>
             {TABS.map(tab => (
               <button key={tab} type="button" onClick={() => setActiveTab(tab)} style={{
-                padding: '20px 24px', border: 'none', background: 'none', cursor: 'pointer',
+                padding: isMobile ? '16px 14px' : '18px 22px', border: 'none', background: 'none', cursor: 'pointer',
                 fontFamily: 'Poppins, sans-serif', fontSize: 16, fontWeight: 500,
                 color: activeTab === tab ? '#8B5CF6' : '#161616',
-                borderBottom: activeTab === tab ? '4px solid #8B5CF6' : '4px solid transparent',
+                borderBottom: activeTab === tab ? '3px solid #8B5CF6' : '3px solid transparent',
                 marginBottom: -1,
               }}>{tab}</button>
             ))}
@@ -400,15 +716,260 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
 
           <div className="test-detail-tab-content" style={{ background: 'linear-gradient(0deg, #E7E1FF 0%, #fff 100%)', padding: '24px 32px 32px' }}>
             {activeTab === 'About' && (
-              <div style={{
-                fontSize: 15, color: '#414141', fontFamily: 'Poppins, sans-serif',
-                lineHeight: 1.75, whiteSpace: 'pre-wrap',
-              }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(14px, 2.2vmin, 20px)' }}>
                 {aboutLoading ? (
-                  <p style={{ color: '#828282', margin: 0 }}>Loading product details…</p>
-                ) : (
-                  aboutTabBody
-                )}
+                  <p style={{ color: '#828282', margin: 0, fontFamily: 'Inter, sans-serif' }}>Loading product details…</p>
+                ) : !isMobile ? (
+                  <p style={{
+                    margin: 0,
+                    fontSize: 'clamp(13px, 1.6vmin, 15px)',
+                    color: '#414141',
+                    fontFamily: 'Poppins, sans-serif',
+                    lineHeight: 1.75,
+                    whiteSpace: 'pre-wrap',
+                  }}>
+                    {aboutTabBody}
+                  </p>
+                ) : null}
+
+                <div
+                  style={{
+                    background: 'linear-gradient(0deg, #E7E1FF 37%, #fff 83%)',
+                    borderRadius: 'clamp(16px, 2.2vmin, 20px)',
+                    overflow: 'hidden',
+                    padding: 'clamp(18px, 3.2vmin, 32px) clamp(16px, 3vmin, 28px)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 'clamp(22px, 3.2vmin, 31px)',
+                  }}
+                >
+                  {[
+                    {
+                      title: 'What this test checks',
+                      icon: aboutIconChecks,
+                      items: [
+                        'Red blood cell count, hemoglobin levels, and hematocrit to assess oxygen-carrying capacity',
+                        'White blood cell count and differential to evaluate immune system health',
+                        'Platelet count to check blood clotting ability',
+                        'Erythrocyte Sedimentation Rate (ESR) to detect inflammation in the body',
+                      ],
+                    },
+                    {
+                      title: 'Who should take this test',
+                      icon: aboutIconWho,
+                      items: [
+                        'Individuals experiencing fatigue, weakness, or shortness of breath',
+                        'Those with suspected infections, anemia, or bleeding disorders',
+                        'People with chronic conditions like diabetes, kidney disease, or autoimmune disorders',
+                        'Anyone undergoing pre-operative evaluation or health screening',
+                      ],
+                    },
+                    {
+                      title: 'Why doctors recommend this',
+                      icon: aboutIconWhy,
+                      items: [
+                        'Most comprehensive initial blood test for diagnosing various conditions',
+                        'Helps monitor treatment effectiveness for blood-related disorders',
+                        'Early detection of infections, anemia, and other abnormalities',
+                        'Essential baseline test for overall health assessment',
+                      ],
+                    },
+                  ].map(section => {
+                    const aboutBulletBlock = (
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 'clamp(10px, 1.6vmin, 16px)',
+                          width: '100%',
+                          alignItems: isMobile ? 'flex-start' : undefined,
+                        }}
+                      >
+                        {section.items.map(item => (
+                          <div
+                            key={item}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              justifyContent: 'flex-start',
+                              /* On mobile the text should align under the section title;
+                                 the tick hangs into the left gutter instead of indenting text. */
+                              gap: isMobile ? 0 : 'clamp(12px, 2.4vmin, 25px)',
+                              width: isMobile ? '100%' : undefined,
+                              position: isMobile ? 'relative' : undefined,
+                            }}
+                          >
+                            <img
+                              src={aboutBulletCheck}
+                              alt=""
+                              width={isMobile ? 16 : 22}
+                              height={isMobile ? 12 : 17}
+                              style={{
+                                display: 'block',
+                                marginTop: isMobile ? 5 : 4,
+                                flexShrink: 0,
+                                /* Pull tick into the left gutter (32 icon col + 10 col gap ≈ 42px). */
+                                marginLeft: isMobile ? -34 : 0,
+                                marginRight: isMobile ? 12 : 0,
+                              }}
+                            />
+                            <div
+                              className="test-detail-about-bullet-text"
+                              style={{
+                                fontFamily: 'Poppins, sans-serif',
+                                fontSize: 'clamp(13px, 1.6vmin, 20px)',
+                                color: '#414141',
+                                lineHeight: isMobile ? '27px' : 1.45,
+                                textAlign: isMobile ? 'start' : undefined,
+                                flex: isMobile ? '1 1 auto' : undefined,
+                                minWidth: 0,
+                              }}
+                            >
+                              {item}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )
+
+                    if (isMobile) {
+                      /* One grid row: fixed icon column | text column stacks title then bullets (same inset + gap for every section). */
+                      const mobileAboutIcon = 32
+                      const mobileAboutGlyph = 16
+                      const mobileAboutBodyGap = 12
+                      return (
+                        <div
+                          key={section.title}
+                          className="test-detail-about-section test-detail-about-section--mobile"
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: `${mobileAboutIcon}px 1fr`,
+                            columnGap: 10,
+                            width: '100%',
+                            boxSizing: 'border-box',
+                            alignItems: 'start',
+                          }}
+                        >
+                          <div
+                            style={{
+                              gridColumn: 1,
+                              gridRow: 1,
+                              width: mobileAboutIcon,
+                              height: mobileAboutIcon,
+                              /* Align icon with the title’s first line on mobile */
+                              marginTop: -2,
+                              borderRadius: 999,
+                              background: '#fff',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                            }}
+                          >
+                            <img
+                              src={section.icon}
+                              alt=""
+                              width={mobileAboutGlyph}
+                              height={mobileAboutGlyph}
+                              style={{
+                                display: 'block',
+                                width: mobileAboutGlyph,
+                                height: mobileAboutGlyph,
+                                objectFit: 'contain',
+                              }}
+                            />
+                          </div>
+                          <div
+                            style={{
+                              gridColumn: 2,
+                              gridRow: 1,
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: mobileAboutBodyGap,
+                              minWidth: 0,
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontFamily: 'Poppins, sans-serif',
+                                fontWeight: 500,
+                                color: '#101129',
+                                fontSize: 'clamp(15px, 4vw, 18px)',
+                                letterSpacing: '-0.02em',
+                                textAlign: 'start',
+                                lineHeight: 1.25,
+                              }}
+                            >
+                              {section.title}
+                            </div>
+                            {aboutBulletBlock}
+                          </div>
+                        </div>
+                      )
+                    }
+
+                    return (
+                      <div
+                        key={section.title}
+                        className="test-detail-about-section"
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'clamp(56px, 7vmin, 75px) 1fr',
+                          gap: 'clamp(14px, 2.2vmin, 22px)',
+                          alignItems: 'start',
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 'clamp(56px, 7vmin, 75px)',
+                            height: 'clamp(56px, 7vmin, 75px)',
+                            borderRadius: 999,
+                            background: '#fff',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <img
+                            src={section.icon}
+                            alt=""
+                            width={24}
+                            height={24}
+                            style={{
+                              display: 'block',
+                              width: 'clamp(18px, 2.2vmin, 24px)',
+                              height: 'clamp(18px, 2.2vmin, 24px)',
+                            }}
+                          />
+                        </div>
+
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 'clamp(10px, 1.8vmin, 17px)',
+                            width: '100%',
+                            boxSizing: 'border-box',
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontFamily: 'Poppins, sans-serif',
+                              fontWeight: 500,
+                              color: '#101129',
+                              fontSize: 'clamp(16px, 2vmin, 24px)',
+                              letterSpacing: '-0.02em',
+                            }}
+                          >
+                            {section.title}
+                          </div>
+                          {aboutBulletBlock}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             )}
             {activeTab === 'Parameters' && (
@@ -453,70 +1014,130 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
               </div>
             )}
             {activeTab === 'Preparation' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(18px, 2.4vmin, 28px)' }}>
 
                 {/* Best Time for Sample */}
-                <div style={{
-                  background: '#fff', borderRadius: 20, border: '1px solid #E7E1FF',
-                  padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <img src={bestTimeIcon} alt="" width={16} height={13} />
-                    <span style={{ fontSize: 14, fontWeight: 500, color: '#101129', fontFamily: 'Poppins, sans-serif' }}>Best Time for Sample</span>
-                  </div>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
                   <div style={{
-                    background: '#E7E1FF', borderRadius: 10, padding: '10px 16px',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 140,
+                    background: '#fff',
+                    borderRadius: 'clamp(14px, 1.8vmin, 20px)',
+                    border: '1px solid #E7E1FF',
+                    padding: isMobile ? '12px 12px' : 'clamp(14px, 2.1vmin, 18px) clamp(16px, 2.4vmin, 22px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: isMobile ? 10 : 'clamp(14px, 2.2vmin, 22px)',
+                    width: 'min(100%, 664px)',
+                    boxSizing: 'border-box',
                   }}>
-                    <span style={{ fontSize: 12, color: '#414141', fontFamily: 'Inter, sans-serif', textAlign: 'center', lineHeight: 1.5 }}>
-                      Recommended time for accurate results
-                    </span>
-                    <span style={{ fontSize: 13, fontWeight: 500, color: '#101129', fontFamily: 'Poppins, sans-serif' }}>7 AM – 10 AM</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                      <img src={bestTimeIcon} alt="" width={20} height={20} style={{ display: 'block', flexShrink: 0 }} />
+                      <span style={{
+                        fontSize: isMobile ? 14 : 'clamp(14px, 1.6vmin, 20px)',
+                        fontWeight: 500,
+                        color: '#101129',
+                        fontFamily: 'Poppins, sans-serif',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        Best Time for Sample
+                      </span>
+                    </div>
+
+                    <div style={{
+                      background: '#E7E1FF',
+                      borderRadius: 'clamp(8px, 1.2vmin, 10px)',
+                      padding: isMobile ? '10px 10px' : 'clamp(10px, 1.7vmin, 14px) clamp(14px, 2.2vmin, 18px)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 3,
+                      minWidth: isMobile ? 168 : 'clamp(220px, 28vmin, 369px)',
+                      textAlign: 'center',
+                      boxSizing: 'border-box',
+                    }}>
+                      <span style={{
+                        fontSize: isMobile ? 11 : 'clamp(12px, 1.35vmin, 18px)',
+                        color: '#414141',
+                        fontFamily: 'Inter, sans-serif',
+                        lineHeight: 1.5,
+                        whiteSpace: isMobile ? 'nowrap' : undefined,
+                      }}>
+                        {isMobile ? 'Recommended time' : 'Recommended time for accurate results'}
+                      </span>
+                      <span style={{
+                        fontSize: isMobile ? 16 : 'clamp(14px, 1.7vmin, 24px)',
+                        fontWeight: 500,
+                        color: '#101129',
+                        fontFamily: 'Poppins, sans-serif',
+                        letterSpacing: '-0.02em',
+                      }}>
+                        7 AM – 10 AM
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Do's */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <img src={doIcon} alt="" width={16} height={16} />
-                    <span style={{ fontSize: 16, fontWeight: 500, color: '#101129', fontFamily: 'Poppins, sans-serif' }}>Do's</span>
-                  </div>
-                  {[
-                    'Fast for 8–12 hours before the test (water is allowed)',
-                    'Drink plenty of water to stay hydrated',
-                    'Get a good night\'s sleep before the test',
-                    'Wear comfortable, loose-fitting clothing',
-                  ].map((item, i) => (
-                    <div key={i} style={{
-                      background: '#E8FFFB', borderRadius: 20, padding: '12px 16px',
-                      display: 'flex', alignItems: 'center', gap: 12,
-                    }}>
-                      <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#41C9B3', flexShrink: 0 }} />
-                      <span style={{ fontSize: 13, color: '#414141', fontFamily: 'Poppins, sans-serif', lineHeight: 1.5 }}>{item}</span>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+                  gap: 'clamp(18px, 3vmin, 33px)',
+                  alignItems: 'start',
+                }}>
+                  {/* Do's */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 1.6vmin, 14px)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <img src={doIcon} alt="" width={20} height={20} style={{ display: 'block' }} />
+                      <span style={{ fontSize: 'clamp(16px, 1.9vmin, 24px)', fontWeight: 500, color: '#101129', fontFamily: 'Poppins, sans-serif', letterSpacing: '-0.02em' }}>Do’s</span>
                     </div>
-                  ))}
-                </div>
+                    {[
+                      'Fast for 8–12 hours before the test (water is allowed)',
+                      'Drink plenty of water to stay hydrated',
+                      'Get a good night\'s sleep before the test',
+                      'Wear comfortable, loose-fitting clothing',
+                    ].map((item, i) => (
+                      <div key={i} style={{
+                        background: '#E8FFFB',
+                        borderRadius: 200,
+                        padding: 'clamp(12px, 1.8vmin, 16px) clamp(16px, 2.4vmin, 24px)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 16,
+                        minHeight: 'clamp(52px, 7.2vmin, 64px)',
+                        boxSizing: 'border-box',
+                      }}>
+                        <img src={doIcon} alt="" width={20} height={20} style={{ display: 'block' }} />
+                        <span style={{ fontSize: 'clamp(13px, 1.6vmin, 20px)', color: '#414141', fontFamily: 'Poppins, sans-serif', lineHeight: 1.45 }}>{item}</span>
+                      </div>
+                    ))}
+                  </div>
 
-                {/* Don'ts */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <img src={dontIcon} alt="" width={16} height={16} />
-                    <span style={{ fontSize: 16, fontWeight: 500, color: '#101129', fontFamily: 'Poppins, sans-serif' }}>Don'ts</span>
-                  </div>
-                  {[
-                    'Avoid eating or drinking anything except water before the test',
-                    'Do not smoke or consume alcohol 24 hours before',
-                    'Avoid strenuous exercise the day before',
-                    'Do not take medications without consulting your doctor',
-                  ].map((item, i) => (
-                    <div key={i} style={{
-                      background: '#FFF0F0', borderRadius: 20, padding: '12px 16px',
-                      display: 'flex', alignItems: 'center', gap: 12,
-                    }}>
-                      <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#E12D2D', flexShrink: 0 }} />
-                      <span style={{ fontSize: 13, color: '#414141', fontFamily: 'Poppins, sans-serif', lineHeight: 1.5 }}>{item}</span>
+                  {/* Don'ts */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 1.6vmin, 14px)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <img src={dontIcon} alt="" width={20} height={20} style={{ display: 'block' }} />
+                      <span style={{ fontSize: 'clamp(16px, 1.9vmin, 24px)', fontWeight: 500, color: '#101129', fontFamily: 'Poppins, sans-serif', letterSpacing: '-0.02em' }}>Don’ts</span>
                     </div>
-                  ))}
+                    {[
+                      'Avoid eating or drinking anything except water before the test',
+                      'Do not smoke or consume alcohol 24 hours before',
+                      'Avoid strenuous exercise the day before',
+                      'Do not take medications without consulting your doctor',
+                    ].map((item, i) => (
+                      <div key={i} style={{
+                        background: '#FFF0F0',
+                        borderRadius: 200,
+                        padding: 'clamp(12px, 1.8vmin, 16px) clamp(16px, 2.4vmin, 24px)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 16,
+                        minHeight: 'clamp(52px, 7.2vmin, 64px)',
+                        boxSizing: 'border-box',
+                      }}>
+                        <img src={dontIcon} alt="" width={20} height={20} style={{ display: 'block' }} />
+                        <span style={{ fontSize: 'clamp(13px, 1.6vmin, 20px)', color: '#414141', fontFamily: 'Poppins, sans-serif', lineHeight: 1.45 }}>{item}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
               </div>

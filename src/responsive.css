@@ -1,6 +1,32 @@
 /* ─── Shared layout helpers ─────────────────────────────────────────────── */
 .page-section {
-  padding: 48px 40px;
+  padding: var(--pad-section-y, 48px) var(--pad-section-x, 40px);
+}
+
+/* This file is imported AFTER index.css, so put per-section padding overrides here. */
+.page-section.home-section--conditions {
+  /* Extra top space before heading (no notch) */
+  padding-top: calc(var(--pad-section-y) + clamp(44px, 6.4vmin, 72px));
+}
+
+/* Mobile: reduce space above "Find Tests by Health Condition" */
+@media (max-width: 768px) {
+  .page-section.home-section--conditions {
+    padding-top: var(--pad-section-y) !important;
+  }
+}
+
+/* Women health segment: dropdown filters smaller on mobile */
+@media (max-width: 768px) {
+  .women-health-main .women-health-dropdown {
+    height: 36px !important;
+    min-height: 36px !important;
+    min-width: 160px !important;
+    padding: 0 30px 0 12px !important;
+    font-size: 13px !important;
+    border-radius: 999px !important;
+    background-position: right 10px center !important;
+  }
 }
 
 /* Women’s health routes — white → pale lavender (vertical, matches design ref) */
@@ -21,9 +47,16 @@
   margin: 0 auto;
   width: 100%;
 }
+.page-inner--wide {
+  /* Match Essential carousel arrows reach (1200 + 60px each side) */
+  max-width: 1320px;
+}
+
+/* (TestPage-specific sizing promoted to global tokens in index.css) */
 .grid-3 {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* minmax(0,1fr) lets columns shrink below content min-width so 3-up rows don’t clip */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
   align-items: stretch;
 }
@@ -31,6 +64,12 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
+}
+/* Test cards: fill row track so every card in a row matches the tallest */
+.grid-3 > .test-card {
+  height: 100%;
+  align-self: stretch;
 }
 .grid-4 {
   display: grid;
@@ -45,10 +84,12 @@
 .essential-carousel__viewport {
   overflow: hidden;
   width: 100%;
+  min-width: 0;
 }
 .essential-carousel__row {
   position: relative;
   width: 100%;
+  min-width: 0;
 }
 .essential-carousel__sideBtn {
   width: 44px;
@@ -74,6 +115,32 @@
   cursor: not-allowed;
 }
 
+.essential-carousel__dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.essential-carousel__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: #e7e1ff;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.essential-carousel__dot:hover {
+  background: #d4c9fc;
+}
+.essential-carousel__dot--active {
+  background: #8b5cf6;
+  transform: scale(1.15);
+}
+
 @media (max-width: 900px) {
   .essential-carousel__viewport {
     overflow: visible;
@@ -88,9 +155,9 @@
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  /* Desktop: show all vitals tiles in one row */
+  /* Desktop: show all vitals tiles in one row (Figma has 7) */
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 16px;
+  gap: clamp(12px, 1.2vw, 20px);
   align-items: stretch;
 }
 .organ-filter-btn {
@@ -98,37 +165,88 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: clamp(8px, 1vw, 12px);
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
   background: #fff;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 20px 12px;
+  border: 1px solid #E7E1FF;
+  border-radius: clamp(18px, 2.2vmin, 24px);
+  /* Bigger cards like Figma (desktop) */
+  padding: clamp(22px, 2.1vw, 32px) clamp(12px, 1.6vw, 18px);
   cursor: pointer;
   font-family: inherit;
+  transform: translateY(0);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+  will-change: transform;
+}
+.organ-filter-btn:focus-visible {
+  outline: 3px solid rgba(139, 92, 246, 0.35);
+  outline-offset: 3px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .organ-filter-btn:hover {
+    transform: translateY(-6px);
+    /* Hover should feel like the "active" chip (purple border + glow) */
+    box-shadow:
+      0 12px 30px rgba(17, 24, 39, 0.12),
+      0 8px 26px rgba(139, 92, 246, 0.18);
+    border-color: #8B5CF6;
+  }
+  .organ-filter-btn:active {
+    transform: translateY(-2px);
+  }
+}
+.organ-filter-btn__bubble {
+  /* Bigger bubble like Figma */
+  --bubble-size: clamp(72px, 6.8vw, 96px);
+  width: var(--bubble-size);
+  height: var(--bubble-size);
+  border-radius: 999px;
+  position: relative;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, var(--organ-bubble-from, #FFD6EE) 48.795%, var(--organ-bubble-to, #FF62BF) 100%);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+.organ-filter-btn__bubble::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  width: calc(var(--bubble-size) * 0.72);
+  height: calc(var(--bubble-size) * 0.70);
+  transform: translate(-50%, -50%);
+  background: var(--organ-glow, #FFABDD);
+  filter: blur(clamp(14px, 1.7vw, 23.3px));
+  opacity: 0.9;
+  pointer-events: none;
 }
 .organ-filter-btn__icon {
-  width: 96px;
-  height: 96px;
-  object-fit: cover;
-  border-radius: 12px;
+  position: relative;
+  z-index: 1;
+  /* Bigger glyph inside bigger bubble */
+  width: var(--organ-icon-size, clamp(40px, 4.3vw, 60px));
+  height: var(--organ-icon-size, clamp(40px, 4.3vw, 60px));
+  object-fit: contain;
   flex-shrink: 0;
+  transform: scale(var(--organ-icon-scale, 1));
+  transform-origin: center;
 }
 .organ-filter-btn__label {
   font-family: 'Poppins', sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  color: #111827;
+  font-size: clamp(0.95rem, 0.75rem + 0.9vmin, 1.5rem);
+  font-weight: 500;
+  color: #161616;
   text-align: center;
   margin: 0;
-  line-height: 1.2;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
   word-break: break-word;
-}
-.organ-filter-btn__emoji {
-  font-size: 32px;
-  line-height: 1;
 }
 
 /* ─── Condition pills (health condition filters on Test page) ───────────── */
@@ -152,13 +270,14 @@
   background: transparent;
   color: #161616;
   font-family: 'Poppins', sans-serif;
-  font-size: clamp(12px, 2.5vw, 14px);
+  font-size: var(--type-price-meta, clamp(0.875rem, 0.78rem + 0.45vmin, 1.25rem));
   font-weight: 500;
+  line-height: var(--lh-ui, 1.3);
   cursor: pointer;
   white-space: nowrap;
   flex: 1 1 auto;
   min-width: 0;
-  max-width: 182px;
+  max-width: min(220px, 100%);
   width: auto;
 }
 .condition-pill-btn--active {
@@ -187,10 +306,7 @@
   .organ-filter-btn {
     padding: 16px 10px;
   }
-  .organ-filter-btn__icon {
-    width: 80px;
-    height: 80px;
-  }
+  /* bubble/icon sizes are fluid via clamp; no overrides needed */
 }
 
 /* ─── Navbar ────────────────────────────────────────────────────────────── */
@@ -222,9 +338,57 @@
   flex-shrink: 0;
 }
 
+/* Desktop: logo → search (flex) → nav → bell/cart (Figma main file; mobile uses 944:8550) */
+@media (min-width: 769px) {
+  .navbar-inner {
+    justify-content: flex-start;
+  }
+  .navbar-logo {
+    order: 2;
+  }
+  .navbar-search {
+    order: 3;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 720px;
+  }
+  .navbar-nav {
+    order: 4;
+    margin-left: auto;
+  }
+  .navbar-trailing-actions {
+    order: 5;
+  }
+  .navbar-location-mobile {
+    display: none !important;
+  }
+  .navbar-bell-badge {
+    display: none !important;
+  }
+  .navbar-search-input {
+    font-size: var(--type-nav-input) !important;
+    font-family: Inter, sans-serif !important;
+  }
+}
+
 /* ─── Hero ──────────────────────────────────────────────────────────────── */
 .hero-section {
   margin: 16px 12px;
+}
+
+/* Remove gap under navbar (all viewports) */
+.site-navbar-header + main .hero-section {
+  margin-top: 0;
+}
+
+/* Mobile: remove extra top space above hero banner */
+@media (max-width: 768px) {
+  .hero-section {
+    margin-top: 0 !important;
+    margin-left: 12px !important;
+    margin-right: 12px !important;
+    margin-bottom: 8px !important;
+  }
 }
 .hero-img {
   width: 100%;
@@ -232,6 +396,36 @@
   display: block;
   object-fit: cover;
   max-height: 460px;
+}
+
+/* Test page mobile banner (Figma 944:7935) */
+@media (max-width: 520px) {
+  /* Mobile banner image (Frame 1948760703.png) */
+  .hero-shell {
+    /* Short banner; text/illustration are baked into the PNG */
+    aspect-ratio: 364 / 204;
+    height: auto !important;
+    background: #ffffff;
+  }
+  .hero-mobile-bg {
+    display: block !important;
+    object-fit: contain !important; /* avoid cropping banner text */
+    background: #ffffff;
+  }
+  .hero-track {
+    display: none !important;
+  }
+  .hero-dots {
+    display: none !important;
+  }
+  /* Hide overlay content because the banner already contains text/art. */
+  .hero-mobile-content { display: none !important; }
+  .hero-mobile-illustration { display: none !important; }
+
+  .hero-shell {
+    position: relative;
+    overflow: hidden;
+  }
 }
 
 /* ─── Footer ────────────────────────────────────────────────────────────── */
@@ -271,8 +465,153 @@
   max-width: 280px;
 }
 @media (max-width: 768px) {
+  /* Mobile: only bump hero title + subtitle font sizes (do not touch ribbon) */
+  .test-detail-mobileTitle {
+    font-size: clamp(20px, 5.4vw, 24px) !important;
+  }
+  .test-detail-mobileSubtitle {
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+  }
+
   .footer-brand-tagline {
     max-width: 100%;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   ORGAN DETAIL — Parameter chart card (Figma 970:8985) — MOBILE
+   ════════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .organ-paramCard {
+    padding: clamp(16px, 4.8vw, 20px) !important;
+    border-radius: var(--m-radius-card-lg) !important;
+  }
+
+  .organ-paramHeader {
+    flex-direction: column !important;
+    gap: clamp(12px, 4.2vw, 16px) !important;
+    margin-bottom: clamp(14px, 4.6vw, 20px) !important;
+  }
+
+  .organ-paramTimeToggle {
+    width: min(265px, 100%) !important;
+    height: 40px !important;
+    padding: clamp(10px, 3.2vw, 14px) !important;
+    border-radius: 112px !important;
+    align-self: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    box-sizing: border-box;
+  }
+
+  .organ-paramTimeBtn {
+    height: 28px !important;
+    border-radius: 47px !important;
+    padding: 8px 12px !important;
+    font-family: Poppins, sans-serif !important;
+    font-weight: 500 !important;
+    font-size: 12px !important;
+    line-height: 20px !important;
+    color: #161616 !important;
+    background: #fff !important;
+    box-shadow: var(--m-shadow) !important;
+    border: var(--m-outline) !important;
+  }
+  .organ-paramTimeBtn.is-active {
+    color: #8B5CF6 !important;
+  }
+
+  .organ-paramName {
+    font-size: 16px !important;
+    line-height: 20px !important;
+    letter-spacing: -0.02em !important;
+    margin-bottom: 12px !important;
+  }
+
+  .organ-paramValueRow {
+    gap: 8px !important;
+    flex-wrap: wrap;
+  }
+  .organ-paramValue {
+    font-size: 16px !important;
+    line-height: 31px !important;
+    letter-spacing: -0.035em !important;
+  }
+  .organ-paramUnit {
+    font-size: 12px !important;
+    line-height: 20px !important;
+    margin-bottom: 0 !important;
+  }
+  .organ-paramStatusPill {
+    font-size: 12px !important;
+    line-height: 20px !important;
+    padding: 3px 10px !important;
+    border-radius: 100px !important;
+  }
+  .organ-paramChangePill {
+    padding: 5px 11px !important;
+    border-radius: 111px !important;
+    gap: 10px !important;
+  }
+  .organ-paramChangeText {
+    font-size: 12px !important;
+    line-height: 20px !important;
+  }
+
+  .organ-paramScrubber {
+    margin-top: clamp(10px, 3.6vw, 14px);
+    height: 12px;
+    width: min(211px, 70%);
+    background: #E7E1FF;
+    border-radius: var(--m-radius-card-sm);
+    overflow: hidden;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+  }
+  .organ-paramScrubberThumb {
+    position: absolute;
+    left: 4px;
+    top: 3px;
+    height: 6px;
+    width: clamp(44px, 16vw, 57px);
+    background: #6D55CC;
+    border-radius: 3px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   EMPTY REPORT — Mobile centering
+   ════════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .empty-report-content {
+    /* Reduce global section side padding so centered block is truly centered */
+    padding-left: clamp(12px, 4vw, 16px) !important;
+    padding-right: clamp(12px, 4vw, 16px) !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    max-width: 100% !important;
+    min-height: calc(100vh - clamp(84px, 10vmin, 96px)) !important;
+    justify-content: center !important;
+  }
+
+  .empty-report-block {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    max-width: 364px !important;
+  }
+
+  .empty-report-ctas {
+    justify-content: center !important;
+  }
+
+  .empty-report-cta {
+    width: 100% !important;
+    max-width: min(320px, 100%) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    flex: 0 1 auto !important;
   }
 }
 .footer-subscribe {
@@ -345,6 +684,81 @@
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
+   ORDER DETAILS PAGE — DESKTOP (Figma 392:3681) — responsive, no fixed layout
+   ════════════════════════════════════════════════════════════════════════════ */
+.order-detail-page {
+  position: relative;
+  overflow-x: hidden;
+}
+.order-detail-inner {
+  position: relative;
+  width: 100%;
+  max-width: var(--page-inner-w);
+  margin: 0 auto;
+  padding: calc(var(--pad-section-y) * 0.55) var(--pad-section-x) calc(var(--pad-section-y) * 0.7);
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .order-detail-inner {
+    max-width: 100% !important;
+    padding: clamp(14px, 4.2vw, 18px) clamp(12px, 4vw, 16px) clamp(28px, 8vw, 44px) !important;
+  }
+
+  /* Mobile: blobs can create perceived misalignment */
+  .order-detail-bg {
+    display: none !important;
+  }
+
+  .order-detail-backBtn {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+.order-detail-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.order-detail-bg ~ * {
+  position: relative;
+  z-index: 1;
+}
+.order-detail-blob {
+  position: absolute;
+  filter: blur(clamp(120px, 12vw, 171px));
+  opacity: 0.39;
+  border-radius: 999px;
+}
+.order-detail-blob--green {
+  width: clamp(260px, 22vw, 420px);
+  height: clamp(200px, 18vw, 320px);
+  left: clamp(-90px, -6vw, -40px);
+  top: clamp(360px, 26vw, 620px);
+  background: #41C9B3;
+}
+.order-detail-blob--purple {
+  width: clamp(280px, 24vw, 487px);
+  height: clamp(200px, 18vw, 315px);
+  right: clamp(-140px, -10vw, -60px);
+  top: clamp(620px, 44vw, 1120px);
+  background: #8B5CF6;
+}
+
+.order-detail-twoUp {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(14px, 1.4vw, 16px);
+  align-items: start;
+}
+@media (max-width: 768px) {
+  .order-detail-twoUp {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
    HEALTH METRICS PAGE — RESPONSIVE
    ════════════════════════════════════════════════════════════════════════════ */
 .metrics-mobile-grid {
@@ -353,8 +767,15 @@
 
 @media (max-width: 768px) {
   .metrics-inner {
-    padding: 18px 16px 44px !important;
-    max-width: 100% !important;
+    padding: 14px 16px 44px !important; /* reduce top spacing */
+    /* Match other mobile pages: keep content from feeling full-bleed */
+    max-width: 364px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .metrics-breadcrumb {
+    display: none !important; /* remove breadcrumb in mobile */
   }
 
   .metrics-header {
@@ -369,11 +790,33 @@
     font-size: 22px !important;
     line-height: 1.15 !important;
   }
+
+  .metrics-titleRow {
+    width: 100% !important;
+  }
   .metrics-selfBtn {
-    width: fit-content !important;
-    align-self: flex-start !important;
-    padding: 10px 14px !important;
-    border-radius: 10px !important;
+    width: clamp(90px, 26vw, 95px) !important;
+    min-width: clamp(90px, 26vw, 95px) !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    justify-content: center !important;
+  }
+  .metrics-selfBtn span {
+    font-size: 12px !important;
+    line-height: 20px !important;
+  }
+
+  .metrics-title {
+    font-size: 20px !important;
+    letter-spacing: -0.02em !important;
+    line-height: 20px !important;
+    margin-bottom: 6px !important;
+  }
+  .metrics-subtitle {
+    font-size: 12px !important;
+    line-height: 20px !important;
   }
 
   .metrics-filters {
@@ -384,9 +827,35 @@
     overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
-    padding: 8px 8px !important;
+    scrollbar-width: none; /* Firefox: hide scrollbar, keep scroll */
+    padding: clamp(12px, 3.6vw, 14px) clamp(12px, 3.6vw, 16px) !important;
     margin-bottom: 18px !important;
-    border-radius: 16px !important;
+    border-radius: 112px !important;
+    min-height: 60px !important;
+    align-items: center !important;
+    gap: 9px !important;
+  }
+  .metrics-filters::-webkit-scrollbar {
+    display: none; /* Chrome/Safari: hide scrollbar, keep scroll */
+  }
+
+  .metrics-filterBtn {
+    flex: 0 0 auto !important;
+    height: 32px !important;
+    border-radius: var(--m-radius-pill) !important;
+    padding: 8px 12px !important;
+    border: var(--m-outline) !important;
+    background: #fff !important;
+    box-shadow: var(--m-shadow) !important;
+    font-family: Poppins, sans-serif !important;
+    font-weight: 500 !important;
+    font-size: 12px !important;
+    line-height: 20px !important;
+    color: #161616 !important;
+    white-space: nowrap !important;
+  }
+  .metrics-filterBtn.is-active {
+    color: #8B5CF6 !important;
   }
 
   .metrics-layout {
@@ -398,6 +867,12 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
     width: 100%;
+    justify-items: center;
+  }
+
+  .metrics-mobile-grid > div {
+    width: 100%;
+    max-width: min(361px, 100%);
   }
 }
 
@@ -497,8 +972,11 @@
    ════════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
   .orders-inner {
-    padding: 18px 16px 44px !important;
-    max-width: 100% !important;
+    padding: clamp(14px, 4.2vw, 18px) clamp(12px, 4vw, 16px) clamp(28px, 8vw, 44px) !important;
+    /* Match Figma mobile frame: centered ~356px column */
+    max-width: 364px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 
   .orders-header {
@@ -506,17 +984,47 @@
     align-items: stretch !important;
     gap: 12px !important;
     margin-bottom: 16px !important;
+    text-align: center !important;
+  }
+  .orders-subtitle {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 
   .orders-tabs {
     width: 100% !important;
-    max-width: 100% !important;
+    max-width: 355px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
     box-sizing: border-box;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    border-radius: 16px !important;
+    overflow: hidden !important; /* no scrollbar in mobile */
+    border-radius: 112px !important;
+    padding: clamp(12px, 3.6vw, 14px) !important;
+    padding-right: clamp(12px, 3.6vw, 14px) !important;
+    gap: clamp(12px, 4vw, 16px) !important;
+    justify-content: center !important;
   }
+
+  .orders-tabBtn {
+    flex: 0 0 auto !important;
+    border-radius: var(--m-radius-pill) !important;
+    border: var(--m-outline) !important;
+    box-shadow: var(--m-shadow) !important;
+    background: #fff !important;
+    padding: clamp(7px, 2.2vw, 8px) clamp(10px, 3.2vw, 12px) !important;
+    font-family: Poppins, sans-serif !important;
+    font-weight: 500 !important;
+    font-size: 12px !important;
+    line-height: 20px !important;
+    color: #161616 !important;
+  }
+  .orders-tabBtn.is-active {
+    color: #8B5CF6 !important;
+  }
+  .orders-tabBtn--all { width: clamp(68px, 20vw, 73px) !important; }
+  .orders-tabBtn--active,
+  .orders-tabBtn--completed { width: clamp(90px, 26vw, 98px) !important; }
 
   .orders-card-right {
     width: 100% !important;
@@ -544,6 +1052,1103 @@
     text-align: center !important;
     align-items: center !important;
   }
+
+  /* Orders empty state: allow subtitle to wrap on smaller screens */
+  .orders-empty-subtitle {
+    white-space: normal !important;
+  }
+
+  .orders-empty-cta {
+    width: 100% !important;
+    max-width: min(320px, 100%) !important; /* reduce button width on mobile */
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   UPLOAD REPORT — Mobile card (Figma 847:7649)
+   ════════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .upload-report-center {
+    padding-left: clamp(12px, 4vw, 16px);
+    padding-right: clamp(12px, 4vw, 16px);
+    box-sizing: border-box;
+  }
+
+  .upload-report-card {
+    width: min(360px, 100%) !important;
+    border-radius: clamp(16px, 4.8vw, 20px) !important;
+    padding: clamp(18px, 6vw, 40px) !important;
+    gap: clamp(12px, 3.8vw, 16px) !important;
+  }
+
+  .upload-report-cardHeader {
+    gap: clamp(8px, 2.8vw, 12px) !important;
+  }
+
+  .upload-report-cardTitle {
+    font-size: clamp(16px, 4.8vw, 18px) !important;
+    letter-spacing: -0.035em !important;
+    line-height: 20px !important;
+  }
+
+  .upload-report-cardSubtitle {
+    font-family: Inter, sans-serif !important;
+    font-size: clamp(13px, 3.8vw, 14px) !important;
+    line-height: 20px !important;
+    color: #414141 !important;
+    max-width: 28ch !important; /* match centered narrow copy */
+  }
+
+  .upload-report-dropzone {
+    width: 100% !important;
+    border: 1px dashed #E7E1FF !important;
+    border-radius: clamp(16px, 4.8vw, 20px) !important;
+    padding: clamp(18px, 6vw, 26px) !important;
+    gap: clamp(16px, 5.8vw, 22px) !important;
+    min-height: clamp(260px, 78vw, 316px);
+    box-sizing: border-box;
+  }
+
+  .upload-report-dropzoneIcon {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  .upload-report-dropzoneIcon img {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .upload-report-fileChips {
+    gap: clamp(10px, 3.6vw, 12px) !important;
+  }
+
+  .upload-report-fileChip {
+    height: 28px !important;
+    padding: 0 clamp(10px, 3.4vw, 10px) !important;
+    border-radius: 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: clamp(14px, 4vw, 16px) !important;
+    line-height: 20px !important;
+  }
+
+  .upload-report-browseBtn {
+    height: 40px !important;
+    min-height: 40px !important;
+    width: min(190px, 100%) !important;
+    padding: 0 clamp(16px, 6vw, 22px) !important;
+    border-radius: 8px !important;
+    font-size: clamp(16px, 4.8vw, 18px) !important;
+    line-height: 20px !important;
+  }
+  .upload-report-browseBtn img {
+    width: 20px !important;
+    height: 20px !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   REVIEW EXTRACTED DATA — Mobile card (Figma 850:6820)
+   ════════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .review-extracted-center {
+    padding-left: clamp(16px, 5vw, 22px);
+    padding-right: clamp(16px, 5vw, 22px);
+    box-sizing: border-box;
+  }
+
+  .review-extracted-card {
+    width: 100% !important; /* use full section width on mobile */
+    border-radius: clamp(16px, 4.8vw, 20px) !important;
+    padding: clamp(20px, 6.4vw, 44px) !important; /* more left/right breathing room */
+    gap: clamp(18px, 5.6vw, 32px) !important;
+  }
+
+  .review-extracted-title {
+    font-size: clamp(15px, 4.2vw, 16px) !important;
+    letter-spacing: -0.035em !important;
+    line-height: 20px !important;
+  }
+
+  .review-extracted-subtitle {
+    font-family: Poppins, sans-serif !important;
+    font-size: 12px !important;
+    line-height: 20px !important;
+    color: #414141 !important;
+  }
+
+  .review-extracted-testNameLabel {
+    font-size: clamp(15px, 4.2vw, 16px) !important;
+    line-height: 20px !important;
+  }
+
+  .review-extracted-testNameField {
+    background: #F9F9F9 !important;
+    border-radius: clamp(16px, 4.8vw, 20px) !important;
+    padding: clamp(8px, 2.8vw, 10px) clamp(12px, 3.8vw, 14px) !important;
+    min-height: clamp(24px, 7.4vw, 27px) !important;
+  }
+
+  .review-extracted-testNameValue {
+    font-family: Inter, sans-serif !important;
+    font-weight: 400 !important;
+    font-size: 12px !important;
+    line-height: 20px !important;
+    color: #414141 !important;
+  }
+
+  .review-extracted-params {
+    gap: clamp(8px, 2.8vw, 9px) !important;
+  }
+
+  .review-extracted-paramRow {
+    border-radius: clamp(16px, 4.8vw, 20px) !important;
+    padding: clamp(8px, 2.8vw, 10px) !important;
+    min-height: clamp(50px, 15.5vw, 55px) !important;
+    align-items: center !important;
+  }
+
+  .review-extracted-dot {
+    width: 7px !important;
+    height: 7px !important;
+  }
+
+  .review-extracted-paramName,
+  .review-extracted-paramRange,
+  .review-extracted-paramValue {
+    font-size: 12px !important;
+    line-height: 20px !important;
+  }
+
+  .review-extracted-ctaRow {
+    justify-content: center !important;
+  }
+
+  .review-extracted-cta {
+    width: min(300px, 100%) !important;
+    min-height: clamp(52px, 13.5vw, 58px) !important;
+    border-radius: 8px !important;
+    font-size: clamp(15px, 4.4vw, 16px) !important;
+    line-height: 26px !important;
+  }
+
+  .review-extracted-cta img {
+    width: 8px !important;
+    height: 13px !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   ORDER DETAILS PAGE — MOBILE (Figma 944:10751 hero card)
+   ════════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .order-detail-hero {
+    background: linear-gradient(90deg, #101129 0%, #2A2C5B 81.011%) !important;
+    border-radius: clamp(16px, 4.8vw, 20px) !important;
+    border: var(--m-outline) !important;
+    box-shadow: var(--m-shadow) !important;
+    padding: clamp(18px, 5.2vw, 22px) clamp(14px, 4.8vw, 20px) !important;
+    gap: clamp(16px, 4.8vw, 20px) !important;
+  }
+
+  .order-detail-heroTop {
+    gap: clamp(10px, 3.4vw, 12px) !important;
+    width: 100% !important;
+  }
+
+  .order-detail-heroTitleRow {
+    width: 100% !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap !important;
+    gap: clamp(10px, 3.6vw, 16px) !important;
+    padding-top: clamp(2px, 1.2vw, 6px) !important;
+  }
+
+  .order-detail-heroTitle {
+    font-family: Poppins, sans-serif !important;
+    font-weight: 500 !important;
+    font-size: clamp(13px, 3.6vw, 14px) !important;
+    line-height: 26px !important;
+    color: #ffffff !important;
+    white-space: nowrap !important;
+  }
+
+  .order-detail-heroStatusPill {
+    background: #8B5CF6 !important;
+    padding: clamp(2px, 0.9vw, 3px) clamp(8px, 2.8vw, 10px) !important;
+    border-radius: 32px !important;
+    font-family: Poppins, sans-serif !important;
+    font-weight: 400 !important;
+    font-size: 12px !important;
+    line-height: 20px !important;
+    color: #F9F9F9 !important;
+    white-space: nowrap !important;
+  }
+
+  .order-detail-heroSub {
+    font-family: Poppins, sans-serif !important;
+    font-weight: 400 !important;
+    font-size: clamp(13px, 3.6vw, 14px) !important;
+    line-height: 20px !important;
+    color: #828282 !important;
+  }
+
+  .order-detail-heroContacts {
+    width: 100% !important;
+    gap: clamp(6px, 2.6vw, 9px) !important;
+  }
+
+  .order-detail-heroContactRow {
+    gap: clamp(10px, 3.4vw, 12px) !important;
+  }
+
+  .order-detail-heroContactIcon {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .order-detail-heroContactText {
+    font-family: Poppins, sans-serif !important;
+    font-weight: 400 !important;
+    font-size: 12px !important;
+    line-height: 20px !important;
+    color: #F9F9F9 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   ORDER DETAILS — Order Tracking timeline (Figma 944:10660) — MOBILE
+   ════════════════════════════════════════════════════════════════════════════ */
+/* Desktop / tablet: match Figma 399:3240 (responsive, no fixed layout) */
+.order-detail-trackingCard {
+  border-radius: clamp(18px, 1.6vw, 20px);
+  padding: clamp(28px, 2.2vw, 38px);
+  padding-left: clamp(28px, 2.4vw, 38px);
+  box-shadow: var(--m-shadow, 0px 4px 27.3px rgba(0,0,0,0.05));
+  outline: var(--m-outline, 1px solid #E7E1FF);
+  outline-offset: -1;
+  position: relative;
+  background: #fff;
+}
+
+.order-detail-trackList {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(20px, 2.2vw, 30px);
+}
+
+.order-detail-trackLine {
+  position: absolute;
+  left: clamp(10px, 0.9vw, 11px);
+  top: clamp(10px, 1vw, 13px);
+  bottom: clamp(10px, 1vw, 13px);
+  width: 1px;
+  background: #E7E1FF;
+}
+
+.order-detail-trackRow {
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(16px, 1.6vw, 20px);
+}
+
+.order-detail-trackMarker {
+  width: clamp(20px, 1.4vw, 23px);
+  height: clamp(20px, 1.4vw, 23px);
+  border-radius: 999px;
+  background: #E7E1FF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.order-detail-trackMarker[data-done="true"] {
+  background: #8B5CF6;
+}
+
+.order-detail-trackTick {
+  width: clamp(12px, 1vw, 16px);
+  height: clamp(10px, 0.9vw, 16px);
+  display: block;
+  filter: brightness(0) invert(1);
+}
+
+.order-detail-trackText {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+.order-detail-trackLabel {
+  font-family: Poppins, sans-serif;
+  font-weight: 500;
+  font-size: clamp(16px, 1.2vw, 20px);
+  line-height: 26px;
+  color: #161616;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.order-detail-trackTime {
+  font-family: Inter, sans-serif;
+  font-weight: 400;
+  font-size: clamp(14px, 1.1vw, 18px);
+  line-height: 27px;
+  color: #828282;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+  .order-detail-trackingCard {
+    border-radius: clamp(16px, 4.8vw, 20px) !important;
+    padding: clamp(22px, 6.2vw, 38px) clamp(14px, 4.6vw, 20px) !important;
+    padding-left: clamp(22px, 8.8vw, 38px) !important; /* matches figma left inset */
+    box-shadow: 0px 4px 27.3px rgba(0, 0, 0, 0.05) !important;
+    outline: 1px solid #E7E1FF !important;
+    outline-offset: -1 !important;
+    position: relative;
+  }
+
+  .order-detail-trackList {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(12px, 4.2vw, 16px); /* figma: 16 */
+  }
+
+  .order-detail-trackLine {
+    position: absolute;
+    left: 10px; /* centers behind 20px marker */
+    top: 10px;
+    bottom: 10px;
+    width: 1px;
+    background: #E7E1FF;
+    opacity: 1;
+  }
+
+  .order-detail-trackRow {
+    display: flex;
+    align-items: flex-start;
+    gap: clamp(14px, 5.4vw, 20px); /* figma: 20 */
+  }
+
+  .order-detail-trackMarker {
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    background: #E7E1FF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .order-detail-trackMarker[data-done="true"] {
+    background: #8B5CF6;
+  }
+
+  .order-detail-trackMarker[data-done="false"] {
+    width: 23px;
+    height: 23px;
+    background: #E7E1FF;
+  }
+
+  .order-detail-trackTick {
+    width: 10px;
+    height: 8px;
+    display: block;
+    filter: brightness(0) invert(1);
+  }
+
+  .order-detail-trackText {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .order-detail-trackLabel {
+    font-family: Poppins, sans-serif;
+    font-weight: 500;
+    font-size: clamp(13px, 3.6vw, 14px);
+    line-height: 20px;
+    color: #161616;
+    white-space: nowrap;
+  }
+
+  .order-detail-trackTime {
+    font-family: Poppins, sans-serif;
+    font-weight: 400;
+    font-size: clamp(13px, 3.6vw, 14px);
+    line-height: 20px;
+    color: #828282;
+    white-space: nowrap;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   ORDER DETAILS — Patient record card (Figma 944:10711) — MOBILE
+   ════════════════════════════════════════════════════════════════════════════ */
+/* Desktop / tablet: match Figma 405:3401 (responsive, no fixed layout) */
+.order-detail-patientCard {
+  border-radius: clamp(18px, 1.6vw, 20px);
+  padding: clamp(14px, 1.2vw, 20px);
+  box-shadow: var(--m-shadow, 0px 4px 27.3px rgba(0,0,0,0.05));
+  outline: var(--m-outline, 1px solid #E7E1FF);
+  outline-offset: -1;
+  background: #fff;
+}
+
+.order-detail-patientList {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(22px, 2vw, 26px);
+}
+
+.order-detail-patientDivider {
+  height: 1px;
+  width: 100%;
+  background: #E7E1FF;
+}
+
+.order-detail-patientEntry {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "top outcome"
+    "bio button";
+  column-gap: clamp(22px, 5vw, 60px);
+  row-gap: clamp(18px, 2vw, 26px);
+  align-items: start;
+  padding-block: clamp(14px, 1.2vw, 18px);
+}
+
+/* Desktop separation between records: avoid "merged" look */
+.order-detail-patientEntry + .order-detail-patientEntry {
+  border-top: 1px solid #E7E1FF;
+  padding-top: clamp(18px, 1.6vw, 22px);
+  margin-top: clamp(2px, 0.6vw, 6px);
+}
+/* Divider node is used for mobile; hide it on desktop to prevent grid issues */
+.order-detail-patientDivider {
+  display: none;
+}
+
+.order-detail-patientTop {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: clamp(18px, 2vw, 29px);
+}
+
+.order-detail-patientAvatar {
+  width: clamp(56px, 5vw, 69px);
+  height: clamp(56px, 5vw, 67px);
+  border-radius: clamp(28px, 2.6vw, 40px);
+  background: #E7E1FF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.order-detail-patientAvatar img {
+  width: clamp(18px, 1.6vw, 24px);
+  height: clamp(18px, 1.6vw, 24px);
+  display: block;
+}
+
+.order-detail-patientName {
+  font-family: Poppins, sans-serif;
+  font-weight: 500;
+  font-size: clamp(16px, 1.25vw, 20px);
+  line-height: 26px;
+  color: #161616;
+}
+.order-detail-patientSub {
+  font-family: Poppins, sans-serif;
+  font-weight: 500;
+  font-size: clamp(14px, 1.25vw, 20px);
+  line-height: 26px;
+  color: #828282;
+  margin-top: clamp(4px, 0.6vw, 8px);
+}
+
+.order-detail-patientOutcome {
+  grid-area: outcome;
+  min-width: clamp(140px, 12vw, 160px);
+}
+.order-detail-patientSectionTitle {
+  font-family: Poppins, sans-serif;
+  font-weight: 500;
+  font-size: clamp(16px, 1.25vw, 20px);
+  line-height: 26px;
+  color: #161616;
+}
+.order-detail-patientOutcomeRow {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 1.6vw, 21px);
+  margin-top: clamp(8px, 1vw, 14px);
+  justify-content: flex-start;
+}
+.order-detail-patientOutcomeDot {
+  width: clamp(18px, 1.6vw, 24px);
+  height: clamp(18px, 1.6vw, 24px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.order-detail-patientOutcomeDot img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.order-detail-patientOutcomeText {
+  font-family: Poppins, sans-serif;
+  font-weight: 500;
+  font-size: clamp(16px, 1.25vw, 20px);
+  line-height: 26px;
+  color: #828282;
+  white-space: nowrap;
+}
+
+.order-detail-patientBiomarker {
+  grid-area: bio;
+  grid-column: 1 / 2;
+  margin-top: 0;
+  max-width: min(520px, 100%);
+}
+.order-detail-patientBiomarkerLabel {
+  font-family: Poppins, sans-serif;
+  font-weight: 400;
+  font-size: clamp(16px, 1.25vw, 20px);
+  line-height: 29px;
+  color: #828282;
+}
+.order-detail-patientBiomarkerPill {
+  margin-top: clamp(8px, 1vw, 10px);
+  background: #FFF4EF;
+  border: 1px solid #EA8C5A;
+  border-radius: var(--m-radius-pill, 999px);
+  padding: clamp(8px, 0.9vw, 10px) clamp(12px, 1.2vw, 16px);
+  font-family: Inter, sans-serif;
+  font-weight: 400;
+  font-size: clamp(14px, 1.15vw, 18px);
+  line-height: 27px;
+  color: #161616;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.order-detail-patientViewReportBtn {
+  grid-area: button;
+  grid-column: 2 / 3;
+  justify-self: end;
+  align-self: center;
+  margin-top: 0;
+  height: clamp(52px, 4.2vw, 58px);
+  border-radius: var(--m-radius-control, 8px);
+  background: #8B5CF6;
+  border: none;
+  padding: 0 clamp(20px, 2.4vw, 34px);
+  color: #fff;
+  font-family: Poppins, sans-serif;
+  font-weight: 500;
+  font-size: clamp(16px, 1.25vw, 20px);
+  line-height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 1vw, 10px);
+  cursor: pointer;
+}
+.order-detail-patientViewReportIcon {
+  width: clamp(18px, 1.6vw, 24px);
+  height: clamp(18px, 1.6vw, 22px);
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .order-detail-patientCard {
+    border-radius: clamp(16px, 4.8vw, 20px) !important;
+    padding: 20px !important;
+    box-shadow: 0px 4px 27.3px rgba(0, 0, 0, 0.05) !important;
+    outline: 1px solid #E7E1FF !important;
+    outline-offset: -1 !important;
+  }
+
+  .order-detail-patientList {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+  }
+
+  .order-detail-patientDivider {
+    height: 1px;
+    width: 100%;
+    background: #E7E1FF;
+    margin: 0;
+  }
+
+  .order-detail-patientEntry {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .order-detail-patientTop {
+    display: flex;
+    align-items: center;
+    gap: clamp(10px, 3.4vw, 12px);
+  }
+
+  .order-detail-patientAvatar {
+    width: clamp(28px, 8.8vw, 32px);
+    height: clamp(28px, 8.8vw, 32px);
+    border-radius: 999px;
+    background: #E7E1FF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .order-detail-patientAvatar img {
+    width: clamp(14px, 4.6vw, 18px);
+    height: clamp(14px, 4.6vw, 18px);
+    display: block;
+  }
+
+  .order-detail-patientName {
+    font-family: Poppins, sans-serif;
+    font-weight: 500;
+    font-size: clamp(15px, 4.4vw, 16px);
+    line-height: 20px;
+    color: #161616;
+  }
+  .order-detail-patientSub {
+    font-family: Poppins, sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 20px;
+    color: #828282;
+    margin-top: clamp(4px, 1.6vw, 8px);
+  }
+
+  .order-detail-patientSectionTitle {
+    font-family: Poppins, sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 26px;
+    color: #161616;
+    margin-top: 0;
+  }
+
+  .order-detail-patientOutcomeRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: clamp(6px, 2.2vw, 8px);
+  }
+
+  .order-detail-patientOutcomeDot {
+    width: 12px;
+    height: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .order-detail-patientOutcomeDot img {
+    width: 12px;
+    height: 12px;
+    display: block;
+  }
+
+  .order-detail-patientOutcomeText {
+    font-family: Poppins, sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 20px;
+    color: #828282;
+    white-space: nowrap;
+  }
+
+  .order-detail-patientBiomarkerLabel {
+    font-family: Poppins, sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 20px;
+    color: #828282;
+    margin-top: 0;
+  }
+
+  .order-detail-patientBiomarkerPill {
+    margin-top: clamp(6px, 2.2vw, 8px);
+    background: #FFF4EF;
+    border: 1px solid #EA8C5A;
+    border-radius: 999px;
+    padding: clamp(8px, 2.8vw, 10px) clamp(12px, 4vw, 16px);
+    font-family: Poppins, sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 20px;
+    color: #161616;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .order-detail-patientViewReportBtn {
+    margin-top: 16px;
+    width: min(140px, 100%);
+    min-height: 32px;
+    background: #8B5CF6;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 8px;
+    color: #fff;
+    font-family: Inter, sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .order-detail-patientViewReportIcon {
+    display: none !important;
+  }
+  .order-detail-patientViewReportBtn:disabled {
+    opacity: 0.7;
+    cursor: wait;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   ORDER DETAILS — Billing & Payment Summary (Figma 944:10786) — MOBILE
+   ════════════════════════════════════════════════════════════════════════════ */
+/* Desktop / tablet: match Figma 406:3570 (responsive, no fixed layout) */
+.order-detail-billingCard {
+  border-radius: clamp(18px, 1.6vw, 20px);
+  padding: clamp(18px, 1.6vw, 26px);
+  box-shadow: var(--m-shadow, 0px 4px 27.3px rgba(0,0,0,0.05));
+  outline: var(--m-outline, 1px solid #E7E1FF);
+  outline-offset: -1;
+  background: #fff;
+}
+
+.order-detail-billingStrip {
+  width: 100%;
+  border-radius: clamp(8px, 0.8vw, 10px);
+  background: linear-gradient(180deg, #E7E1FF 33.696%, #FFFFFF 88.406%);
+  overflow: hidden;
+  min-height: clamp(110px, 10vw, 138px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 1.3vw, 22px) clamp(16px, 1.4vw, 22px);
+  box-sizing: border-box;
+  margin-bottom: clamp(12px, 1.2vw, 18px);
+}
+
+.order-detail-billingStripInner {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(24px, 6vw, 70px);
+  align-items: start;
+}
+@media (max-width: 1024px) {
+  .order-detail-billingStripInner {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(18px, 4vw, 32px);
+  }
+}
+
+.order-detail-billingMeta {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.2vw, 16px);
+  min-width: 0;
+}
+.order-detail-billingMetaLabel {
+  font-family: Poppins, sans-serif;
+  font-weight: 500;
+  font-size: clamp(16px, 1.25vw, 20px);
+  line-height: 26px;
+  color: #161616;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.order-detail-billingMetaValue {
+  font-family: Poppins, sans-serif;
+  font-weight: 400;
+  font-size: clamp(16px, 1.25vw, 20px);
+  line-height: 29px;
+  color: #828282;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.order-detail-billingBody {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.1vw, 14px);
+}
+.order-detail-billingItems {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.1vw, 14px);
+}
+.order-detail-billingItemRow,
+.order-detail-billingRow,
+.order-detail-billingTotalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(16px, 2vw, 24px);
+  min-width: 0;
+}
+.order-detail-billingItemName,
+.order-detail-billingRowLabel {
+  font-family: Poppins, sans-serif;
+  font-weight: 400;
+  font-size: clamp(16px, 1.25vw, 20px);
+  line-height: 29px;
+  color: #161616;
+  min-width: 0;
+  flex: 1 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.order-detail-billingItemAmount,
+.order-detail-billingRowValue {
+  font-family: Poppins, sans-serif;
+  font-weight: 400;
+  font-size: clamp(16px, 1.25vw, 20px);
+  line-height: 29px;
+  color: #161616;
+  flex-shrink: 0;
+}
+.order-detail-billingRowValue--positive {
+  color: #41C9B3;
+}
+
+.order-detail-billingDivider {
+  height: 1px;
+  width: 100%;
+  background: #E7E1FF;
+  opacity: 0.9;
+}
+
+.order-detail-billingTotalLabel {
+  font-family: Poppins, sans-serif;
+  font-weight: 500;
+  font-size: clamp(18px, 1.5vw, 24px);
+  line-height: 27px;
+  letter-spacing: -0.02em;
+  color: #161616;
+}
+.order-detail-billingTotalValue {
+  font-family: Poppins, sans-serif;
+  font-weight: 600;
+  font-size: clamp(22px, 2vw, 32px);
+  line-height: 31px;
+  letter-spacing: -0.035em;
+  color: #101129;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .order-detail-billingCard {
+    border-radius: clamp(16px, 4.8vw, 20px) !important;
+    padding: clamp(16px, 4.8vw, 20px) !important;
+    box-shadow: 0px 4px 27.3px rgba(0, 0, 0, 0.05) !important;
+    outline: 1px solid #E7E1FF !important;
+    outline-offset: -1 !important;
+  }
+
+  .order-detail-billingStrip {
+    width: 100%;
+    border-radius: clamp(8px, 2.8vw, 10px);
+    background: linear-gradient(180deg, #E7E1FF 33.696%, #FFFFFF 88.406%);
+    overflow: hidden;
+    min-height: clamp(150px, 44vw, 175px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(18px, 5.4vw, 24px) clamp(14px, 4.6vw, 20px);
+    box-sizing: border-box;
+    margin-bottom: clamp(14px, 4.2vw, 20px);
+  }
+
+  .order-detail-billingStripInner {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(12px, 3.6vw, 16px) clamp(18px, 5.6vw, 32px);
+    align-items: start;
+  }
+
+  .order-detail-billingMeta {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(6px, 2.2vw, 8px);
+    min-width: 0;
+  }
+
+  .order-detail-billingMetaLabel {
+    font-family: Poppins, sans-serif;
+    font-weight: 500;
+    font-size: clamp(13px, 3.6vw, 14px);
+    line-height: 20px;
+    color: #161616;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .order-detail-billingMetaValue {
+    font-family: Poppins, sans-serif;
+    font-weight: 400;
+    font-size: clamp(13px, 3.6vw, 14px);
+    line-height: 20px;
+    color: #828282;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .order-detail-billingBody {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(10px, 3.2vw, 14px);
+  }
+
+  .order-detail-billingItems {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(6px, 2.2vw, 8px);
+  }
+
+  .order-detail-billingItemRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(10px, 3.2vw, 14px);
+    min-width: 0;
+  }
+
+  .order-detail-billingItemName {
+    font-family: Poppins, sans-serif;
+    font-weight: 400;
+    font-size: clamp(13px, 3.6vw, 14px);
+    line-height: 20px;
+    color: #161616;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .order-detail-billingItemAmount {
+    font-family: Poppins, sans-serif;
+    font-weight: 500;
+    font-size: clamp(13px, 3.6vw, 14px);
+    line-height: 20px;
+    color: #161616;
+    flex-shrink: 0;
+  }
+
+  .order-detail-billingDivider {
+    height: 1px;
+    width: 100%;
+    background: #E7E1FF;
+    opacity: 0.8;
+  }
+
+  .order-detail-billingRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(10px, 3.2vw, 14px);
+    font-size: clamp(13px, 3.6vw, 14px);
+    line-height: 20px;
+  }
+
+  .order-detail-billingRowLabel {
+    font-family: Poppins, sans-serif;
+    font-weight: 400;
+    color: #161616;
+  }
+
+  .order-detail-billingRowValue {
+    font-family: Poppins, sans-serif;
+    font-weight: 500;
+    color: #161616;
+    flex-shrink: 0;
+  }
+
+  .order-detail-billingRowValue--positive {
+    color: #41C9B3;
+  }
+
+  .order-detail-billingTotalRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(10px, 3.2vw, 14px);
+    margin-top: clamp(2px, 1vw, 4px);
+  }
+
+  .order-detail-billingTotalLabel {
+    font-family: Poppins, sans-serif;
+    font-weight: 500;
+    font-size: clamp(17px, 4.6vw, 18px);
+    line-height: 20px;
+    letter-spacing: -0.02em;
+    color: #161616;
+  }
+
+  .order-detail-billingTotalValue {
+    font-family: Poppins, sans-serif;
+    font-weight: 600;
+    font-size: clamp(17px, 4.6vw, 18px);
+    line-height: 20px;
+    letter-spacing: -0.035em;
+    color: #101129;
+    flex-shrink: 0;
+  }
+}
+
+/* Orders empty state: keep subtitle centered and readable */
+.orders-empty-subtitle {
+  white-space: normal;
 }
 
 @media (max-width: 480px) {
@@ -569,22 +2174,84 @@
     margin: 10px 0 12px !important;
   }
 
+  .cart-items-title {
+    font-size: 16px !important;
+    line-height: 22px !important;
+    margin-bottom: 14px !important;
+  }
+
+  /* Cart stepper: slightly smaller than default mobile */
+  .cart-page .checkout-stepper__step {
+    width: 56px !important;
+    gap: 8px !important;
+  }
+  .cart-page .checkout-stepper__step img {
+    width: 42px !important;
+    height: 42px !important;
+  }
+  .cart-page .checkout-stepper__connector {
+    width: 28px !important;
+    margin-top: 20px !important;
+  }
+
   /* Cart line cards: stack rows and tighten spacing */
   .cart-line {
-    padding: 18px 16px !important;
-    border-radius: 16px !important;
+    padding: clamp(14px, 4.2vw, 16px) clamp(12px, 3.6vw, 12px) !important;
+    border-radius: var(--m-radius-card-sm) !important;
+    box-shadow: none !important;
   }
-  .cart-line-row2 {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    justify-content: flex-start !important;
-    gap: 12px !important;
+  .cart-line-titleRow > span {
+    font-size: 16px !important;
+    line-height: 24px !important;
   }
-  .cart-line-patients {
-    width: 100% !important;
-    justify-content: space-between !important;
+  .cart-line-typePill {
+    font-size: 12px !important;
+    line-height: 27px !important;
+    padding: 0 10px !important;
+    height: 26px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 122px !important;
+  }
+
+  .cart-line-priceRow {
+    margin-bottom: 16px !important;
     gap: 10px !important;
-    flex-wrap: wrap !important;
+  }
+  .cart-line-divider {
+    display: none !important;
+  }
+  .cart-line-price {
+    font-size: 24px !important;
+    line-height: 22px !important;
+    letter-spacing: -0.03em !important;
+    color: #101129 !important;
+  }
+  .cart-line-mrp {
+    font-size: 12px !important;
+    line-height: 20px !important;
+    color: #828282 !important;
+  }
+
+  .cart-line-patientBox {
+    border-radius: var(--m-radius-control) !important;
+    padding: 8px clamp(18px, 5.4vw, 24px) !important;
+    gap: 16px !important;
+    min-height: 47px !important;
+    align-items: flex-end !important;
+  }
+  .cart-line-patientLabel {
+    font-size: clamp(14px, 4.8vw, 18px) !important;
+    line-height: 27px !important;
+  }
+  .cart-line-stepperBtn {
+    width: 32px !important;
+    height: 31px !important;
+  }
+  .cart-line-stepperValue {
+    font-size: 20px !important;
+    line-height: 29px !important;
   }
 
   .checkout-stepper {
@@ -607,15 +2274,84 @@
   }
   .checkout-stepper__step {
     width: 64px !important;
-    gap: 8px !important;
+    gap: 6px !important;
   }
   .checkout-stepper__step img {
     width: 48px !important;
     height: 48px !important;
   }
+  .checkout-stepper__step > span {
+    line-height: 18px !important;
+  }
   .checkout-stepper__connector {
     width: 40px !important;
     margin-top: 24px !important;
+  }
+}
+
+/* Cart page: match Figma checkout stepper placement */
+@media (max-width: 768px) {
+  .cart-page .checkout-stepper {
+    position: static !important;
+    top: auto !important;
+    z-index: auto !important;
+    overflow: visible !important;
+    /* Reduce the big inline padding (32px 0 24px) for mobile */
+    padding: 12px 12px 10px !important;
+    background: transparent !important;
+    border-top: none !important;
+  }
+}
+
+/* Order summary card: Figma (944:9951) sizing on mobile */
+@media (max-width: 768px) {
+  .order-summary-card {
+    border-radius: var(--m-radius-card-sm) !important;
+    padding: clamp(16px, 4.5vw, 20px) !important;
+    max-width: min(363px, 100%) !important;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .order-summary-title {
+    font-size: clamp(16px, 4.8vw, 18px) !important;
+    line-height: 27px !important;
+    letter-spacing: -0.02em !important;
+    color: #101129 !important;
+  }
+  .order-summary-rowLabel,
+  .order-summary-totalLabel {
+    font-size: 14px !important;
+    line-height: 22px !important;
+  }
+  .order-summary-rowValue {
+    font-size: 14px !important;
+    line-height: 22px !important;
+  }
+  .order-summary-totalValue {
+    font-size: 18px !important;
+    line-height: 27px !important;
+    letter-spacing: -0.02em !important;
+  }
+  .order-summary-continueBtn {
+    height: 52px !important;
+    width: min(327px, 100%) !important;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 8px !important;
+    font-size: 16px !important;
+    line-height: 26px !important;
+  }
+  .order-summary-savingsRow {
+    justify-content: center !important;
+    gap: 9px !important;
+  }
+  .order-summary-savingsText {
+    font-size: 14px !important;
+    line-height: 20px !important;
+    text-align: left;
+  }
+  .order-summary-savingsIcon svg {
+    display: block;
   }
 }
 
@@ -669,8 +2405,8 @@
   .navbar-nav          { gap: 16px; }
   .hero-section        { margin: 10px 16px; }
   .hero-img            { max-height: 360px; }
-  .grid-3              { grid-template-columns: repeat(2, 1fr); }
-  .grid-4              { grid-template-columns: repeat(2, 1fr); }
+  .grid-3              { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-4              { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cart-content        { padding: 0 24px 48px; }
   .comp-layout         { flex-direction: column; gap: 40px; }
   .comp-heading        { width: 100%; }
@@ -701,15 +2437,13 @@
   }
   .navbar-inner        { padding: 0 16px; }
   .navbar-nav          { display: none; }
-  .navbar-bell         { display: none; }
-  .navbar-search       { display: none; }
   .navbar-hamburger    { display: flex !important; }
   .navbar-mobile-menu  { display: flex; }
   .navbar-cart-label   { display: none; }
   .hero-section        { margin: 8px 10px; }
   .hero-img            { max-height: 220px; }
-  .grid-3              { grid-template-columns: 1fr; }
-  .grid-4              { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .grid-3              { grid-template-columns: minmax(0, 1fr); }
+  .grid-4              { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .cart-content        { flex-direction: column; padding: 0 16px 40px; }
   .cart-summary        { width: 100%; }
 }
@@ -719,6 +2453,37 @@
   .why-choose-grid,
   .how-it-works-grid {
     gap: 18px !important;
+  }
+
+  /* Why Choose Nucleotide cards — avoid full-bleed feel on mobile */
+  .why-choose-grid {
+    justify-items: center;
+  }
+  .why-choose-card {
+    width: 100%;
+    max-width: min(361px, 100%);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* How It Works cards — match Figma mobile width (not full-bleed) */
+  .how-it-works-grid {
+    justify-items: center;
+  }
+  .how-works-step {
+    width: 100%;
+    max-width: min(361px, 100%);
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .how-works-step__card {
+    width: 100%;
+  }
+
+  .how-works-step__badge {
+    min-width: 128px !important;
+    justify-content: center !important;
+    text-align: center !important;
   }
 }
 
@@ -739,8 +2504,8 @@
   .navbar-inner        { padding: 0 12px; gap: 8px; height: auto !important; }
   .hero-section        { margin: 6px 8px; }
   .hero-img            { max-height: 180px; }
-  .grid-3              { grid-template-columns: 1fr; gap: 14px; }
-  .grid-4              { grid-template-columns: 1fr; gap: 12px; }
+  .grid-3              { grid-template-columns: minmax(0, 1fr); gap: clamp(16px, 4.8vw, 20px); }
+  .grid-4              { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .cart-content        { padding: 0 12px 32px; }
 }
 
@@ -757,16 +2522,16 @@
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   MOBILE NAVBAR (≤768px) — grid: row1 logo + actions, row2 full-width search
+   MOBILE NAVBAR (≤768px) — Figma 944:8550: menu+logo | bell+cart; location row; search
    ════════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
   .navbar-inner {
     display: grid !important;
     grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-rows: auto auto;
+    grid-template-rows: auto auto auto;
     align-items: center;
-    column-gap: 8px;
-    row-gap: 10px;
+    column-gap: 12px;
+    row-gap: 16px;
     padding: 10px 12px !important;
     height: auto !important;
     min-height: 0;
@@ -794,26 +2559,35 @@
 
   .navbar-logo-img {
     display: block;
-    max-height: 44px;
+    height: 52px !important;
+    max-height: 52px !important;
     width: auto;
-    max-width: min(200px, 48vw);
-    height: auto;
+    max-width: min(240px, 58vw);
     object-fit: contain;
   }
 
-  .navbar-mobile-actions {
+  .navbar-trailing-actions {
     grid-column: 3;
     grid-row: 1;
     display: flex !important;
     align-items: center;
-    gap: 6px;
+    gap: 12px;
     flex-shrink: 0;
     justify-self: end;
   }
 
-  .navbar-search {
+  .navbar-location-mobile {
     grid-column: 1 / -1;
     grid-row: 2;
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 29px;
+  }
+
+  .navbar-search {
+    grid-column: 1 / -1;
+    grid-row: 3;
     display: flex !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -822,20 +2596,32 @@
     height: 44px;
     border-radius: 153px;
     box-sizing: border-box;
+    padding-left: 16px;
+    padding-right: 8px;
+  }
+
+  /* Hide location row + search bar on mobile */
+  .navbar-location-mobile {
+    display: none !important;
+  }
+  .navbar-search {
+    display: none !important;
+  }
+  /* Collapse navbar grid back to a single row */
+  .navbar-inner {
+    grid-template-rows: auto !important;
+    row-gap: 0 !important;
+  }
+
+  .navbar-location-desktop {
+    display: none !important;
   }
 
   .navbar-location-label { display: inline !important; }
 
-  .navbar-location-btn {
-    padding: 6px 8px !important;
-    margin: 4px !important;
-  }
-
   .navbar-nav {
     display: none !important;
   }
-
-  /* hamburger is positioned in grid above */
 
   .navbar-mobile-menu {
     display: flex;
@@ -846,30 +2632,73 @@
   }
 
   .navbar-bell-btn {
-    width: 40px !important;
-    height: 40px !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    border: 0.5px solid #e7e1ff !important;
+  }
+
+  .navbar-bell-btn svg {
+    width: 20px !important;
+    height: 20px !important;
   }
 
   .navbar-cart-btn {
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
     padding: 0 !important;
     justify-content: center !important;
     border-radius: 50% !important;
     gap: 0 !important;
+    background: #f9f9f9 !important;
+    border: 0.5px solid #e7e1ff !important;
+  }
+
+  .navbar-cart-btn svg path {
+    stroke: #101129 !important;
+  }
+
+  .navbar-cart-btn svg circle {
+    stroke: none !important;
+    fill: #101129 !important;
   }
 
   .navbar-cart-btn svg {
-    width: 18px !important;
-    height: 18px !important;
+    width: 20px !important;
+    height: 20px !important;
+  }
+}
+
+/* Checkout / cart: single top row on mobile */
+@media (max-width: 768px) {
+  .site-navbar-header--no-search .navbar-location-mobile {
+    display: none !important;
+  }
+  .site-navbar-header--no-search .navbar-search {
+    display: none !important;
+  }
+  .site-navbar-header--no-search .navbar-inner {
+    grid-template-rows: auto !important;
+    row-gap: 0 !important;
+  }
+  .site-navbar-header--no-search .navbar-logo {
+    grid-row: 1;
+  }
+  .site-navbar-header--no-search .navbar-hamburger {
+    grid-row: 1;
+  }
+  .site-navbar-header--no-search .navbar-trailing-actions {
+    grid-row: 1;
   }
 }
 
 /* Silent card placeholders (no “Loading…” copy) while catalog hydrates */
 .test-card-skeleton {
   border-radius: 16px;
-  min-height: 300px;
+  min-height: 380px;
   background: linear-gradient(90deg, #f3f4f6 25%, #e8eaef 50%, #f3f4f6 75%);
   background-size: 220% 100%;
   animation: test-card-skeleton-shimmer 1.15s ease-in-out infinite;
@@ -885,29 +2714,78 @@
    MOBILE TEST PAGE SECTIONS
    ════════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
-  /* Typography balance: section titles smaller on mobile */
-  .page-section h2 {
-    font-size: clamp(22px, 6vw, 28px) !important;
-    line-height: 1.25 !important;
-    letter-spacing: -0.01em;
+  /* Hide scrollbars across mobile (keep scrolling) */
+  html, body {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge legacy */
   }
-  .page-section p {
-    font-size: clamp(13px, 3.6vw, 15px) !important;
-    line-height: 1.55 !important;
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+  /* Hide scrollbars for nested scrollers (carousels/pills) */
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  *::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
   }
 
-  /* App-wide headings: many pages use inline fontSize; normalize on mobile */
-  h1 {
-    font-size: clamp(22px, 6.2vw, 30px);
-    line-height: 1.2;
+  /* Section typography: see end of file — mobile type system (design spec). */
+
+  /* Tests page (mobile) — match Figma type scale (H2=24, H3=20, B1=16). */
+  .testpage-root {
+    --type-section: 24px;
+    --lh-section: 1; /* 24 / 24 */
+    --type-subhead: 20px;
+    --type-lead: 16px;
+    --type-body: 16px;
+    --lh-body: 1.25; /* 20 / 16 */
+    --type-ui: 16px;
+    --lh-ui: 1.25; /* 20 / 16 */
   }
-  h2 {
-    font-size: clamp(20px, 5.8vw, 28px);
-    line-height: 1.25;
+
+  /* Packages page (mobile) — match Test page type tokens for shared sections (WhyChoose/HowItWorks). */
+  .packages-page-root {
+    --type-section: 24px;
+    --lh-section: 1; /* 24 / 24 */
+    --type-subhead: 20px;
+    --type-lead: 16px;
+    --type-body: 16px;
+    --lh-body: 1.25; /* 20 / 16 */
+    --type-ui: 16px;
+    --lh-ui: 1.25; /* 20 / 16 */
   }
-  h3 {
-    font-size: clamp(16px, 4.8vw, 20px);
-    line-height: 1.3;
+
+  /* Vitals organ page: hide dropdown on mobile (use tiles instead). */
+  .vitals-organ-select {
+    display: none !important;
+  }
+
+  /* Vertical rhythm between hero + stacked sections (Test home, Packages, etc.) */
+  .hero-section + .page-section {
+    margin-top: clamp(20px, 5vw, 32px);
+  }
+  .page-section + .page-section {
+    margin-top: clamp(20px, 5vw, 32px);
+  }
+
+  /* Mobile: remove extra gap between Essential Tests → Check Your Vitals */
+  .home-section--essential + .home-section--vitals {
+    margin-top: 0 !important;
+  }
+
+  /* Mobile: tighten padding between Essential ↔ Vitals */
+  .home-section--essential {
+    padding-bottom: 6px !important;
+  }
+  .home-section--vitals {
+    padding-top: 4px !important;
   }
 
   /* Prevent huge price text from overwhelming mobile layout */
@@ -915,27 +2793,22 @@
     font-size: 34px !important;
   }
 
-  /* Navbar: slightly larger so it doesn't feel tiny */
+  /* Navbar mobile — Figma 944:8550: compact logo, white bar + soft purple glow */
   .navbar-logo-img {
-    max-height: 56px !important;
-    max-width: min(240px, 56vw) !important;
+    height: 52px !important;
+    max-height: 52px !important;
+    max-width: min(240px, 58vw) !important;
   }
   .navbar-inner {
     padding: 12px 12px !important;
   }
   .site-navbar-header {
-    background: linear-gradient(180deg, #ffffff 0%, #f7f4ff 100%) !important;
-    box-shadow: 0px 10px 40px rgba(139, 92, 246, 0.20) !important;
-    border-bottom: 1px solid rgba(231, 225, 255, 0.9);
+    background: #ffffff !important;
+    box-shadow: 0px 4px 149px rgba(139, 92, 246, 0.21) !important;
+    border-bottom: none;
   }
 
-  /* Checkout/cart pages: hide the search row on mobile when requested */
-  .site-navbar-header--no-search .navbar-search {
-    display: none !important;
-  }
   .site-navbar-header--no-search .navbar-inner {
-    grid-template-rows: auto !important;
-    row-gap: 0 !important;
     padding-bottom: 10px !important;
   }
 
@@ -978,35 +2851,188 @@
     display: none !important;
   }
 
-  /* Essential tests — single card visible, horizontal scroll */
+  /* Override: for the TestPage mobile banner, show the short PNG banner. */
+  .hero-shell {
+    /* Short banner; text/art are baked into the PNG */
+    aspect-ratio: 364 / 204;
+    height: auto !important;
+    background: #ffffff;
+  }
+  .hero-mobile-bg {
+    display: block !important;
+    object-fit: contain !important; /* avoid cropping banner text */
+    background: #ffffff;
+  }
+  .hero-track {
+    display: none !important;
+  }
+  .hero-mobile-content { display: none !important; }
+  .hero-mobile-illustration { display: none !important; }
+
+  /* TestCard (mobile) — match Figma 944:7948 */
+  .test-card {
+    --test-card-shell-radius: 12px;
+    --test-card-inner-radius: 10px;
+    --test-card-shell-pad: 8px;
+    --card-pad-x: 20px;
+    --card-pad-y-top: 20px;
+    --card-pad-y-bottom: 20px;
+    --test-card-intro-gap: 8px;
+    --test-card-gap-lg: 20px;
+    --test-card-gap-md: 20px;
+    --test-card-tile-h: 66px;
+    --test-card-tile-pad-x: 12px;
+    --test-card-tile-pad-y: 10px;
+    --test-card-tile-gap: 12px;
+    --test-card-tile-inner-gap: 8px;
+    --test-card-tile-text-gap: 0px;
+    --test-card-meta-pad: 35px;
+    --test-card-badge-h: 40px;
+    --test-card-pill-pad-x: 10px;
+    --test-card-pill-pad-y: 6px;
+    --test-card-price-stack-gap: 5px;
+    --test-card-cta-h: 50px;
+    --test-card-cta-px: 12px;
+    --test-card-cart-w: 20px;
+    --test-card-cart-h: 16px;
+  }
+
+  .test-card .type-card-title {
+    font-size: 20px !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.02em !important;
+    font-weight: 600 !important;
+  }
+  .test-card .type-price {
+    font-size: 20px !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.035em !important;
+    font-weight: 600 !important;
+    font-family: Poppins, sans-serif !important;
+  }
+  .test-card .type-price-meta {
+    font-size: 12px !important;
+    line-height: 26px !important;
+    font-family: Inter, sans-serif !important;
+  }
+  .test-card .offer-badge__text {
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+  }
+
+  .test-card .test-card__fasting {
+    font-family: Inter, sans-serif !important;
+    font-weight: 400 !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+    color: #414141 !important;
+  }
+  .test-card .test-card__meta-label {
+    font-family: Poppins, sans-serif !important;
+    font-weight: 400 !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+    color: #828282 !important;
+  }
+  .test-card .test-card__meta-value {
+    font-family: Inter, sans-serif !important;
+    font-weight: 500 !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+    color: #161616 !important;
+  }
+  /* Description text — match desktop color */
+  .test-card .test-card__intro .type-body {
+    color: #828282 !important;
+  }
+
+  .test-card__footer {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 14px !important;
+  }
+  .test-card__cta {
+    width: 140px !important;
+    padding-inline: 12px !important;
+    font-family: Inter, sans-serif !important;
+    font-weight: 500 !important;
+    font-size: 16px !important;
+    line-height: 26px !important;
+    text-align: center !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  /* Essential cards: don't stretch vertically on mobile */
+  .essential-grid .test-card {
+    height: auto !important;
+    align-self: flex-start !important;
+  }
+
+  /* Mobile cards should not feel “full-bleed”.
+     Match Figma: cards are ~361px wide inside a 390px frame. */
+  .essential-grid .test-card,
+  .conditions-grid .test-card,
+  .packages-grid .test-card,
+  #packages .test-card,
+  .test-card-skeleton {
+    max-width: min(361px, 100%);
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .test-card__intro {
+    min-height: 0 !important;
+    flex: 0 0 auto !important;
+  }
+
+  /* Essential tests — one card per page (carousel prev/next + dots); no horizontal peek-scroll */
+  .essential-carousel__viewport {
+    overflow: hidden !important;
+  }
+  .essential-carousel__sideBtn {
+    display: none !important;
+  }
   .essential-grid {
     display: flex !important;
     overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
     scroll-snap-type: x mandatory;
     gap: 12px;
-    padding-bottom: 8px;
-    -webkit-overflow-scrolling: touch;
+    padding: 0 2px 8px;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
   }
   .essential-grid > * {
-    flex: 0 0 calc(100vw - 48px);
-    scroll-snap-align: start;
+    flex: 0 0 92%;
+    max-width: 100%;
+    min-width: 0;
     min-height: 0;
+    box-sizing: border-box;
+    scroll-snap-align: start;
+  }
+  .essential-carousel__dots {
+    display: none !important;
   }
 
-  /* Condition pills — wrap to multiple rows (no horizontal overflow) */
+  /* Condition pills — single horizontal row on mobile */
   .condition-pills {
-    justify-content: center;
+    justify-content: flex-start;
     margin-bottom: 28px;
-    flex-wrap: wrap !important;
-    gap: 8px 10px;
-    overflow: visible;
-    padding-bottom: 0;
+    flex-wrap: nowrap !important;
+    gap: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
   }
   .condition-pills .condition-pill-btn,
   .packages-filter-pills .condition-pill-btn {
-    flex: 0 1 auto !important;
-    min-width: 0 !important;
-    max-width: min(182px, calc((100% - 10px) / 2)) !important;
+    flex: 0 0 auto !important;
+    min-width: max-content !important;
+    max-width: none !important;
     width: auto;
     padding: 10px 16px;
     font-size: 13px;
@@ -1024,10 +3050,6 @@
   .organ-filter-grid .organ-filter-btn {
     padding: 14px 10px !important;
   }
-  .organ-filter-grid .organ-filter-btn__icon {
-    width: 72px !important;
-    height: 72px !important;
-  }
   .organ-filter-grid .organ-filter-btn__label {
     font-size: 12px !important;
   }
@@ -1037,30 +3059,74 @@
     flex-direction: column !important;
     gap: 24px !important;
   }
+  #comprehensive.page-section {
+    padding-top: 32px !important;
+    padding-bottom: 36px !important;
+  }
+  #comprehensive .page-inner.comp-layout {
+    max-width: 100% !important;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+  }
   .comp-heading {
     width: 100% !important;
+    text-align: center;
   }
   .comp-heading h2 {
-    font-size: clamp(22px, 5.5vw, 32px) !important;
+    line-height: var(--lh-section, 1.22) !important;
+    text-align: center;
+  }
+  #comprehensive .comp-heading p.type-lead {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  #comprehensive .type-subhead {
+    display: block;
+    width: 100%;
+    text-align: center !important;
+  }
+  /* Comprehensive section (mobile) — force the 2+2 line layout */
+  #comprehensive .comp-heading h2.type-section {
+    font-size: var(--type-section) !important; /* match other section titles */
+    line-height: var(--lh-section) !important;
+    letter-spacing: -0.03em !important;
+    white-space: normal; /* allow 2-line heading like Figma */
+    font-size: 24px !important;
+    line-height: 24px !important;
+  }
+  #comprehensive .comp-title-line {
+    display: block;
+  }
+  #comprehensive .comp-heading p.type-lead {
+    font-size: 14px !important;
+    line-height: 18px !important;
+    max-width: 360px !important;
   }
   /* Avatar rows: 3-up grid, shrink circles so nothing overflows */
   .comp-avatar-row {
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 8px !important;
+    gap: 18px !important;
     width: 100%;
     max-width: 100%;
+    justify-content: space-between;
   }
   .comp-avatar-card {
     max-width: none !important;
     min-width: 0 !important;
     width: 100%;
-    padding: 12px 6px 10px !important;
+    /* Remove the “box” on mobile; keep circle + label visible */
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
     aspect-ratio: auto !important;
   }
   .comp-avatar-circle {
-    width: min(92px, 28vw) !important;
-    height: min(92px, 28vw) !important;
+    width: min(140px, 38vw) !important;
+    height: min(140px, 38vw) !important;
     max-width: 100%;
     margin-inline: auto;
   }
@@ -1074,46 +3140,145 @@
     grid-template-columns: 1fr !important;
   }
 
-  /* On mobile: hide Popular Packages cards; keep CTA button visible */
+  /* Popular Packages (mobile): show section + cards */
   #packages .packages-grid {
-    display: none !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+    justify-items: center;
+    align-items: start;
+    /* Mobile: pull cards up closer to header */
+    margin-top: -120px !important;
   }
   #packages .packages-section-header__sub {
-    display: none !important;
+    display: block !important;
   }
   #packages {
-    background: #fff !important;
+    background: #101129 !important;
+    background-image: none !important;
+    padding-top: 24px !important; /* mobile top spacing above Popular Packages */
     padding-bottom: 24px !important;
+    /* Prevent horizontal overflow from global `.page-section` padding */
+    padding-left: 16px !important;
+    padding-right: 16px !important;
     margin-top: 20px !important;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+  #packages .page-inner {
+    max-width: 370px !important;
+    width: 100% !important;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 1;
+  }
+
+  #packages .packages-grid > * {
+    width: 100%;
+    max-width: min(361px, 100%);
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+    align-self: start;
+  }
+
+  /* Mobile: prevent any "stretch-to-row" behavior from shared grid rules */
+  #packages .test-card {
+    height: auto !important;
+    align-self: flex-start !important;
   }
   #packages .packages-section-header {
-    margin-bottom: 0 !important;
+    margin-bottom: 0 !important; /* remove extra gap before first card */
     justify-content: center;
+    text-align: center;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 6px !important;
   }
-  /* Hide navy header + title on mobile; keep only the purple button */
   #packages .packages-section-header__text {
-    display: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 10px !important; /* mobile: more space between title and paragraph */
+    padding-top: 0 !important;
+    /* Align with cards container (page-inner) */
+    width: 100% !important;
+    max-width: 370px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    box-sizing: border-box;
+    margin-bottom: 0 !important;
+  }
+  #packages .packages-section-header__title.type-section {
+    color: #ffffff !important;
+    margin: 0 !important;
+    text-align: center;
+    font-size: 24px !important; /* reduce header height on mobile */
+    line-height: 28px !important;
+  }
+  #packages .packages-section-header__sub.type-lead {
+    color: #828282 !important;
+    margin: 0 !important;
+    text-align: center;
+    max-width: 856px;
+    font-size: 12px !important;
+    line-height: 16px !important;
   }
   #packages .packages-section-cta {
-    width: auto !important;
+    width: min(178px, 100%) !important;
     align-self: center !important;
-    padding: 12px 22px !important;
-    min-width: 220px;
-    max-width: 280px;
+    padding: 12px 8px !important;
+    border-radius: 8px !important;
+    background: #8b5cf6 !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-family: Inter, sans-serif !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    line-height: 26px !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
   }
+
+  /* Mobile: move "View all packages" after cards */
+  #packages .packages-section-cta--desktop {
+    display: none !important;
+  }
+  #packages .packages-section-footer--mobile {
+    display: flex !important;
+    justify-content: center;
+    margin-top: 14px !important;
+    margin-bottom: 18px !important; /* space before Comprehensive section */
+  }
+  #packages .packages-section-cta--mobile {
+    display: inline-flex !important;
+  }
+
+  /* Ensure grid starts immediately after header */
+  #packages .packages-grid {
+    /* Mobile: pull cards up closer to header */
+    margin-top: -120px !important;
+    padding-top: 0 !important;
+  }
+  /* Don't force the desktop CTA visible on mobile */
 
   /* Hero section */
   .hero-section {
     margin: 8px 12px;
     border-radius: 10px;
   }
+
+  /* Find Tests by Health Condition (mobile): follow desktop styling */
+  .conditions-viewall {
+    display: none !important;
+  }
 }
 
 @media (max-width: 480px) {
-  .essential-grid > * {
-    flex: 0 0 calc(100vw - 32px);
-  }
-
   .comp-avatar-circle {
     width: min(80px, 26vw) !important;
     height: min(80px, 26vw) !important;
@@ -1128,10 +3293,6 @@
   }
   .organ-filter-grid .organ-filter-btn {
     padding: 10px 6px !important;
-  }
-  .organ-filter-grid .organ-filter-btn__icon {
-    width: 56px !important;
-    height: 56px !important;
   }
   .organ-filter-grid .organ-filter-btn__label {
     font-size: 11px !important;
@@ -1160,19 +3321,20 @@
 }
 .packages-section-header__title {
   font-family: 'Poppins', sans-serif;
-  font-size: clamp(22px, 5vw, 34px);
-  font-weight: 700;
+  font-size: var(--type-section, clamp(1.5rem, 0.88rem + 2.15vmin, 3rem));
+  font-weight: 500;
   color: #fff;
   margin: 0 0 8px;
-  line-height: 1.2;
+  line-height: var(--lh-section, 1.22);
+  letter-spacing: -0.03em;
 }
 .packages-section-header__sub {
   font-family: 'Poppins', sans-serif;
-  font-size: 14px;
+  font-size: var(--type-lead, clamp(0.875rem, 0.76rem + 0.55vmin, 1.25rem));
   font-weight: 400;
-  color: #9CA3AF;
+  color: #828282;
   margin: 0;
-  line-height: 1.6;
+  line-height: var(--lh-body, 1.45);
 }
 .packages-section-cta {
   background: #8B5CF6;
@@ -1182,11 +3344,26 @@
   padding: 12px 24px;
   cursor: pointer;
   font-family: 'Poppins', sans-serif;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--type-ui, clamp(0.875rem, 0.8rem + 0.42vmin, 1.25rem));
+  font-weight: 500;
+  line-height: var(--lh-ui, 1.3);
   white-space: nowrap;
   flex-shrink: 0;
   align-self: center;
+}
+
+.packages-section-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* Default: hide the mobile-only footer CTA (enabled in mobile `#packages` rules). */
+.packages-section-footer--mobile {
+  display: none;
+}
+.packages-section-cta--mobile {
+  display: none;
 }
 @media (max-width: 520px) {
   .packages-section-header {
@@ -1200,10 +3377,16 @@
 
   /* Home page Popular Packages: keep button compact */
   #packages .packages-section-cta {
-    width: auto !important;
+    width: min(178px, 100%) !important;
     align-self: center !important;
-    min-width: 220px;
-    max-width: 280px;
+    padding: 12px 8px !important;
+    border-radius: 8px !important;
+    font-family: Inter, sans-serif !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    line-height: 26px !important;
+    min-width: 0 !important;
+    max-width: none !important;
   }
 }
 
@@ -1212,7 +3395,7 @@
    ════════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
   .test-detail-wrapper {
-    padding: 0 12px 28px !important;
+    padding: 0 8px 8px !important;
   }
 
   .test-detail-breadcrumb {
@@ -1222,31 +3405,65 @@
   /* Hero: stack vertically, no overflow */
   .test-detail-hero {
     flex-direction: column !important;
-    padding: 10px 12px 10px !important; /* reduce vertical padding further */
+    padding: 14px 10px 4px !important; /* tighter overall */
     margin-bottom: 0 !important;
     overflow: hidden !important;
     border-radius: 16px !important;
+  }
+
+  /* Ribbon (Single Test): smaller on mobile + vertically centered text */
+  .test-detail-typeRibbon {
+    min-height: 32px !important;
+    min-width: 0 !important;
+    padding: 3px 10px !important;
+    border-bottom-left-radius: 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 12px !important;
+    font-weight: 400 !important;
+    line-height: 26px !important;
   }
 
   /* Hero + pricing card wrapper: create spacing between ribbon and card */
   .test-detail-heroWrap {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
   }
 
   /* Left info: no right padding */
   .test-detail-info {
     padding-right: 0 !important;
     width: 100% !important;
+    padding-top: 14px !important; /* pull content down without changing alignment */
   }
 
   /* Tighten bottom gap under "Parameters" tile in navy ribbon */
   .test-detail-info {
-    gap: 16px !important;
+    gap: 12px !important;
+    margin-bottom: -12px !important;
   }
   .test-detail-statsRow {
-    margin-top: -2px;
+    margin-top: 6px;
+    flex-wrap: nowrap !important;
+    overflow: hidden !important;
+    gap: 10px !important;
+    margin-bottom: 0 !important;
+  }
+  .test-detail-statsRow > div {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    max-width: calc((100% - 12px) / 2) !important;
+    padding: 8px 10px !important;
+    gap: 8px !important;
+    height: auto !important; /* remove fixed 83px height from inline styles */
+    min-height: 66px !important;
+    align-items: center !important;
+  }
+
+  .test-detail-statsRow > div div {
+    line-height: 1.2 !important;
   }
 
   /* Pricing card: static, full width, below hero */
@@ -1262,30 +3479,83 @@
     box-sizing: border-box;
   }
 
-  /* Feature pills: smaller text, tighter gap */
+  /* Feature pills: single row, no horizontal scroll — size down icons/type to fit */
   .test-detail-pills {
-    gap: 16px !important;
-    padding: '12px 0 16px' !important;
-    flex-wrap: wrap !important;
+    gap: clamp(10px, 3.2vw, 14px) !important; /* equal gap between 3 items */
+    padding: 6px 0 8px !important;
+    flex-wrap: nowrap !important;
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: center !important;
+    overflow-x: visible;
+    overflow-y: visible;
+  }
+  .test-detail-pills > div {
+    flex: 0 0 auto !important;
   }
   .test-detail-pills span {
-    font-size: 12px !important;
+    font-size: clamp(10px, 2.75vw, 11px) !important;
+    line-height: 1.25 !important;
+    white-space: nowrap !important;
   }
 
   /* Tab bar: smaller padding */
   .test-detail-tabs {
-    padding: 0 12px !important;
+    padding: 0 8px !important;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
   .test-detail-tabs button {
-    padding: 12px 14px !important;
-    font-size: 13px !important;
+    padding: 10px 12px !important;
+    font-size: 12px !important;
   }
 
   /* Tab content */
   .test-detail-tab-content {
-    padding: 16px 12px 20px !important;
+    padding: 10px 8px 10px !important;
+  }
+
+  /* Tabs card (Figma 944:8580) */
+  .test-detail-tabsCard {
+    border-radius: 16px !important;
+    border: 0.5px solid #E7E1FF !important;
+    overflow: hidden !important;
+  }
+  .test-detail-tabs {
+    padding: 0 !important;
+    min-height: 45px;
+    border-bottom: 0.5px solid #E7E1FF !important;
+    justify-content: center;
+    gap: 20px;
+    overflow-x: hidden;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+  }
+  .test-detail-tabs button {
+    padding: 0 !important;
+    height: 45px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-family: Poppins, sans-serif !important;
+    font-weight: 500 !important;
+    font-size: 12px !important;
+    line-height: 26px !important;
+    margin-bottom: 0 !important; /* neutralize inline -1px */
+    border-bottom-width: 1px !important; /* thinner like Figma underline */
+  }
+  .test-detail-tab-content {
+    background: linear-gradient(0deg, #E7E1FF 37.338%, #FFFFFF 82.888%) !important;
+    padding: 24px 14px 28px !important;
+  }
+
+  /* About tab: bullets start-aligned; mobile layout is driven in TestDetailPage */
+  .test-detail-about-section {
+    justify-items: start !important;
+  }
+  .test-detail-about-bullet-text {
+    text-align: start !important;
+    text-align-last: start !important;
   }
 }
 
@@ -1295,18 +3565,36 @@
 @media (max-width: 768px) {
   /* Category pills: wrap (same as Test page — avoids nowrap fighting .condition-pills) */
   .packages-filter-pills {
-    flex-wrap: wrap !important;
-    justify-content: center;
-    overflow: visible;
-    gap: 8px 10px !important;
-    margin-bottom: 24px;
-    padding-bottom: 0;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    gap: 10px !important;
+    margin-bottom: 18px;
+    padding-bottom: 6px;
+  }
+  .packages-filter-pills::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+  }
+  .packages-filter-pills .condition-pill-btn {
+    flex: 0 0 auto !important;
+    min-width: max-content !important;
   }
 
   /* Cards: single column */
   .packages-grid {
     grid-template-columns: 1fr !important;
     gap: 16px !important;
+  }
+
+  /* Packages page uses `.grid-3` (not `.packages-grid`) — keep card width consistent with Test page. */
+  .packages-page-root .grid-3 .test-card,
+  .packages-page-root .test-card-skeleton {
+    max-width: min(361px, 100%);
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
@@ -1319,13 +3607,42 @@
     padding: 0 16px 40px !important;
     gap: 20px !important;
   }
+  /* Address step: match Figma mobile frame width (~364px) */
+  .checkout-leftcol {
+    width: 100% !important;
+    max-width: 364px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
   .checkout-summary {
     flex: none !important;
     width: 100% !important;
     max-width: 100% !important;
   }
   .checkout-stepper {
-    padding: 12px 16px !important;
+    /* Prevent sticky stepper from covering checkout content on mobile */
+    position: static !important;
+    top: auto !important;
+    z-index: auto !important;
+    overflow: visible !important;
+    padding: 12px 16px 10px !important;
+  }
+
+  /* Compact stepper sizing on checkout pages (incl. Payment) */
+  .checkout-stepper__step {
+    width: 56px !important;
+    gap: 6px !important;
+  }
+  .checkout-stepper__step img {
+    width: 42px !important;
+    height: 42px !important;
+  }
+  .checkout-stepper__connector {
+    width: 28px !important;
+    margin-top: 20px !important;
+  }
+  .checkout-stepper__step > span {
+    line-height: 18px !important;
   }
 
   /* Address step: a bit more breathing room under stepper */
@@ -1335,7 +3652,7 @@
 
   /* Time slot step: match address breathing room */
   .checkout-layout--timeslot {
-    padding-top: 10px !important;
+    padding-top: 16px !important;
   }
 
   /* Payment page: match side padding to OrderSummaryCard */
@@ -1355,7 +3672,24 @@
   }
 
   .payment-leftcol {
-    align-items: center !important;
+    /* Align like Address/Time Slot on mobile */
+    width: 100% !important;
+    max-width: 364px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    align-items: stretch !important;
+  }
+
+  /* Payment: Figma shows the bottom action panel; hide desktop sidebar on mobile */
+  .payment-desktop-sidebar {
+    display: none !important;
+  }
+
+  .payment-mobile-actions {
+    width: 100%;
+    max-width: min(364px, 100%);
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
@@ -1521,5 +3855,151 @@
   }
   .reports-empty-ctas {
     flex-direction: column !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   MOBILE TYPOGRAPHY (≤768px) — design tokens: H1/H2/H3, B1–B3, UI
+   Placed last so variables override earlier :root / section rules.
+   ════════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  :root {
+    /* H2 / H3 — 48px / 61px lh */
+    --type-section: clamp(28px, 10.5vw, 48px);
+    --lh-section: 1.270833; /* 61 / 48 */
+
+    /* B1 — Inter 18 / 27 */
+    --type-lead: 18px;
+    --type-body: 18px;
+    --lh-body: 1.5; /* 27 / 18 */
+
+    /* B3 — Poppins 500 24 / 27 */
+    --type-subhead: min(24px, 6.5vw);
+
+    /* B2 / UI — Poppins ~16–20px */
+    --type-ui: clamp(14px, 3.8vw, 18px);
+    --lh-ui: 1.3;
+
+    --type-nav: 16px;
+    --type-nav-input: 16px;
+
+    /* ── Shared MOBILE UI tokens (uniform across pages) ─────────────── */
+    --m-outline: 1px solid #E7E1FF;
+    --m-shadow: 0px 4px 27.3px rgba(0,0,0,0.05);
+
+    /* Radii */
+    --m-radius-card-lg: 20px;  /* primary cards (most screens) */
+    --m-radius-card-md: 16px;  /* secondary cards */
+    --m-radius-card-sm: 12px;  /* compact cards (checkout/cart) */
+    --m-radius-control: 8px;   /* inputs / inset boxes */
+    --m-radius-pill: 999px;    /* pills / chips */
+
+    /* Spacing */
+    --m-pad-page-x: clamp(12px, 4vw, 16px);
+    --m-pad-card: clamp(16px, 4.8vw, 20px);
+    --m-gap-1: clamp(8px, 2.8vw, 12px);
+    --m-gap-2: clamp(12px, 4vw, 16px);
+  }
+
+  .comp-heading {
+    --type-section: clamp(28px, 10.5vw, 48px);
+  }
+
+  /* Heading 1 — 60px / 68.4px lh, Poppins 500 */
+  h1 {
+    font-family: Poppins, sans-serif;
+    font-weight: 500;
+    font-size: clamp(32px, 14vmin, 60px);
+    line-height: 1.14; /* 68.4 / 60 */
+    letter-spacing: -0.03em;
+    color: #101129;
+  }
+
+  h2 {
+    font-family: Poppins, sans-serif;
+    font-weight: 500;
+    font-size: clamp(28px, 10.5vw, 48px);
+    line-height: 1.270833;
+    letter-spacing: -0.03em;
+    color: #101129;
+  }
+
+  h3 {
+    font-family: Poppins, sans-serif;
+    font-weight: 500;
+    font-size: clamp(24px, 9vw, 48px);
+    line-height: 1.270833;
+    letter-spacing: -0.03em;
+    color: #101129;
+  }
+
+  .type-section {
+    font-family: Poppins, sans-serif;
+    font-size: var(--type-section);
+    line-height: var(--lh-section);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    color: #101129;
+  }
+
+  .type-lead {
+    font-family: Inter, sans-serif;
+    font-size: var(--type-lead);
+    font-weight: 400;
+    line-height: 27px;
+    color: #101129;
+  }
+
+  /* Section subtitles — spec secondary #6C6C6C (overrides inline #828282 on home) */
+  .home-section-header .type-lead {
+    color: #6c6c6c !important;
+  }
+
+  .type-subhead {
+    font-family: Poppins, sans-serif;
+    font-size: var(--type-subhead);
+    font-weight: 500;
+    line-height: 27px;
+    letter-spacing: -0.03em;
+  }
+
+  .type-body {
+    font-family: Inter, sans-serif;
+    font-size: var(--type-body);
+    font-weight: 400;
+    line-height: 27px;
+    color: #101129;
+  }
+
+  .type-ui {
+    font-family: Poppins, sans-serif;
+    font-size: var(--type-ui);
+    font-weight: 500;
+    line-height: var(--lh-ui);
+  }
+
+  .type-price-meta {
+    font-family: Poppins, sans-serif;
+  }
+
+  /* B3 on cards — 24 / 27 / 500 */
+  .type-card-title {
+    font-family: Poppins, sans-serif;
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 27px;
+    letter-spacing: -0.03em;
+  }
+
+  .packages-section-header__title {
+    font-size: var(--type-section);
+    line-height: var(--lh-section);
+  }
+
+  .packages-section-header__sub {
+    font-family: Inter, sans-serif;
+    font-size: var(--type-lead);
+    line-height: 27px;
+    color: #6c6c6c;
   }
 }

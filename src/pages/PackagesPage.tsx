@@ -54,7 +54,7 @@ export default function PackagesPage({ cartCount }: { cartCount?: number } = {})
   const hasMore = visibleCount < filtered.length
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Poppins', sans-serif" }}>
+    <div className="packages-page-root" style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Poppins', sans-serif" }}>
       <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" cartCount={cartCount} onCtaClick={() => navigate('/cart')} />
 
       <HeroSection />

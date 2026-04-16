@@ -1,16 +1,17 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Navbar } from '../components'
+import { Navbar, UploadReportStepper } from '../components'
+import backChevron from '../assets/figma/upload-report/Frame-1.svg'
+import chevronDown from '../assets/figma/upload-report/Frame-4.svg'
+import chevronRightWhite from '../assets/figma/upload-report/Frame.svg'
+import breadcrumbChevron from '../assets/figma/upload-report/Vector.svg'
 
 const NAV_LINKS = [
-  { label: 'Tests', href: '/' }, { label: 'Packages', href: '/' },
-  { label: 'Reports', href: '/reports' }, { label: 'Metrics', href: '/metrics' }, { label: 'Orders', href: '/orders' },
-]
-
-const steps = [
-  { num: 1, label: 'Upload', done: true },
-  { num: 2, label: 'Report Details', active: true },
-  { num: 3, label: 'Review', active: false },
+  { label: 'Tests', href: '/' },
+  { label: 'Packages', href: '/packages' },
+  { label: 'Reports', href: '/reports' },
+  { label: 'Metrics', href: '/metrics' },
+  { label: 'Orders', href: '/orders' },
 ]
 
 export default function UploadReportDetailsPage() {
@@ -19,101 +20,219 @@ export default function UploadReportDetailsPage() {
   const [labName, setLabName] = React.useState('Self')
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Poppins', sans-serif" }}>
-      <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" onCtaClick={() => navigate('/cart')} />
+    <div style={{ minHeight: '100vh', background: '#fff', fontFamily: 'Poppins, sans-serif', overflowX: 'hidden' }}>
+      <Navbar
+        logoSrc="/favicon.svg"
+        logoAlt="Nucleotide"
+        links={NAV_LINKS}
+        ctaLabel="My Cart"
+        hideSearchOnMobile
+        activeHrefOverride="/reports"
+        onCtaClick={() => navigate('/cart')}
+      />
 
-      <div style={{ maxWidth: 700, margin: '0 auto', padding: '32px 40px 60px' }}>
-
+      <div
+        style={{
+          maxWidth: 'var(--page-inner-w)',
+          margin: '0 auto',
+          padding: 'calc(var(--pad-section-y) * 0.45) var(--pad-section-x) calc(var(--pad-section-y) * 0.8)',
+          boxSizing: 'border-box',
+          width: '100%',
+        }}
+      >
         {/* Breadcrumb */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32 }}>
-          <span onClick={() => navigate('/reports')} style={{ fontSize: 13, color: '#9CA3AF', cursor: 'pointer' }}>Reports</span>
-          <span style={{ fontSize: 13, color: '#9CA3AF' }}>›</span>
-          <span style={{ fontSize: 13, color: '#1B1F3B', fontWeight: 600 }}>Upload Report</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 'clamp(18px, 2.8vmin, 30px)' }}>
+          <button type="button" onClick={() => navigate('/reports')} style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: 'var(--type-body)', color: '#828282' }}>
+            Reports
+          </button>
+          <img src={breadcrumbChevron} alt="" style={{ width: 8, height: 12, display: 'block' }} />
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 'var(--type-body)', color: '#101129', fontWeight: 500 }}>Upload Report</span>
         </div>
 
-        {/* Stepper */}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 40 }}>
-          {steps.map((step, i) => (
-            <React.Fragment key={step.num}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: '50%',
-                  background: step.done ? '#7C5CFC' : step.active ? '#EDE9FE' : '#EDE9FE',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: step.done ? 18 : 15, fontWeight: 500,
-                  color: step.done ? '#fff' : step.active ? '#7C5CFC' : '#9CA3AF',
-                  border: step.active ? '2px solid #7C5CFC' : 'none',
-                }}>
-                  {step.done ? '✓' : step.num}
-                </div>
-                <span style={{ fontSize: 13, color: step.done || step.active ? '#7C5CFC' : '#9CA3AF', fontWeight: step.active ? 600 : 400 }}>{step.label}</span>
+        {/* Stepper (Figma 716:4889 component) */}
+        <div style={{ marginBottom: 'clamp(18px, 3vmin, 30px)' }}>
+          <UploadReportStepper currentStep={2} />
+        </div>
+
+        {/* Main card */}
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <div
+            style={{
+              width: 'min(920px, 100%)',
+              background: '#fff',
+              borderRadius: 'clamp(16px, 2.2vmin, 20px)',
+              boxShadow: '0px 4px 156.2px rgba(136, 107, 249, 0.23)',
+              padding: 'clamp(16px, 2.6vmin, 32px)',
+              boxSizing: 'border-box',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'clamp(16px, 2.6vmin, 24px)',
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 1.8vmin, 14px)', alignItems: 'center', textAlign: 'center' }}>
+              <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: 'var(--type-subhead)', lineHeight: 1.15, letterSpacing: '-0.03em', color: '#101129' }}>
+                Report Details
               </div>
-              {i < steps.length - 1 && (
-                <div style={{ width: 100, height: 1.5, background: '#E5E7EB', margin: '0 8px 20px' }} />
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-
-        {/* Card */}
-        <div style={{ background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 20, padding: '36px 40px 32px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-          <h2 style={{ fontSize: 22, fontWeight: 800, color: '#111827', textAlign: 'center', margin: '0 0 8px' }}>Report Details</h2>
-          <p style={{ fontSize: 14, color: '#9CA3AF', textAlign: 'center', margin: '0 0 28px' }}>Confirm a few details before we analyze your report.</p>
-
-          {/* File info */}
-          <div style={{ border: '1.5px solid #E5E7EB', borderRadius: 10, padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>Frame 1948759968.png</div>
-              <div style={{ fontSize: 12, color: '#9CA3AF' }}>0.42 MB</div>
+              <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: 'var(--type-body)', lineHeight: 'var(--lh-body)', color: '#414141', maxWidth: 720 }}>
+                Confirm a few details before we analyze your report.
+              </div>
             </div>
-            <button onClick={() => navigate('/upload-report')} style={{ background: 'none', border: 'none', color: '#7C5CFC', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Change</button>
-          </div>
 
-          {/* Report For */}
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ fontSize: 14, fontWeight: 600, color: '#111827', display: 'block', marginBottom: 8 }}>Report For</label>
-            <div style={{ position: 'relative' }}>
-              <select value={reportFor} onChange={e => setReportFor(e.target.value)} style={{
-                width: '100%', padding: '12px 16px', borderRadius: 10, border: '1.5px solid #E5E7EB',
-                fontSize: 14, color: '#374151', background: '#fff', appearance: 'none', cursor: 'pointer', outline: 'none',
-              }}>
+            {/* File row */}
+            <div style={{
+              background: '#F9F9F9',
+              borderRadius: 'clamp(14px, 2vmin, 20px)',
+              padding: 'clamp(10px, 1.6vmin, 14px) clamp(14px, 2vmin, 16px)',
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: 16,
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, flex: 1 }}>
+                <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, fontSize: 'var(--type-ui)', color: '#161616', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  Frame 1948759968.png
+                </div>
+                <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: 'var(--type-body)', color: '#414141' }}>
+                  0.42 MB
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate('/upload-report')}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  fontFamily: 'Poppins, sans-serif',
+                  fontWeight: 500,
+                  fontSize: 'var(--type-ui)',
+                  color: '#161616',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Change
+              </button>
+            </div>
+
+            {/* Report For */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, fontSize: 'var(--type-ui)', color: '#161616' }}>Report For</div>
+              <button
+                type="button"
+                onClick={() => {}}
+                style={{
+                  width: '100%',
+                  background: '#F9F9F9',
+                  border: 'none',
+                  borderRadius: 'clamp(14px, 2vmin, 20px)',
+                  padding: 'clamp(14px, 2.2vmin, 18px) clamp(14px, 2vmin, 16px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                  cursor: 'default',
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 400,
+                  fontSize: 'var(--type-body)',
+                  color: '#414141',
+                }}
+              >
+                <span>{reportFor}</span>
+                <img src={chevronDown} alt="" style={{ width: 24, height: 24, display: 'block' }} />
+              </button>
+              {/* Keep actual value in state for later wiring */}
+              <select value={reportFor} onChange={e => setReportFor(e.target.value)} style={{ display: 'none' }}>
                 <option>Self</option>
                 <option>Family Member</option>
               </select>
-              <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#9CA3AF' }}>▾</span>
             </div>
-          </div>
 
-          {/* Lab Name */}
-          <div style={{ marginBottom: 28 }}>
-            <label style={{ fontSize: 14, fontWeight: 600, color: '#111827', display: 'block', marginBottom: 8 }}>Lab Name (optional)</label>
-            <div style={{ position: 'relative' }}>
-              <select value={labName} onChange={e => setLabName(e.target.value)} style={{
-                width: '100%', padding: '12px 16px', borderRadius: 10, border: '1.5px solid #E5E7EB',
-                fontSize: 14, color: '#374151', background: '#fff', appearance: 'none', cursor: 'pointer', outline: 'none',
-              }}>
+            {/* Lab Name */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, fontSize: 'var(--type-ui)', color: '#161616' }}>Lab Name (optional)</div>
+              <button
+                type="button"
+                onClick={() => {}}
+                style={{
+                  width: '100%',
+                  background: '#F9F9F9',
+                  border: 'none',
+                  borderRadius: 'clamp(14px, 2vmin, 20px)',
+                  padding: 'clamp(14px, 2.2vmin, 18px) clamp(14px, 2vmin, 16px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                  cursor: 'default',
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 400,
+                  fontSize: 'var(--type-body)',
+                  color: '#414141',
+                }}
+              >
+                <span>{labName}</span>
+                <img src={chevronDown} alt="" style={{ width: 24, height: 24, display: 'block' }} />
+              </button>
+              <select value={labName} onChange={e => setLabName(e.target.value)} style={{ display: 'none' }}>
                 <option>Self</option>
                 <option>Apollo</option>
                 <option>Thyrocare</option>
                 <option>Lal Path Labs</option>
               </select>
-              <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#9CA3AF' }}>▾</span>
+            </div>
+
+            {/* Bottom actions */}
+            <div style={{ display: 'flex', gap: 'clamp(12px, 2.2vmin, 20px)', flexWrap: 'wrap', marginTop: 'clamp(2px, 0.8vmin, 8px)' }}>
+              <button
+                type="button"
+                onClick={() => navigate('/upload-report')}
+                style={{
+                  flex: '1 1 280px',
+                  minHeight: 'clamp(48px, 6vmin, 58px)',
+                  borderRadius: 'clamp(8px, 1vmin, 10px)',
+                  border: '1px solid #8B5CF6',
+                  background: '#fff',
+                  cursor: 'pointer',
+                  fontFamily: 'Poppins, sans-serif',
+                  fontWeight: 500,
+                  fontSize: 'var(--type-ui)',
+                  color: '#101129',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 10,
+                }}
+              >
+                <img src={backChevron} alt="" style={{ width: 18, height: 18, display: 'block' }} />
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/analysing-report')}
+                style={{
+                  flex: '1 1 280px',
+                  minHeight: 'clamp(48px, 6vmin, 58px)',
+                  borderRadius: 'clamp(8px, 1vmin, 10px)',
+                  border: 'none',
+                  background: '#8B5CF6',
+                  cursor: 'pointer',
+                  fontFamily: 'Poppins, sans-serif',
+                  fontWeight: 500,
+                  fontSize: 'var(--type-ui)',
+                  color: '#fff',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 10,
+                }}
+              >
+                Analyse Report
+                <img src={chevronRightWhite} alt="" style={{ width: 18, height: 18, display: 'block' }} />
+              </button>
             </div>
           </div>
-
-          {/* Back + Analyse */}
-          <div style={{ display: 'flex', gap: 16 }}>
-            <button onClick={() => navigate('/upload-report')} style={{
-              flex: 1, padding: '14px', borderRadius: 12, border: '1.5px solid #E5E7EB',
-              background: '#fff', color: '#374151', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-            }}>‹ Back</button>
-            <button onClick={() => navigate('/analysing-report')} style={{
-              flex: 1, padding: '14px', borderRadius: 12, border: 'none',
-              background: '#7C5CFC', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-            }}>Analyse Report ›</button>
-          </div>
         </div>
-
       </div>
     </div>
   )

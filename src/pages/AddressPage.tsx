@@ -82,6 +82,7 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
   const [memberModalProductId, setMemberModalProductId] = useState<number | null>(null)
   const [newMember, setNewMember] = useState({ name: '', relation: 'Spouse', age: '', gender: 'M', dob: '', mobile: '' })
   const [savingMember, setSavingMember] = useState(false)
+  const [showGenderModal, setShowGenderModal] = useState(false)
 
   // single address modal
   const [showAddressModal, setShowAddressModal] = useState(false)
@@ -366,6 +367,15 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
   const showMemberModal = memberModalProductId !== null
   function setShowMemberModal(open: boolean) { if (!open) setMemberModalProductId(null) }
 
+  function genderLabel(value: string) {
+    return value === 'F' ? 'Female' : 'Male'
+  }
+
+  function selectGender(value: 'M' | 'F') {
+    setNewMember(p => ({ ...p, gender: value }))
+    setShowGenderModal(false)
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Poppins', sans-serif" }}>
       <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" cartCount={cartCount} hideSearchOnMobile onCtaClick={() => navigate('/cart')} />
@@ -388,7 +398,7 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
 
       <CheckoutStepper activeStep={1} />
       <div className="checkout-layout checkout-layout--address" style={{ display: 'flex', gap: 32, padding: '0 56px 60px', maxWidth: 1600, margin: '0 auto', alignItems: 'flex-start' }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 32 }}>
+        <div className="checkout-leftcol" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 32 }}>
           {loading ? (
             <p style={{ color: '#828282', fontSize: 14, fontFamily: 'Inter,sans-serif' }}>Loading...</p>
           ) : (
@@ -450,11 +460,6 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
 
                 return (
                   <div key={productId} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 15, fontWeight: 600, color: '#161616', fontFamily: 'Poppins, sans-serif' }}>{item.name}</span>
-                      <span style={{ background: '#E7E1FF', borderRadius: 122, padding: '2px 12px', fontSize: 12, color: '#8B5CF6', fontFamily: 'Inter, sans-serif' }}>{item.type}</span>
-                    </div>
-
                     <div style={{
                       background: 'linear-gradient(135deg, #F5F3FF 0%, #fff 100%)',
                       borderRadius: 14, padding: '14px 16px', border: '1px solid #E7E1FF',
@@ -627,9 +632,24 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
             <div style={{ display: 'flex', gap: 12 }}>
               <div style={{ flex: 1 }}><label style={LABEL}>Age *</label><input style={INPUT} type="number" value={newMember.age} onChange={e => setNewMember(p => ({ ...p, age: e.target.value }))} placeholder="Age" /></div>
               <div style={{ flex: 1 }}><label style={LABEL}>Gender *</label>
-                <select style={INPUT} value={newMember.gender} onChange={e => setNewMember(p => ({ ...p, gender: e.target.value }))}>
-                  <option value="M">Male</option><option value="F">Female</option>
-                </select>
+                <button
+                  type="button"
+                  onClick={() => setShowGenderModal(true)}
+                  style={{
+                    ...INPUT,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 10,
+                  }}
+                  aria-haspopup="dialog"
+                  aria-expanded={showGenderModal}
+                >
+                  <span>{genderLabel(newMember.gender)}</span>
+                  <span aria-hidden style={{ color: '#828282' }}>▾</span>
+                </button>
               </div>
             </div>
             <div><label style={LABEL}>Date of Birth *</label><input style={INPUT} type="date" value={newMember.dob} max={new Date().toISOString().split('T')[0]} onChange={e => setNewMember(p => ({ ...p, dob: e.target.value }))} /></div>
@@ -637,6 +657,94 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
             <div style={{ display: 'flex', gap: 12 }}>
               <button onClick={() => setShowMemberModal(false)} style={{ flex: 1, height: 44, borderRadius: 8, border: 'none', outline: '1px solid #E7E1FF', background: 'transparent', cursor: 'pointer', fontFamily: 'Poppins, sans-serif', fontSize: 14 }}>Cancel</button>
               <button onClick={handleSaveMember} disabled={savingMember} style={{ flex: 1, height: 44, borderRadius: 8, border: 'none', background: '#8B5CF6', color: '#fff', cursor: 'pointer', fontFamily: 'Poppins, sans-serif', fontSize: 14, fontWeight: 500 }}>{savingMember ? 'Saving...' : 'Save Member'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Gender Modal (Figma node 281:2597) */}
+      {showGenderModal && (
+        <div style={OVERLAY} onClick={() => setShowGenderModal(false)}>
+          <div
+            role="dialog"
+            aria-label="Gender"
+            style={{
+              background: '#fff',
+              borderRadius: 20,
+              padding: '9px 11px 19px',
+              width: 360,
+              maxWidth: 'calc(100vw - 32px)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 21,
+              boxSizing: 'border-box',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div
+              style={{
+                background: '#E7E1FF',
+                border: '1px solid #E7E1FF',
+                borderRadius: 10,
+                height: 67,
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              <span
+                style={{
+                  position: 'absolute',
+                  left: 27,
+                  top: 26,
+                  fontFamily: 'Poppins, sans-serif',
+                  fontSize: 20,
+                  fontWeight: 500,
+                  lineHeight: '26px',
+                  color: '#101129',
+                }}
+              >
+                Gender
+              </span>
+            </div>
+
+            <div style={{ paddingInline: 25, display: 'flex', flexDirection: 'column', gap: 18 }}>
+              <button
+                type="button"
+                onClick={() => selectGender('M')}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  padding: 0,
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  fontFamily: 'Poppins, sans-serif',
+                  fontSize: 20,
+                  fontWeight: 500,
+                  lineHeight: '26px',
+                  color: '#101129',
+                }}
+              >
+                Male
+              </button>
+              <div style={{ height: 1, width: 235, background: '#8B5CF6' }} />
+              <button
+                type="button"
+                onClick={() => selectGender('F')}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  padding: 0,
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  fontFamily: 'Poppins, sans-serif',
+                  fontSize: 20,
+                  fontWeight: 500,
+                  lineHeight: '26px',
+                  color: '#828282',
+                }}
+              >
+                Female
+              </button>
             </div>
           </div>
         </div>

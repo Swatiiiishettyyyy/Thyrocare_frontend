@@ -1,6 +1,83 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/*
+ * Fluid type + spacing: Figma uses fixed px at one frame width; real desktops
+ * (1280–1600px, toolbars, scrollbars) need values that scale and cap smoothly.
+ * Peaks near Figma sizes; shrinks on narrower viewports. Uses vmin so short
+ * laptop screens don’t overshoot.
+ */
+:root {
+  /* Global: match improved TestPage sizing */
+  --type-section: clamp(1.85rem, 1.1rem + 2.55vmin, 3.4rem);
+  --type-lead: clamp(0.95rem, 0.84rem + 0.6vmin, 1.35rem);
+  --type-subhead: clamp(1rem, 0.86rem + 0.7vmin, 1.5rem);
+  --type-price: clamp(1.125rem, 0.92rem + 1.05vmin, 2rem);
+  --type-price-meta: clamp(0.875rem, 0.78rem + 0.45vmin, 1.25rem);
+  --type-ui: clamp(0.875rem, 0.8rem + 0.42vmin, 1.25rem);
+  --type-body: clamp(0.8125rem, 0.74rem + 0.38vmin, 1.125rem);
+  --type-nav: clamp(0.8125rem, 0.72rem + 0.4vmin, 1.25rem);
+  --type-nav-input: clamp(0.8125rem, 0.74rem + 0.35vmin, 1.125rem);
+  --lh-section: 1.22;
+  --lh-snug: 1.27;
+  --lh-ui: 1.3;
+  --lh-body: 1.45;
+  --pad-section-y: clamp(40px, 7.4vmin, 90px);
+  --pad-section-x: clamp(20px, 4.6vmin, 72px);
+  /* Figma 148:1169 inner content padding ~23px */
+  --card-pad-x: clamp(14px, 1.2vmin, 23px);
+  --card-pad-y-top: clamp(16px, 1.5vmin, 23px);
+  --card-pad-y-bottom: clamp(14px, 1.2vmin, 23px);
+  --card-gap: clamp(12px, 1.5vmin, 20px);
+  /* Figma 148:1169 — file + parameters icons are 24×24 */
+  --test-card-meta-icon: 24px;
+
+  /* Test card rhythm (fluid, alignment-preserving) */
+  --test-card-gap-lg: clamp(20px, 2.4vmin, 35px); /* tiles & divider spacing */
+  --test-card-gap-md: clamp(18px, 2.0vmin, 29px); /* divider → footer */
+  --test-card-tile-h: clamp(66px, 7.2vmin, 74px);
+  --test-card-offer-h: clamp(20px, 2.4vmin, 23px);
+  --test-card-cta-h: clamp(50px, 6vmin, 58px);
+  --test-card-cta-px: clamp(18px, 3.2vmin, 34px);
+  --test-card-meta-pad: clamp(28px, 3.5vmin, 35px);
+  --test-card-badge-h: clamp(38px, 4.8vmin, 44px);
+  --test-card-tile-gap: clamp(8px, 1.2vmin, 11px);
+  --test-card-shell-pad: clamp(8px, 1.1vmin, 10px);
+  --test-card-shell-radius: clamp(16px, 2.1vmin, 20px);
+  --test-card-inner-radius: clamp(8px, 1.2vmin, 10px);
+  /* Title ↔ description (Figma 143:311 gap 20) */
+  --test-card-intro-gap: clamp(14px, 1.8vmin, 20px);
+  /* Main price ↔ strikethrough row (Figma ~13px) */
+  --test-card-price-stack-gap: clamp(6px, 1vmin, 13px);
+  --test-card-pill-pad-x: clamp(8px, 1.1vmin, 10px);
+  --test-card-pill-pad-y: clamp(6px, 0.9vmin, 8px);
+  --test-card-tile-pad-x: clamp(7px, 1vmin, 9px);
+  --test-card-tile-pad-y: clamp(8px, 1.1vmin, 10px);
+  --test-card-tile-inner-gap: clamp(7px, 1vmin, 9px);
+  --test-card-cart-w: clamp(20px, 3vmin, 24px);
+  --test-card-cart-h: clamp(18px, 2.7vmin, 22px);
+
+  /* Vitals notch sizing (used across sections) */
+  --page-inner-w: min(1200px, calc(100% - (var(--pad-section-x) * 2)));
+  --vitals-organ-gap: clamp(12px, 1.2vw, 20px);
+  --vitals-organ-card-w: calc((var(--page-inner-w) - (var(--vitals-organ-gap) * 6)) / 7);
+  /* Notch must match ONE organ card width */
+  --vitals-notch-w: var(--vitals-organ-card-w);
+  --vitals-notch-h: clamp(44px, 6vmin, 74px);
+  --vitals-notch-radius: clamp(18px, 2.6vmin, 28px);
+}
+
+/* Let the vitals row breathe wider (closer to carousel arrow reach) */
+.home-section--vitals {
+  /* Keep vitals row aligned with carousel arrow reach */
+  --page-inner-w: min(1320px, calc(100% - (var(--pad-section-x) * 2)));
+}
+
+.test-card-meta-icon {
+  width: var(--test-card-meta-icon);
+  height: var(--test-card-meta-icon);
+  object-fit: contain;
+  flex-shrink: 0;
+}
 
 @layer base {
   html, body {
@@ -8,4 +85,277 @@
     overflow-x: hidden;
     max-width: 100vw;
   }
+}
+
+.type-section {
+  font-family: Poppins, sans-serif;
+  font-size: var(--type-section);
+  font-weight: 500;
+  line-height: var(--lh-section);
+  letter-spacing: -0.03em;
+}
+
+/* Comprehensive section keeps original section-title sizing */
+.comp-heading {
+  --type-section: clamp(1.7rem, 1.05rem + 2.35vmin, 3.2rem);
+}
+.type-lead {
+  font-family: Poppins, sans-serif;
+  font-size: var(--type-lead);
+  font-weight: 400;
+  line-height: var(--lh-body);
+}
+.type-subhead {
+  font-family: Poppins, sans-serif;
+  font-size: var(--type-subhead);
+  font-weight: 500;
+  line-height: 1.15;
+}
+.type-price {
+  font-family: Poppins, sans-serif;
+  font-size: var(--type-price);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+.type-price-meta {
+  font-family: Poppins, sans-serif;
+  font-size: var(--type-price-meta);
+  font-weight: 500;
+  line-height: var(--lh-ui);
+}
+.type-ui {
+  font-family: Poppins, sans-serif;
+  font-size: var(--type-ui);
+  font-weight: 500;
+  line-height: var(--lh-ui);
+}
+.type-body {
+  font-family: Inter, sans-serif;
+  font-size: var(--type-body);
+  font-weight: 400;
+  line-height: var(--lh-body);
+}
+
+/* Home page section header spacing (Figma-like at desktop, fluid elsewhere). */
+.home-section-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Global uniform title ↔ subtitle spacing */
+  gap: clamp(8px, 1.1vmin, 12px);
+  margin-bottom: clamp(24px, 4vmin, 40px);
+  text-align: center;
+}
+
+/* Home page: allow per-section spacing tweaks without fixed pixels. */
+.home-section--essential {
+  background: #fff;
+  padding-bottom: clamp(16px, 2.4vmin, 20px);
+}
+.home-section--vitals {
+  position: relative;
+  background: linear-gradient(180deg, #FFFFFF 0%, #E7E1FF 100%);
+  padding-top: clamp(20px, 4.8vmin, 40px);
+  /* Space between organ cards and the notch */
+  padding-bottom: clamp(32px, 5vmin, 56px);
+  overflow: visible;
+}
+
+.home-section--conditions {
+  position: relative;
+  z-index: 1;
+}
+
+/* “Find Tests by Health Condition” mobile CTA (shown via responsive.css) */
+.conditions-viewall {
+  display: none;
+}
+
+/* (Notch removed) */
+
+/* Figma (156:1347): heading → organ tiles gap ~49px at desktop. */
+.home-section--vitals .home-section-header {
+  margin-bottom: clamp(28px, 4.8vmin, 49px);
+}
+
+/* Figma (129:6) — How It Works + Why Choose Nucleotide sections */
+.home-section--howitworks .home-section-header {
+  /* Figma gap: 49px from header → cards */
+  margin-bottom: clamp(28px, 4.8vmin, 49px);
+}
+.how-works-deco {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.65;
+}
+.how-works-deco--tl {
+  top: clamp(-100px, -8vmin, -64px);
+  left: clamp(-300px, -18vmin, -180px);
+  width: clamp(320px, 44vw, 620px);
+  height: auto;
+}
+.how-works-deco--bl {
+  bottom: clamp(-360px, -26vmin, -240px);
+  left: clamp(-220px, -14vmin, -140px);
+  width: clamp(300px, 40vw, 560px);
+  height: auto;
+}
+.how-works-deco--tr {
+  top: clamp(-120px, -9vmin, -70px);
+  right: clamp(-260px, -16vmin, -160px);
+  width: clamp(320px, 44vw, 620px);
+  height: auto;
+  transform: scaleX(-1);
+}
+.how-works-deco--br {
+  bottom: clamp(-340px, -24vmin, -220px);
+  right: clamp(-220px, -14vmin, -140px);
+  width: clamp(300px, 40vw, 560px);
+  height: auto;
+  transform: scaleX(-1);
+}
+.how-it-works-grid {
+  /* Figma: 33px gap at desktop */
+  gap: clamp(12px, 2.2vw, 33px) !important;
+}
+.how-works-step {
+  position: relative;
+  padding-top: clamp(18px, 2.2vmin, 27px); /* overlap space above card */
+}
+.how-works-step__badge {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, #101129 0%, #2A2C5B 81.011%);
+  color: #fff;
+  font-family: Poppins, sans-serif;
+  font-size: var(--type-ui);
+  font-weight: 500;
+  line-height: var(--lh-ui);
+  border-radius: 999px;
+  padding: clamp(10px, 1.2vmin, 14px) clamp(28px, 3.8vw, 50px);
+  min-height: clamp(44px, 5.2vmin, 53px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(27, 31, 59, 0.18);
+  z-index: 2;
+}
+.how-works-step__card {
+  background: #fff;
+  border: 1.5px solid #E7E1FF;
+  border-radius: clamp(16px, 2vmin, 20px);
+  min-height: clamp(176px, 20vmin, 232px);
+  padding: clamp(18px, 2.6vmin, 28px) clamp(16px, 2.4vmin, 22px);
+  display: grid;
+  place-items: center;
+  text-align: center;
+  box-sizing: border-box;
+}
+.how-works-step__desc {
+  font-family: Poppins, sans-serif;
+  color: #101129;
+  font-weight: 400;
+  font-size: var(--type-lead);
+  line-height: var(--lh-body);
+  margin: 0;
+  max-width: 20ch;
+}
+
+.home-section--whychoose .home-section-header {
+  /* Figma gap: 47px from header → cards */
+  margin-bottom: clamp(26px, 4.6vmin, 47px);
+}
+.why-choose-grid {
+  /* Figma: 20px gap */
+  gap: clamp(12px, 1.6vw, 20px) !important;
+}
+.why-choose-card {
+  background: linear-gradient(360deg, #E7E1FF 0%, #FFFFFF 82.054%);
+  border: 1px solid #E7E1FF;
+  border-radius: clamp(16px, 2vmin, 20px);
+  /* Slightly tighter padding (top/bottom too) */
+  padding: clamp(16px, 2.6vmin, 28px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(22px, 4.2vmin, 44px); /* icon → text */
+  box-sizing: border-box;
+}
+.why-choose-icon {
+  /* Smaller icon bubble */
+  --wc-size: clamp(48px, 5.2vw, 64px);
+  width: var(--wc-size);
+  height: var(--wc-size);
+  border-radius: 999px;
+  background: linear-gradient(90deg, #101129 0%, #2A2C5B 81.011%);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  box-shadow: 0px 4px 156.2px rgba(136, 107, 249, 0.23);
+}
+.why-choose-text {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 2.2vmin, 23px); /* title → desc */
+}
+
+/* Offer badge next to struck-through price (Figma 167:2331). */
+.offer-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  background: #E6F6F3;
+  border: 0.2px solid #41C9B3;
+  border-radius: 5px;
+  /* Do NOT hard-lock height: text scales responsively. */
+  min-height: clamp(18px, 2.2vmin, 23px);
+  padding-inline: clamp(8px, 1.1vmin, 10px);
+  padding-block: clamp(1px, 0.35vmin, 3px);
+  box-sizing: border-box;
+}
+.offer-badge__text {
+  color: #41C9B3;
+  font-family: Poppins, sans-serif;
+  font-weight: 500;
+  /* Slightly smaller than other meta text so it never clips. */
+  font-size: clamp(0.75rem, 0.68rem + 0.35vmin, 1rem);
+  line-height: 1.15;
+}
+
+/* Line clamping (avoid dependency on Tailwind plugins). */
+.line-clamp-1,
+.line-clamp-2,
+.line-clamp-3,
+.line-clamp-4,
+.line-clamp-5,
+.line-clamp-6 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-1 { -webkit-line-clamp: 1; }
+.line-clamp-2 { -webkit-line-clamp: 2; }
+.line-clamp-3 { -webkit-line-clamp: 3; }
+.line-clamp-4 { -webkit-line-clamp: 4; }
+.line-clamp-5 { -webkit-line-clamp: 5; }
+.line-clamp-6 { -webkit-line-clamp: 6; }
+
+/* Test card: reserve space for title + description so tiles/footer align in a row (Figma 148:1169). */
+.test-card__intro {
+  min-height: clamp(108px, 14vmin, 168px);
+}
+
+/* Poppins 24 / 500 / 27px, tracking -0.48px — matches Figma B3-MEDIUM on card title */
+.type-card-title {
+  font-family: Poppins, sans-serif;
+  font-size: var(--type-subhead);
+  font-weight: 600;
+  line-height: 27px;
+  letter-spacing: -0.02em;
 }

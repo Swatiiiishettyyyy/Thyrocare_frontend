@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Navbar } from '../components'
-import emptyReportIllustration from '../assets/figma/empty-report/fi_4751509.svg'
+import EmptyReportPage from './EmptyReportPage'
 
 const NAV_LINKS = [
   { label: 'Tests', href: '/' },
-  { label: 'Packages', href: '/' },
+  { label: 'Packages', href: '/packages' },
   { label: 'Reports', href: '/reports' },
   { label: 'Metrics', href: '/metrics' },
   { label: 'Orders', href: '/orders' },
@@ -18,6 +18,12 @@ export default function ReportsListPage() {
   const [searchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'All')
   const tabs = ['All', 'Nucleotide', 'Uploaded', 'Needs Attention']
+
+  // Figma (928:5213): when there are no reports, show the dedicated empty state screen
+  // without tabs / filters / extra wrappers.
+  if (REPORTS.length === 0) {
+    return <EmptyReportPage />
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Poppins', sans-serif" }}>
@@ -79,49 +85,7 @@ export default function ReportsListPage() {
           </div>
         </div>
 
-        {/* Report list or empty state */}
-        {REPORTS.length === 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', gap: 24 }}>
-            {/* Illustration */}
-            <div style={{
-              width: 200, height: 200,
-              background: 'linear-gradient(180deg, #E7E1FF 0%, #fff 100%)',
-              borderRadius: '50%',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <img src={emptyReportIllustration} alt="No reports" style={{ width: 80, height: 80 }} />
-            </div>
-            {/* Text */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, maxWidth: 440, textAlign: 'center' }}>
-              <h2 style={{ fontFamily: 'Poppins,sans-serif', fontSize: 24, fontWeight: 500, color: '#161616', margin: 0 }}>No Reports Found</h2>
-              <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 15, fontWeight: 400, color: '#414141', margin: 0, lineHeight: 1.6 }}>
-                Your reports will appear here after you complete a test or upload an external report.
-              </p>
-            </div>
-            {/* CTAs */}
-            <div className="reports-empty-ctas" style={{ display: 'flex', gap: 14, width: '100%', maxWidth: 440 }}>
-              <button className="reports-empty-cta" onClick={() => navigate('/')} style={{
-                flex: 1, height: 56, background: '#8B5CF6', color: '#fff', border: 'none',
-                borderRadius: 10, fontFamily: 'Poppins,sans-serif', fontSize: 15, fontWeight: 500,
-                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                padding: '0 16px',
-              }}>
-                Browse Tests
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M6 2l4 4-4 4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </button>
-              <button className="reports-empty-cta" onClick={() => navigate('/upload-report')} style={{
-                flex: 1, height: 52, background: '#fff', color: '#101129',
-                border: '1.5px solid #8B5CF6', borderRadius: 8,
-                fontFamily: 'Poppins,sans-serif', fontSize: 15, fontWeight: 500,
-                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              }}>
-                Upload Report
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M6 2l4 4-4 4" stroke="#8B5CF6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </button>
-            </div>
-          </div>
-        ) : (
+        {/* Report list */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {REPORTS.map((r, i) => (
             <div key={i} onClick={() => navigate('/report')} style={{
@@ -182,7 +146,6 @@ export default function ReportsListPage() {
             </div>
           ))}
         </div>
-        )}
 
       </div>
     </div>

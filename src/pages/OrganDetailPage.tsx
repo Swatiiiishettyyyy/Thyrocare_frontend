@@ -184,24 +184,28 @@ export default function OrganDetailPage({ cartCount }: { cartCount?: number } = 
             const ss = STATUS_STYLE[p.status]
             const chartColor = p.status === 'Normal' ? '#8B5CF6' : '#8B5CF6'
             return (
-              <div key={p.name} style={{
-                background: '#fff', borderRadius: 20, padding: '24px',
-                outline: '1px solid #E7E1FF', outlineOffset: -1,
-                marginBottom: 16,
-              }}>
+              <div
+                key={p.name}
+                className="organ-paramCard"
+                style={{
+                  background: '#fff', borderRadius: 20, padding: '24px',
+                  outline: '1px solid #E7E1FF', outlineOffset: -1,
+                  marginBottom: 16,
+                }}
+              >
                 {/* Param header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+                <div className="organ-paramHeader" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
                   <div>
-                    <div style={{ fontSize: 18, fontWeight: 500, color: '#161616', marginBottom: 8 }}>{p.name}</div>
-                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 6 }}>
-                      <span style={{ fontSize: 28, fontWeight: 600, color: '#161616', lineHeight: 1 }}>{p.value}</span>
-                      <span style={{ fontSize: 15, color: '#828282', marginBottom: 2, fontFamily: 'Inter, sans-serif' }}>{p.unit}</span>
-                      <span style={{ padding: '3px 10px', borderRadius: 100, background: ss.bg, color: ss.color, fontSize: 13, fontFamily: 'Inter, sans-serif' }}>{p.status}</span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px', background: '#E6F6F3', borderRadius: 100 }}>
-                        <svg width="14" height="10" viewBox="0 0 24 14" fill="none">
+                    <div className="organ-paramName" style={{ fontSize: 18, fontWeight: 500, color: '#161616', marginBottom: 8 }}>{p.name}</div>
+                    <div className="organ-paramValueRow" style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 6 }}>
+                      <span className="organ-paramValue" style={{ fontSize: 28, fontWeight: 600, color: '#161616', lineHeight: 1 }}>{p.value}</span>
+                      <span className="organ-paramUnit" style={{ fontSize: 15, color: '#828282', marginBottom: 2, fontFamily: 'Inter, sans-serif' }}>{p.unit}</span>
+                      <span className="organ-paramStatusPill" style={{ padding: '3px 10px', borderRadius: 100, background: ss.bg, color: ss.color, fontSize: 13, fontFamily: 'Inter, sans-serif' }}>{p.status}</span>
+                      <div className="organ-paramChangePill" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px', background: '#E6F6F3', borderRadius: 100 }}>
+                        <svg width="14" height="10" viewBox="0 0 24 14" fill="none" aria-hidden="true">
                           <path d="M1 13L12 2L23 13" stroke="#41C9B3" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
-                        <span style={{ fontSize: 13, color: '#101129', fontFamily: 'Inter, sans-serif' }}>{p.change}</span>
+                        <span className="organ-paramChangeText" style={{ fontSize: 13, color: '#101129', fontFamily: 'Inter, sans-serif' }}>{p.change}</span>
                       </div>
                     </div>
                     <span style={{ fontSize: 14, color: '#828282', fontFamily: 'Poppins, sans-serif' }}>
@@ -209,9 +213,9 @@ export default function OrganDetailPage({ cartCount }: { cartCount?: number } = 
                     </span>
                   </div>
                   {/* Time filter */}
-                  <div style={{ display: 'flex', background: '#fff', boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)', borderRadius: 112, outline: '1px solid #E7E1FF', outlineOffset: -1, padding: 8 }}>
+                  <div className="organ-paramTimeToggle" style={{ display: 'flex', background: '#fff', boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)', borderRadius: 112, outline: '1px solid #E7E1FF', outlineOffset: -1, padding: 8 }}>
                     {['Monthly', 'Quarterly', 'Yearly'].map(f => (
-                      <button key={f} onClick={() => setActiveTimeFilter(f)} style={{
+                      <button key={f} onClick={() => setActiveTimeFilter(f)} className={`organ-paramTimeBtn ${activeTimeFilter === f ? 'is-active' : ''}`} style={{
                         padding: '6px 16px', borderRadius: 47, border: 'none',
                         background: activeTimeFilter === f ? '#fff' : 'transparent',
                         boxShadow: activeTimeFilter === f ? '0px 4px 27.3px rgba(0,0,0,0.05)' : 'none',
@@ -240,6 +244,11 @@ export default function OrganDetailPage({ cartCount }: { cartCount?: number } = 
                       ))}
                     </div>
                   </div>
+                </div>
+
+                {/* Mobile scrubber (visual only) */}
+                <div className="organ-paramScrubber" aria-hidden="true">
+                  <div className="organ-paramScrubberThumb" />
                 </div>
               </div>
             )

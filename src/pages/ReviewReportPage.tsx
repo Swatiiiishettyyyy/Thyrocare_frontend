@@ -1,16 +1,16 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Navbar } from '../components'
+import { Navbar, UploadReportStepper } from '../components'
+import breadcrumbChevron from '../assets/figma/upload-report/Vector.svg'
+import chevronDown from '../assets/figma/upload-report/Frame-4.svg'
+import chevronRightWhite from '../assets/figma/upload-report/Frame.svg'
 
 const NAV_LINKS = [
-  { label: 'Tests', href: '/' }, { label: 'Packages', href: '/' },
-  { label: 'Reports', href: '/reports' }, { label: 'Metrics', href: '/metrics' }, { label: 'Orders', href: '/orders' },
-]
-
-const steps = [
-  { num: 1, label: 'Upload', done: true },
-  { num: 2, label: 'Report Details', done: true },
-  { num: 3, label: 'Review', active: true },
+  { label: 'Tests', href: '/' },
+  { label: 'Packages', href: '/packages' },
+  { label: 'Reports', href: '/reports' },
+  { label: 'Metrics', href: '/metrics' },
+  { label: 'Orders', href: '/orders' },
 ]
 
 const PARAMS = [
@@ -26,80 +26,178 @@ export default function ReviewReportPage() {
   const navigate = useNavigate()
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Poppins', sans-serif" }}>
-      <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" onCtaClick={() => navigate('/cart')} />
+    <div style={{ minHeight: '100vh', background: '#fff', fontFamily: 'Poppins, sans-serif', overflowX: 'hidden' }}>
+      <Navbar
+        logoSrc="/favicon.svg"
+        logoAlt="Nucleotide"
+        links={NAV_LINKS}
+        ctaLabel="My Cart"
+        hideSearchOnMobile
+        activeHrefOverride="/reports"
+        onCtaClick={() => navigate('/cart')}
+      />
 
-      <div style={{ maxWidth: 700, margin: '0 auto', padding: '32px 40px 60px' }}>
-
+      <div
+        style={{
+          maxWidth: 'var(--page-inner-w)',
+          margin: '0 auto',
+          padding: 'calc(var(--pad-section-y) * 0.45) var(--pad-section-x) calc(var(--pad-section-y) * 0.8)',
+          boxSizing: 'border-box',
+          width: '100%',
+        }}
+      >
         {/* Breadcrumb */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32 }}>
-          <span onClick={() => navigate('/reports')} style={{ fontSize: 13, color: '#9CA3AF', cursor: 'pointer' }}>Reports</span>
-          <span style={{ fontSize: 13, color: '#9CA3AF' }}>›</span>
-          <span style={{ fontSize: 13, color: '#1B1F3B', fontWeight: 600 }}>Upload Report</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 'clamp(18px, 2.8vmin, 30px)' }}>
+          <button
+            type="button"
+            onClick={() => navigate('/reports')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              padding: 0,
+              cursor: 'pointer',
+              fontFamily: 'Inter, sans-serif',
+              fontSize: 'var(--type-body)',
+              color: '#828282',
+            }}
+          >
+            Reports
+          </button>
+          <img src={breadcrumbChevron} alt="" style={{ width: 8, height: 12, display: 'block' }} />
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 'var(--type-body)', color: '#101129', fontWeight: 500 }}>
+            Upload Report
+          </span>
         </div>
 
         {/* Stepper */}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 40 }}>
-          {steps.map((step, i) => (
-            <React.Fragment key={step.num}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: '50%',
-                  background: step.done ? '#7C5CFC' : '#EDE9FE',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: step.done ? 18 : 15, fontWeight: 500,
-                  color: step.done ? '#fff' : '#9CA3AF',
-                  border: step.active ? '2px solid #7C5CFC' : 'none',
-                }}>
-                  {step.done ? '✓' : step.num}
-                </div>
-                <span style={{ fontSize: 13, color: step.done || step.active ? '#7C5CFC' : '#9CA3AF', fontWeight: step.active ? 600 : 400 }}>{step.label}</span>
-              </div>
-              {i < steps.length - 1 && (
-                <div style={{ width: 100, height: 1.5, background: '#7C5CFC', margin: '0 8px 20px' }} />
-              )}
-            </React.Fragment>
-          ))}
+        <div style={{ marginBottom: 'clamp(18px, 3vmin, 30px)' }}>
+          <UploadReportStepper currentStep={3} />
         </div>
 
-        {/* Review card */}
-        <div style={{ background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 20, padding: '32px 32px 28px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-          <h2 style={{ fontSize: 20, fontWeight: 800, color: '#111827', margin: '0 0 4px' }}>Review Extracted Data</h2>
-          <p style={{ fontSize: 13, color: '#9CA3AF', margin: '0 0 24px' }}>6 parameters found · 2 abnormal</p>
-
-          {/* Test name field */}
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 8 }}>Test Name</label>
-            <div style={{ background: '#F9FAFB', border: '1.5px solid #E5E7EB', borderRadius: 10, padding: '12px 16px', fontSize: 14, color: '#374151' }}>
-              Complete Blood Count(CBC)
+        {/* Main card */}
+        <div className="review-extracted-center" style={{ display: 'flex', justifyContent: 'center' }}>
+          <div
+            className="review-extracted-card"
+            style={{
+              width: 'min(920px, 100%)',
+              background: '#fff',
+              borderRadius: 'clamp(16px, 2.2vmin, 20px)',
+              boxShadow: '0px 4px 156.2px rgba(136, 107, 249, 0.23)',
+              padding: 'clamp(16px, 2.6vmin, 32px)',
+              boxSizing: 'border-box',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'clamp(18px, 3.2vmin, 32px)',
+            }}
+          >
+            <div className="review-extracted-header" style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 1.8vmin, 14px)' }}>
+              <div
+                className="review-extracted-title"
+                style={{
+                  fontFamily: 'Poppins, sans-serif',
+                  fontWeight: 600,
+                  fontSize: 'var(--type-subhead)',
+                  lineHeight: 1.15,
+                  letterSpacing: '-0.03em',
+                  color: '#101129',
+                }}
+              >
+                Review Extracted Data
+              </div>
+              <div className="review-extracted-subtitle" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: 'var(--type-body)', lineHeight: 'var(--lh-body)', color: '#414141' }}>
+                6 parameters found · 2 abnormal
+              </div>
             </div>
-          </div>
 
-          {/* Parameters list */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 28 }}>
-            {PARAMS.map((p, i) => (
-              <div key={i} style={{ border: '1.5px solid #E5E7EB', borderRadius: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: p.dot, flexShrink: 0 }} />
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>{p.name}</div>
-                    <div style={{ fontSize: 12, color: '#9CA3AF' }}>Range: {p.range}</div>
+            {/* Test name */}
+            <div className="review-extracted-testNameWrap" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div className="review-extracted-testNameLabel" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, fontSize: 'var(--type-ui)', color: '#161616' }}>Test Name</div>
+              <div
+                className="review-extracted-testNameField"
+                style={{
+                  width: '100%',
+                  background: '#F9F9F9',
+                  borderRadius: 'clamp(14px, 2vmin, 20px)',
+                  padding: 'clamp(14px, 2.2vmin, 18px) clamp(14px, 2vmin, 16px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 400,
+                  fontSize: 'var(--type-body)',
+                  color: '#414141',
+                }}
+              >
+                <span className="review-extracted-testNameValue" style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Complete Blood Count(CBC)</span>
+                <img src={chevronDown} alt="" style={{ width: 24, height: 24, display: 'block' }} />
+              </div>
+            </div>
+
+            {/* Parameters */}
+            <div className="review-extracted-params" style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(8px, 1.2vmin, 9px)' }}>
+              {PARAMS.map((p, i) => (
+                <div
+                  key={i}
+                  className="review-extracted-paramRow"
+                  style={{
+                    border: '1px solid #E7E1FF',
+                    borderRadius: 'clamp(14px, 2vmin, 20px)',
+                    padding: 'clamp(8px, 1.4vmin, 10px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 'clamp(24px, 12vw, 60px)',
+                  }}
+                >
+                  <div className="review-extracted-paramLeft" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(12px, 4vw, 17px)', minWidth: 0 }}>
+                    <div className="review-extracted-dot" style={{ width: 7, height: 7, borderRadius: 999, background: p.dot, flexShrink: 0 }} />
+                    <div style={{ minWidth: 0 }}>
+                      <div className="review-extracted-paramName" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'var(--type-body)', lineHeight: '20px', color: '#161616', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {p.name}
+                      </div>
+                      <div className="review-extracted-paramRange" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 400, fontSize: 'var(--type-body)', lineHeight: '20px', color: '#828282', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        Range: {p.range}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="review-extracted-paramValue" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 400, fontSize: 'var(--type-body)', lineHeight: '20px', color: '#161616', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                    {p.value}
                   </div>
                 </div>
-                <span style={{ fontSize: 14, fontWeight: 600, color: '#374151' }}>{p.value}</span>
-              </div>
-            ))}
+              ))}
+            </div>
+
+            {/* CTA */}
+            <div className="review-extracted-ctaRow" style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => navigate('/reports?tab=Uploaded')}
+                className="review-extracted-cta"
+                style={{
+                  width: 'min(470px, 100%)',
+                  minHeight: 'clamp(48px, 6vmin, 58px)',
+                  borderRadius: 'clamp(8px, 1vmin, 10px)',
+                  border: 'none',
+                  background: '#8B5CF6',
+                  cursor: 'pointer',
+                  fontFamily: 'Poppins, sans-serif',
+                  fontWeight: 500,
+                  fontSize: 'var(--type-ui)',
+                  color: '#fff',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 10,
+                }}
+              >
+                Save to My Reports
+                <img src={chevronRightWhite} alt="" style={{ width: 18, height: 18, display: 'block' }} />
+              </button>
+            </div>
           </div>
-
-          {/* Save button */}
-          <button onClick={() => navigate('/reports?tab=Uploaded')} style={{
-            width: '100%', padding: '15px', borderRadius: 12, border: 'none',
-            background: '#7C5CFC', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer',
-          }}>
-            Save to My Reports ›
-          </button>
         </div>
-
       </div>
     </div>
   )
