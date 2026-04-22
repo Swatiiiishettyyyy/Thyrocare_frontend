@@ -71,6 +71,23 @@
   height: 100%;
   align-self: stretch;
 }
+
+/* TestCard: keep top badges aligned across all sections */
+.test-card__topRow {
+  /* Ensure the top row height is stable even when fasting text wraps */
+  min-height: calc(var(--test-card-badge-h) + var(--test-card-shell-pad));
+}
+.test-card__fastingPill {
+  min-height: var(--test-card-badge-h);
+  display: flex;
+  align-items: center;
+}
+.test-card__fasting {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
 .grid-4 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -344,20 +361,26 @@
     justify-content: flex-start;
   }
   .navbar-logo {
-    order: 2;
+    order: 1;
+    flex-shrink: 0;
   }
-  .navbar-search {
-    order: 3;
+  /* Wrap is a direct child of .navbar-inner; order must live here (not on inner .navbar-search form). */
+  .navbar-search-wrap {
+    order: 2;
     flex: 1 1 auto;
     min-width: 0;
     max-width: 720px;
   }
+  .navbar-search {
+    width: 100%;
+    max-width: 100%;
+  }
   .navbar-nav {
-    order: 4;
+    order: 3;
     margin-left: auto;
   }
   .navbar-trailing-actions {
-    order: 5;
+    order: 4;
   }
   .navbar-location-mobile {
     display: none !important;
@@ -589,17 +612,21 @@
     /* Reduce global section side padding so centered block is truly centered */
     padding-left: clamp(12px, 4vw, 16px) !important;
     padding-right: clamp(12px, 4vw, 16px) !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
+    padding-top: 18px !important;
+    padding-bottom: 18px !important;
     max-width: 100% !important;
     min-height: calc(100vh - clamp(84px, 10vmin, 96px)) !important;
     justify-content: center !important;
+    gap: 16px !important;
   }
 
   .empty-report-block {
     margin-left: auto !important;
     margin-right: auto !important;
     max-width: 364px !important;
+    gap: 16px !important;
+    padding: 18px 0 !important;
+    text-align: center !important;
   }
 
   .empty-report-ctas {
@@ -755,6 +782,17 @@
 @media (max-width: 768px) {
   .order-detail-twoUp {
     grid-template-columns: 1fr;
+  }
+
+  .order-detail-infoCard {
+    padding: 14px !important;
+    border-radius: 16px !important;
+    gap: 12px !important;
+  }
+
+  .order-detail-infoLabel {
+    font-size: 12px !important;
+    line-height: 20px !important;
   }
 }
 
@@ -970,7 +1008,25 @@
 /* ════════════════════════════════════════════════════════════════════════════
    ORDERS PAGE — MOBILE
    ════════════════════════════════════════════════════════════════════════════ */
+.orders-title {
+  font-size: var(--type-subhead);
+}
+
 @media (max-width: 768px) {
+  .orders-empty {
+    gap: 16px !important;
+    padding: 18px 0 !important;
+    min-height: auto !important;
+  }
+
+  .orders-title {
+    /* Match HealthMetrics mobile title sizing (`.metrics-title`) */
+    font-size: 20px !important;
+    letter-spacing: -0.02em !important;
+    line-height: 20px !important;
+    margin-bottom: 6px !important;
+  }
+
   .orders-inner {
     padding: clamp(14px, 4.2vw, 18px) clamp(12px, 4vw, 16px) clamp(28px, 8vw, 44px) !important;
     /* Match Figma mobile frame: centered ~356px column */
@@ -987,9 +1043,14 @@
     text-align: center !important;
   }
   .orders-subtitle {
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    display: block;
+    max-width: 100%;
+    white-space: nowrap !important; /* single line */
+    overflow: visible !important;   /* don't clip */
+    text-overflow: unset !important;
+    font-size: 11px !important;     /* ensure it fits on small phones */
+    line-height: 20px !important;
+    letter-spacing: -0.01em;
   }
 
   .orders-tabs {
@@ -1000,9 +1061,9 @@
     box-sizing: border-box;
     overflow: hidden !important; /* no scrollbar in mobile */
     border-radius: 112px !important;
-    padding: clamp(12px, 3.6vw, 14px) !important;
-    padding-right: clamp(12px, 3.6vw, 14px) !important;
-    gap: clamp(12px, 4vw, 16px) !important;
+    padding: 10px !important;
+    padding-right: 10px !important;
+    gap: 10px !important;
     justify-content: center !important;
   }
 
@@ -1025,6 +1086,11 @@
   .orders-tabBtn--all { width: clamp(68px, 20vw, 73px) !important; }
   .orders-tabBtn--active,
   .orders-tabBtn--completed { width: clamp(90px, 26vw, 98px) !important; }
+
+  .orders-card {
+    padding: 16px !important;
+    gap: 14px !important;
+  }
 
   .orders-card-right {
     width: 100% !important;
@@ -1056,6 +1122,8 @@
   /* Orders empty state: allow subtitle to wrap on smaller screens */
   .orders-empty-subtitle {
     white-space: normal !important;
+    font-size: 14px !important;
+    line-height: 20px !important;
   }
 
   .orders-empty-cta {
@@ -2173,11 +2241,16 @@
     flex-wrap: wrap;
     margin: 10px 0 12px !important;
   }
+  /* But hide the breadcrumb on Health Metrics page (matches Figma mobile) */
+  .cart-breadcrumb.metrics-breadcrumb {
+    display: none !important;
+  }
 
   .cart-items-title {
     font-size: 16px !important;
     line-height: 22px !important;
-    margin-bottom: 14px !important;
+    margin-top: 10px !important;
+    margin-bottom: 16px !important;
   }
 
   /* Cart stepper: slightly smaller than default mobile */
@@ -2199,6 +2272,12 @@
     padding: clamp(14px, 4.2vw, 16px) clamp(12px, 3.6vw, 12px) !important;
     border-radius: var(--m-radius-card-sm) !important;
     box-shadow: none !important;
+  }
+  /* More specific override to beat inline styles on cart pages */
+  .cart-page .cart-line {
+    padding: 16px 16px !important;
+    border-radius: 16px !important;
+    margin-bottom: 12px !important;
   }
   .cart-line-titleRow > span {
     font-size: 16px !important;
@@ -2586,8 +2665,6 @@
   }
 
   .navbar-search {
-    grid-column: 1 / -1;
-    grid-row: 3;
     display: flex !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -2602,6 +2679,9 @@
 
   /* Hide location row + search bar on mobile */
   .navbar-location-mobile {
+    display: none !important;
+  }
+  .navbar-search-wrap {
     display: none !important;
   }
   .navbar-search {
@@ -2677,6 +2757,7 @@
   .site-navbar-header--no-search .navbar-location-mobile {
     display: none !important;
   }
+  .site-navbar-header--no-search .navbar-search-wrap,
   .site-navbar-header--no-search .navbar-search {
     display: none !important;
   }
@@ -3698,6 +3779,16 @@
   max-width: 380px;
   width: 100%;
   box-sizing: border-box;
+}
+
+/* Payment — desktop: let the left column grow and fill the card width (sidebar stays ~380px) */
+@media (min-width: 769px) {
+  .payment-page-root .payment-leftcol {
+    flex: 1 1 560px !important;
+  }
+  .payment-page-root .payment-leftcol .payment-card {
+    max-width: 100% !important;
+  }
 }
 
 /* ════════════════════════════════════════════════════════════════════════════

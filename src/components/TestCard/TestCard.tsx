@@ -16,11 +16,11 @@ const TestCard = React.memo(function TestCard({
 
   // TEMP: hardcode offer badge to match Figma (167:2331) even if API discount is missing.
   // Once API discount is reliable everywhere, we can restore conditional rendering.
-  const offerLabel = offerPercent?.trim() || '33% OFF'
+  const offerLabel = offerPercent?.trim() || '40% OFF'
 
   const goToDetail = useCallback(() => {
     const id = thyrocareProductId ?? encodeURIComponent(name)
-    navigate(`/test/${id}`, {
+    navigate(`/${id}`, {
       state: {
         test: {
           name,
@@ -39,6 +39,7 @@ const TestCard = React.memo(function TestCard({
   }, [navigate, name, description, price, originalPrice, offerPercent, tests, fasting, type, thyrocareProductId, maxBeneficiaries])
 
   const secondTileLabel = parametersLabel ?? (type === 'Package' ? 'Tests included' : 'Parameters ')
+  const testsDisplay = Math.max(1, tests)
   const metaValuePadLeft = 'var(--test-card-meta-pad)'
   const metaValuePadParams = 'calc(var(--test-card-meta-pad) - 1px)'
 
@@ -62,7 +63,7 @@ const TestCard = React.memo(function TestCard({
             background: 'linear-gradient(180deg, #E7E1FF 0%, #FFFFFF 82.054%)',
           }}
         >
-          <div className="flex items-start justify-between min-w-0 shrink-0" style={{ gap: 'clamp(8px, 1.2vmin, 12px)' }}>
+          <div className="test-card__topRow flex items-start justify-between min-w-0 shrink-0" style={{ gap: 'clamp(8px, 1.2vmin, 12px)' }}>
             <span
               className="shrink-0 flex items-center justify-center text-white type-ui"
               style={{
@@ -77,7 +78,7 @@ const TestCard = React.memo(function TestCard({
               <span className="whitespace-nowrap">{type}</span>
             </span>
             <span
-              className="min-w-0 max-w-[min(100%,220px)] rounded-[8px] border border-[#E7E1FF] bg-white"
+              className="test-card__fastingPill min-w-0 max-w-[min(100%,220px)] rounded-[8px] border border-[#E7E1FF] bg-white"
               style={{
                 marginTop: 'var(--test-card-shell-pad)',
                 marginRight: 'var(--test-card-shell-pad)',
@@ -156,7 +157,7 @@ const TestCard = React.memo(function TestCard({
                     {secondTileLabel}
                   </span>
                   <span className="test-card__meta-value type-body text-[#161616]">
-                    {tests}
+                    {testsDisplay}
                   </span>
                 </div>
               </div>

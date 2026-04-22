@@ -1,21 +1,21 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import profileIcon from '../assets/figma/checkout-pages/profile.svg'
 import familyIcon from '../assets/figma/checkout-pages/family.svg'
 import selectIcon from '../assets/figma/checkout-pages/select.svg'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { Navbar } from '../components'
+import { AddAddressModal } from '../components/AddAddressModal'
 import { CheckoutStepper } from '../components/CheckoutStepper'
 import { OrderSummaryCard } from '../components/OrderSummaryCard'
 import type { CartItem } from '../types'
 import { fetchMembers, saveMember } from '../api/member'
-import { fetchAddresses, saveThyrocareAddress } from '../api/address'
+import { fetchAddresses } from '../api/address'
 import {
   fetchActiveGroups,
-  fetchPriceBreakup,
   checkPincodeServiceability,
   getCheckoutPriceSummary,
-  checkoutPricingSnapshotKey,
-  ensureThyrocareCartGroup,
+  checkoutPatientCount,
+  upsertCartByProduct,
   pullCheckoutSnapshot,
 } from '../api/cart'
 import type { CartGroup } from '../api/cart'
@@ -64,6 +64,8 @@ interface AddressPageProps {
 
 export default function AddressPage({ cartCount, items, session, onSessionUpdate, onUpsertGroup }: AddressPageProps) {
   const navigate = useNavigate()
+  const location = useLocation()
+  const blockReason = (location.state as any)?.checkoutBlockReason as string | undefined
 
   const [members, setMembers] = useState<Member[]>([])
   const [addresses, setAddresses] = useState<Address[]>([])
@@ -72,9 +74,9 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
   const [memberMap, setMemberMap] = useState<Record<number, number[]>>({})
   /** Which list is visible: profile only vs family only (selections in `memberMap` are kept when toggling) */
   const [memberListFocus, setMemberListFocus] = useState<Record<number, 'profile' | 'family'>>({})
-  // single shared address for all products
-  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null)
-  const [serviceability, setServiceability] = useState<{ checking: boolean; serviceable: boolean | null; message?: string }>({ checking: false, serviceable: null })
+  // per-product address (one product group = one address)
+  const [addressMap, setAddressMap] = useState<Record<number, number | null>>({})
+  const [serviceabilityMap, setServiceabilityMap] = useState<Record<number, { checking: boolean; serviceable: boolean | null; message?: string }>>({})
   const [upsertError, setUpsertError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -84,11 +86,7 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
   const [savingMember, setSavingMember] = useState(false)
   const [showGenderModal, setShowGenderModal] = useState(false)
 
-  // single address modal
   const [showAddressModal, setShowAddressModal] = useState(false)
-  const [newAddress, setNewAddress] = useState({ address_label: 'Home', street_address: '', landmark: '', locality: '', city: '', state: '', postal_code: '', country: 'India' })
-  const [savingAddress, setSavingAddress] = useState(false)
-  const [pincodeCheck, setPincodeCheck] = useState<{ checking: boolean; serviceable: boolean | null; message?: string }>({ checking: false, serviceable: null })
 
   const { subtotal, savings, total: displayTotal } = getCheckoutPriceSummary(items, {
     thyrocarePricing: session.thyrocarePricing,
@@ -96,6 +94,7 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
     groups: session.groups,
     pricingSnapshotKey: session.pricingSnapshotKey,
   })
+  const patientCount = useMemo(() => checkoutPatientCount(items), [items])
 
   useEffect(() => {
     async function init() {
@@ -104,10 +103,10 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
         setMembers(m)
         setAddresses(a)
         const mMap: Record<number, number[]> = {}
-        let sharedAddr: number | null = null
+        const aMap: Record<number, number | null> = {}
         for (const g of activeGroups) {
           mMap[g.thyrocare_product_id] = g.member_ids
-          if (!sharedAddr && g.address_id) sharedAddr = g.address_id
+          aMap[g.thyrocare_product_id] = g.address_id ?? null
           onUpsertGroup(g)
         }
         for (const item of items) {
@@ -116,20 +115,43 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
           if (!mMap[pid]) {
             const sg = session.groups.find(g => g.thyrocare_product_id === pid)
             mMap[pid] = sg?.member_ids ?? []
-            if (!sharedAddr && sg?.address_id) sharedAddr = sg.address_id
+            if (aMap[pid] == null) aMap[pid] = sg?.address_id ?? null
+          }
+          if (aMap[pid] == null) aMap[pid] = null
+        }
+        // If user reduced patients on Cart, do not keep extra saved members here.
+        for (const item of items) {
+          const pid = item.thyrocareProductId
+          if (!pid) continue
+          const needed = Math.max(1, item.quantity || 1)
+          const cur = mMap[pid] ?? []
+          if (Array.isArray(cur) && cur.length > needed) {
+            mMap[pid] = cur.slice(0, needed)
           }
         }
         setMemberMap(mMap)
-        setSelectedAddressId(sharedAddr)
+        setAddressMap(aMap)
       } catch {
         const mMap: Record<number, number[]> = {}
+        const aMap: Record<number, number | null> = {}
         for (const item of items) {
           if (!item.thyrocareProductId) continue
           const pid = item.thyrocareProductId
           const sg = session.groups.find(g => g.thyrocare_product_id === pid)
           mMap[pid] = sg?.member_ids ?? []
+          aMap[pid] = sg?.address_id ?? null
+        }
+        for (const item of items) {
+          const pid = item.thyrocareProductId
+          if (!pid) continue
+          const needed = Math.max(1, item.quantity || 1)
+          const cur = mMap[pid] ?? []
+          if (Array.isArray(cur) && cur.length > needed) {
+            mMap[pid] = cur.slice(0, needed)
+          }
         }
         setMemberMap(mMap)
+        setAddressMap(aMap)
       } finally {
         setLoading(false)
       }
@@ -137,54 +159,84 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
     init()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Pre-select Self only when this line needs exactly 1 patient and nothing chosen yet
+  // Keep member/address maps consistent with cart quantity when user goes back to Cart and edits patients.
+  // - If qty decreases: truncate selected members to match qty (can't keep extra members).
+  // - If qty increases: keep existing selection; user must add more members to reach qty.
   useEffect(() => {
-    if (loading || members.length === 0) return
+    if (loading) return
+
     setMemberMap(prev => {
-      let next = { ...prev }
+      let next = prev
       let changed = false
       for (const item of items) {
-        if (!item.thyrocareProductId || item.quantity !== 1) continue
         const pid = item.thyrocareProductId
+        if (!pid) continue
+        const needed = Math.max(1, item.quantity || 1)
         const cur = next[pid] ?? []
-        if (cur.length > 0) continue
-        const selfMember = members.find(isSelfMember)
-        if (selfMember) {
-          next = { ...next, [pid]: [selfMember.member_id] }
+        if (!Array.isArray(cur)) continue
+        if (cur.length > needed) {
+          if (next === prev) next = { ...prev }
+          next[pid] = cur.slice(0, needed)
+          changed = true
+        } else if (!(pid in next)) {
+          if (next === prev) next = { ...prev }
+          next[pid] = cur
           changed = true
         }
       }
       return changed ? next : prev
     })
-  }, [loading, members, items])
+
+    setAddressMap(prev => {
+      let next = prev
+      let changed = false
+      for (const item of items) {
+        const pid = item.thyrocareProductId
+        if (!pid) continue
+        if (!(pid in next)) {
+          if (next === prev) next = { ...prev }
+          next[pid] = null
+          changed = true
+        }
+      }
+      return changed ? next : prev
+    })
+  }, [items, loading])
+
 
   function setProductMembers(productId: number, memberIds: number[]) {
     setMemberMap(prev => ({ ...prev, [productId]: memberIds }))
   }
-  async function selectAddress(addressId: number) {
-    setSelectedAddressId(addressId)
+  async function selectProductAddress(productId: number, addressId: number) {
+    setAddressMap(prev => ({ ...prev, [productId]: addressId }))
     const addr = addresses.find(a => a.address_id === addressId)
     if (!addr?.postal_code || addr.postal_code.length !== 6) return
-    setServiceability({ checking: true, serviceable: null })
+    setServiceabilityMap(prev => ({ ...prev, [productId]: { checking: true, serviceable: null } }))
     try {
       const result = await checkPincodeServiceability(addr.postal_code)
-      setServiceability({ checking: false, serviceable: result.serviceable, message: result.message })
+      setServiceabilityMap(prev => ({
+        ...prev,
+        [productId]: { checking: false, serviceable: result.serviceable, message: result.message },
+      }))
     } catch {
-      setServiceability({
-        checking: false,
-        serviceable: false,
-        message: 'Could not verify pincode. Check your connection and try again.',
-      })
+      setServiceabilityMap(prev => ({
+        ...prev,
+        [productId]: {
+          checking: false,
+          serviceable: false,
+          message: 'Could not verify pincode. Check your connection and try again.',
+        },
+      }))
     }
   }
 
-  const canContinue = selectedAddressId !== null &&
-    serviceability.serviceable === true &&
-    !serviceability.checking &&
-    items.every(item => {
+  const canContinue = items.every(item => {
     if (!item.thyrocareProductId) return false
-    const memberIds = memberMap[item.thyrocareProductId] ?? []
-    return memberIds.length === item.quantity
+    const pid = item.thyrocareProductId
+    const memberIds = memberMap[pid] ?? []
+    const addrId = addressMap[pid] ?? null
+    const svc = serviceabilityMap[pid] ?? { checking: false, serviceable: null }
+    return memberIds.length === item.quantity && addrId != null && svc.serviceable === true && !svc.checking
   })
 
   async function handleContinue() {
@@ -192,42 +244,48 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
     setSubmitting(true)
     setUpsertError(null)
     try {
-      // parallel upsert for all products
-      const results = await Promise.all(
-        items
-          .filter(item => item.thyrocareProductId)
-          .map(async item => {
-            const pid = item.thyrocareProductId!
-            const memberIds = memberMap[pid] ?? []
-            if (!selectedAddressId) return null
-            const existingGroup = session.groups.find(g => g.thyrocare_product_id === pid)
+      // IMPORTANT: upsert sequentially.
+      // Some backends race/500 when multiple `/thyrocare/cart/upsert` run concurrently for the same cart.
+      const updatedGroups: CartGroup[] = []
+      for (const item of items.filter(i => i.thyrocareProductId)) {
+        const pid = item.thyrocareProductId!
+        const memberIds = memberMap[pid] ?? []
+        const selectedAddressId = addressMap[pid] ?? null
+        if (!selectedAddressId) continue
+        const existingGroup = session.groups.find(g => g.thyrocare_product_id === pid)
 
-            const groupId = await ensureThyrocareCartGroup(
-              pid,
-              memberIds,
-              selectedAddressId,
-              existingGroup?.group_id ?? null,
-            )
-
-            const updated: CartGroup = {
-              ...(existingGroup ?? {
-                group_id: groupId,
-                thyrocare_product_id: pid,
-                product_name: item.name,
-                items: [],
-              }),
-              group_id: groupId,
-              member_ids: memberIds,
-              address_id: selectedAddressId,
-              appointment_date: existingGroup?.appointment_date ?? '',
-              appointment_start_time: existingGroup?.appointment_start_time ?? '',
-            }
-            onUpsertGroup(updated)
-            return updated
+        let groupId: string
+        try {
+          groupId = await upsertCartByProduct({
+            thyrocare_product_id: pid,
+            member_ids: memberIds,
+            address_id: selectedAddressId,
+            group_id: existingGroup?.group_id ?? null,
           })
-      )
+        } catch (e: any) {
+          const msg =
+            (typeof e?.data?.message === 'string' && e.data.message) ||
+            (typeof e?.message === 'string' && e.message) ||
+            'Could not update cart. Please try again.'
+          throw new Error(`${msg} (${item.name})`)
+        }
 
-      const updatedGroups = results.filter(Boolean) as CartGroup[]
+        const updated: CartGroup = {
+          ...(existingGroup ?? {
+            group_id: groupId,
+            thyrocare_product_id: pid,
+            product_name: item.name,
+            items: [],
+          }),
+          group_id: groupId,
+          member_ids: memberIds,
+          address_id: selectedAddressId,
+          appointment_date: existingGroup?.appointment_date ?? '',
+          appointment_start_time: existingGroup?.appointment_start_time ?? '',
+        }
+        updatedGroups.push(updated)
+        onUpsertGroup(updated)
+      }
       const groupIds = updatedGroups.map(g => g.group_id).filter(Boolean)
 
       if (groupIds.length === 0) {
@@ -237,7 +295,6 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
       }
 
       try {
-        const pricing = await fetchPriceBreakup(groupIds)
         const snap = await pullCheckoutSnapshot({
           previousGroups: updatedGroups,
           localOnlyItems: [],
@@ -248,9 +305,9 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
         onSessionUpdate({
           cartItems: nextItems,
           groups: nextGroups,
-          netPayableAmount: pricing.net_payable_amount,
-          thyrocarePricing: pricing,
-          pricingSnapshotKey: checkoutPricingSnapshotKey(nextGroups, nextItems),
+          netPayableAmount: null,
+          thyrocarePricing: null,
+          pricingSnapshotKey: null,
         })
         navigate('/timeslot')
       } catch {
@@ -306,64 +363,6 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
     }
   }
 
-  async function handlePincodeChange(value: string) {
-    const digits = value.replace(/\D/g, '').slice(0, 6)
-    setNewAddress(p => ({ ...p, postal_code: digits }))
-    if (digits.length === 6) {
-      setPincodeCheck({ checking: true, serviceable: null })
-      try {
-        const result = await checkPincodeServiceability(digits)
-        setPincodeCheck({ checking: false, serviceable: result.serviceable, message: result.message })
-      } catch {
-        setPincodeCheck({
-          checking: false,
-          serviceable: false,
-          message: 'Could not verify pincode. Try again.',
-        })
-      }
-    } else {
-      setPincodeCheck({ checking: false, serviceable: null })
-    }
-  }
-
-  async function handleSaveAddress() {
-    if (!newAddress.street_address || !newAddress.city || !newAddress.state || !newAddress.postal_code || !newAddress.locality) return
-    if (pincodeCheck.serviceable !== true || pincodeCheck.checking) return
-    setSavingAddress(true)
-    try {
-      const payload: Address = {
-        address_id: 0,
-        address_label: newAddress.address_label,
-        street_address: newAddress.street_address,
-        landmark: newAddress.landmark,
-        locality: newAddress.locality,
-        city: newAddress.city,
-        state: newAddress.state,
-        postal_code: newAddress.postal_code,
-        country: newAddress.country,
-        save_for_future: true,
-      }
-      const saved = await saveThyrocareAddress(payload)
-      setAddresses(prev => [...prev, saved])
-      setSelectedAddressId(saved.address_id)
-      setServiceability({ checking: false, serviceable: true })
-      setShowAddressModal(false)
-      setNewAddress({ address_label: 'Home', street_address: '', landmark: '', locality: '', city: '', state: '', postal_code: '', country: 'India' })
-      setPincodeCheck({ checking: false, serviceable: null })
-    } catch (err: any) {
-      const msg = err?.data?.message ?? 'Failed to save address. Please try again.'
-      // backend may reject due to unserviceable pincode
-      const isServiceability = msg.toLowerCase().includes('pincode') || msg.toLowerCase().includes('serve')
-      if (isServiceability) {
-        setPincodeCheck({ checking: false, serviceable: false, message: msg })
-      } else {
-        setPincodeCheck(prev => ({ ...prev, message: msg }))
-      }
-    } finally {
-      setSavingAddress(false)
-    }
-  }
-
   const showMemberModal = memberModalProductId !== null
   function setShowMemberModal(open: boolean) { if (!open) setMemberModalProductId(null) }
 
@@ -399,6 +398,11 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
       <CheckoutStepper activeStep={1} />
       <div className="checkout-layout checkout-layout--address" style={{ display: 'flex', gap: 32, padding: '0 56px 60px', maxWidth: 1600, margin: '0 auto', alignItems: 'flex-start' }}>
         <div className="checkout-leftcol" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 32 }}>
+          {blockReason && (
+            <div role="alert" style={{ background: '#FEF3C7', border: '1px solid #FCD34D', borderRadius: 12, padding: '10px 12px', fontSize: 13, color: '#92400E', fontFamily: 'Inter, sans-serif' }}>
+              {blockReason}
+            </div>
+          )}
           {loading ? (
             <p style={{ color: '#828282', fontSize: 14, fontFamily: 'Inter,sans-serif' }}>Loading...</p>
           ) : (
@@ -550,48 +554,57 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
                 )
               })}
 
-              {/* Shared address section — one for all products */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 15, fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif' }}>Collection Address</span>
-                  <button onClick={() => setShowAddressModal(true)} style={{ padding: '4px 14px', borderRadius: 56, outline: '1px solid #8B5CF6', outlineOffset: '-1px', border: 'none', background: 'transparent', fontSize: 13, fontFamily: 'Inter, sans-serif', color: '#101129', cursor: 'pointer' }}>Add New +</button>
-                </div>
-                {addresses.map(addr => (
-                  <div key={addr.address_id} onClick={() => selectAddress(addr.address_id)}
-                    style={{
-                      background: '#fff', boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)', borderRadius: 20,
-                      outline: selectedAddressId === addr.address_id ? '1px solid #8B5CF6' : '1px solid #E7E1FF',
-                      outlineOffset: '-1px', padding: '14px 16px', cursor: 'pointer',
-                    }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                      <input type="radio" checked={selectedAddressId === addr.address_id} readOnly style={{ width: 18, height: 18, accentColor: '#8B5CF6', flexShrink: 0, marginTop: 3 }} />
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif' }}>{addr.address_label}</div>
-                        <div style={{ fontSize: 12, color: '#828282', fontFamily: 'Inter, sans-serif', lineHeight: 1.6 }}>
-                          {addr.street_address}{addr.landmark ? `, ${addr.landmark}` : ''}<br />
-                          {addr.city}, {addr.state} - {addr.postal_code}
-                        </div>
-                        {selectedAddressId === addr.address_id && (
-                          <div style={{ marginTop: 6 }}>
-                            {serviceability.checking && (
-                              <span style={{ fontSize: 12, color: '#828282', fontFamily: 'Inter, sans-serif' }}>Checking serviceability...</span>
-                            )}
-                            {!serviceability.checking && serviceability.serviceable === true && (
-                              <span style={{ fontSize: 12, color: '#059669', fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>✓ Home collection available at this pincode</span>
-                            )}
-                            {!serviceability.checking && serviceability.serviceable === false && (
-                              <span style={{ fontSize: 12, color: '#DC2626', fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
-                                ✗ Home collection not available at pincode {addr.postal_code}
-                                {serviceability.message ? ` — ${serviceability.message}` : ''}
-                              </span>
+              {/* Per-product address section (one product group = one address) */}
+              {items.filter(i => i.thyrocareProductId).map(item => {
+                const pid = item.thyrocareProductId!
+                const selectedAddressId = addressMap[pid] ?? null
+                const serviceability = serviceabilityMap[pid] ?? { checking: false, serviceable: null as boolean | null, message: undefined as string | undefined }
+                return (
+                  <div key={`addr-${pid}`} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 15, fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif' }}>
+                        {item.name} — Collection Address
+                      </span>
+                      <button onClick={() => setShowAddressModal(true)} style={{ padding: '4px 14px', borderRadius: 56, outline: '1px solid #8B5CF6', outlineOffset: '-1px', border: 'none', background: 'transparent', fontSize: 13, fontFamily: 'Inter, sans-serif', color: '#101129', cursor: 'pointer' }}>Add New +</button>
+                    </div>
+                    {addresses.map(addr => (
+                      <div key={`${pid}-${addr.address_id}`} onClick={() => selectProductAddress(pid, addr.address_id)}
+                        style={{
+                          background: '#fff', boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)', borderRadius: 20,
+                          outline: selectedAddressId === addr.address_id ? '1px solid #8B5CF6' : '1px solid #E7E1FF',
+                          outlineOffset: '-1px', padding: '14px 16px', cursor: 'pointer',
+                        }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                          <input type="radio" checked={selectedAddressId === addr.address_id} readOnly style={{ width: 18, height: 18, accentColor: '#8B5CF6', flexShrink: 0, marginTop: 3 }} />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 14, fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif' }}>{addr.address_label}</div>
+                            <div style={{ fontSize: 12, color: '#828282', fontFamily: 'Inter, sans-serif', lineHeight: 1.6 }}>
+                              {addr.street_address}{addr.landmark ? `, ${addr.landmark}` : ''}<br />
+                              {addr.city}, {addr.state} - {addr.postal_code}
+                            </div>
+                            {selectedAddressId === addr.address_id && (
+                              <div style={{ marginTop: 6 }}>
+                                {serviceability.checking && (
+                                  <span style={{ fontSize: 12, color: '#828282', fontFamily: 'Inter, sans-serif' }}>Checking serviceability...</span>
+                                )}
+                                {!serviceability.checking && serviceability.serviceable === true && (
+                                  <span style={{ fontSize: 12, color: '#059669', fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>✓ Home collection available at this pincode</span>
+                                )}
+                                {!serviceability.checking && serviceability.serviceable === false && (
+                                  <span style={{ fontSize: 12, color: '#DC2626', fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
+                                    ✗ Home collection not available at pincode {addr.postal_code}
+                                    {serviceability.message ? ` — ${serviceability.message}` : ''}
+                                  </span>
+                                )}
+                              </div>
                             )}
                           </div>
-                        )}
+                        </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                )
+              })}
             </>
           )}
         </div>
@@ -603,7 +616,7 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
             </div>
           )}
           <OrderSummaryCard
-            itemCount={items.length}
+            itemCount={patientCount}
             subtotal={subtotal}
             savings={savings}
             total={displayTotal}
@@ -750,60 +763,14 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
         </div>
       )}
 
-      {/* Add Address Modal */}
-      {showAddressModal && (
-        <div style={OVERLAY} onClick={() => setShowAddressModal(false)}>
-          <div style={MODAL} onClick={e => e.stopPropagation()}>
-            <span style={{ fontSize: 16, fontWeight: 600, color: '#161616', fontFamily: 'Poppins, sans-serif' }}>Add New Address</span>
-            <div><label style={LABEL}>Label</label>
-              <select style={INPUT} value={newAddress.address_label} onChange={e => setNewAddress(p => ({ ...p, address_label: e.target.value }))}>
-                {['Home', 'Work', 'Other'].map(l => <option key={l}>{l}</option>)}
-              </select>
-            </div>
-            <div><label style={LABEL}>Street Address *</label><input style={INPUT} value={newAddress.street_address} onChange={e => setNewAddress(p => ({ ...p, street_address: e.target.value }))} placeholder="Flat/House No, Street" /></div>
-            <div><label style={LABEL}>Landmark</label><input style={INPUT} value={newAddress.landmark} onChange={e => setNewAddress(p => ({ ...p, landmark: e.target.value }))} placeholder="Near..." /></div>
-            <div><label style={LABEL}>Locality *</label><input style={INPUT} value={newAddress.locality} onChange={e => setNewAddress(p => ({ ...p, locality: e.target.value }))} placeholder="Area / Locality" /></div>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <div style={{ flex: 1 }}><label style={LABEL}>City *</label><input style={INPUT} value={newAddress.city} onChange={e => setNewAddress(p => ({ ...p, city: e.target.value }))} placeholder="City" /></div>
-              <div style={{ flex: 1 }}><label style={LABEL}>State *</label><input style={INPUT} value={newAddress.state} onChange={e => setNewAddress(p => ({ ...p, state: e.target.value }))} placeholder="State" /></div>
-            </div>
-            <div>
-              <label style={LABEL}>Pincode *</label>
-              <input style={{ ...INPUT, borderColor: pincodeCheck.serviceable === false ? '#DC2626' : '#E7E1FF' }}
-                value={newAddress.postal_code}
-                onChange={e => handlePincodeChange(e.target.value)}
-                placeholder="6-digit pincode"
-                maxLength={6}
-              />
-              {pincodeCheck.checking && (
-                <span style={{ fontSize: 12, color: '#828282', fontFamily: 'Inter, sans-serif', marginTop: 4, display: 'block' }}>Checking serviceability...</span>
-              )}
-              {!pincodeCheck.checking && pincodeCheck.serviceable === true && (
-                <span style={{ fontSize: 12, color: '#059669', fontFamily: 'Inter, sans-serif', marginTop: 4, display: 'block' }}>✓ Home collection available</span>
-              )}
-              {!pincodeCheck.checking && pincodeCheck.serviceable === false && (
-                <span style={{ fontSize: 12, color: '#DC2626', fontFamily: 'Inter, sans-serif', marginTop: 4, display: 'block' }}>
-                  ✗ {pincodeCheck.message ?? 'Home collection not available at this pincode'}
-                </span>
-              )}
-              {!pincodeCheck.checking && pincodeCheck.serviceable !== false && pincodeCheck.message && (
-                <span style={{ fontSize: 12, color: '#DC2626', fontFamily: 'Inter, sans-serif', marginTop: 4, display: 'block' }}>
-                  ✗ {pincodeCheck.message}
-                </span>
-              )}
-            </div>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => { setShowAddressModal(false); setPincodeCheck({ checking: false, serviceable: null }) }} style={{ flex: 1, height: 44, borderRadius: 8, border: 'none', outline: '1px solid #E7E1FF', background: 'transparent', cursor: 'pointer', fontFamily: 'Poppins, sans-serif', fontSize: 14 }}>Cancel</button>
-              <button
-                onClick={handleSaveAddress}
-                disabled={savingAddress || pincodeCheck.checking || pincodeCheck.serviceable !== true}
-                style={{ flex: 1, height: 44, borderRadius: 8, border: 'none', background: (savingAddress || pincodeCheck.checking || pincodeCheck.serviceable !== true) ? '#E7E1FF' : '#8B5CF6', color: (savingAddress || pincodeCheck.checking || pincodeCheck.serviceable !== true) ? '#828282' : '#fff', cursor: (savingAddress || pincodeCheck.checking || pincodeCheck.serviceable !== true) ? 'not-allowed' : 'pointer', fontFamily: 'Poppins, sans-serif', fontSize: 14, fontWeight: 500 }}>
-                {savingAddress ? 'Saving...' : pincodeCheck.checking ? 'Checking...' : pincodeCheck.serviceable !== true ? 'Verify pincode first' : 'Save Address'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AddAddressModal
+        open={showAddressModal}
+        onClose={() => setShowAddressModal(false)}
+        onSaved={saved => {
+          setAddresses(prev => [...prev, saved])
+          setShowAddressModal(false)
+        }}
+      />
     </div>
   )
 }

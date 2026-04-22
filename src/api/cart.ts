@@ -103,6 +103,37 @@ export async function fetchActiveGroupsForProduct(productId: number): Promise<Ca
   return extractGroupsArray(res).map(normalizeCartGroupRow).filter((g): g is CartGroup => g != null)
 }
 
+// ── Product-level mutations (new flow) ────────────────────────────────────────
+
+/** Page-1 deselect rule: delete the saved group rows for this product immediately. */
+export async function deleteCartProduct(thyrocare_product_id: number): Promise<void> {
+  const pid = Number(thyrocare_product_id)
+  if (!Number.isFinite(pid) || pid <= 0) return
+  await api.delete(`/thyrocare/cart/product/${pid}`)
+}
+
+/**
+ * Page-2 rule: one product group upsert (retire old rows, write fresh).
+ * Matches backend contract: `{ thyrocare_product_id, member_ids: [...], address_id, group_id?: existing_group_id }`.
+ */
+export async function upsertCartByProduct(body: {
+  thyrocare_product_id: number
+  member_ids: number[]
+  address_id: number
+  group_id?: string | null
+}): Promise<string> {
+  const payload: Record<string, unknown> = {
+    thyrocare_product_id: body.thyrocare_product_id,
+    member_ids: body.member_ids,
+    address_id: body.address_id,
+  }
+  const gid = body.group_id != null ? String(body.group_id).trim() : ''
+  if (gid) payload.group_id = gid
+  const res = await api.put<any>('/thyrocare/cart/upsert', payload)
+  const out = res?.group_id ?? res?.data?.group_id ?? gid
+  return out ? String(out) : gid
+}
+
 // ── Add (POST /thyrocare/cart/add) ───────────────────────────────────────────
 
 /**
@@ -268,7 +299,17 @@ function isCheckoutPricingFresh(
   return pricingSnapshotKey === checkoutPricingSnapshotKey(groups, items)
 }
 
-/** Sidebar / payment: use Thyrocare breakup only if it matches current groups + cart (see pricingSnapshotKey). */
+/** Sum of checkout line quantities (patients). Aligns with `getCheckoutPriceSummary` line qty rules. */
+export function checkoutPatientCount(items: CartItem[]): number {
+  return items.reduce((s, i) => s + Math.max(1, Math.floor(Number(i.quantity) || 1)), 0)
+}
+
+/**
+ * Checkout sidebar / payment totals.
+ * - Prefer Thyrocare price-breakup when it still matches the current groups + cart fingerprint.
+ * - Otherwise sum per-line amounts in **whole rupees** (round each line, then add) so line items,
+ *   subtotal, savings, and total always agree (matches Payment page line display).
+ */
 export function getCheckoutPriceSummary(
   items: CartItem[],
   opts: {
@@ -278,48 +319,32 @@ export function getCheckoutPriceSummary(
     pricingSnapshotKey?: string | null
   },
 ): { subtotal: number; savings: number; total: number } {
-  const clientSubtotal = items.reduce((s, i) => s + parseMoney(i.originalPrice) * i.quantity, 0)
-  const clientLineTotal = items.reduce((s, i) => s + parseMoney(i.price) * i.quantity, 0)
-  const fresh = isCheckoutPricingFresh(
-    items,
-    opts.groups,
-    opts.pricingSnapshotKey ?? null,
-    opts.thyrocarePricing ?? null,
-  )
-  const br = fresh ? opts.thyrocarePricing : null
-  const netOverride = fresh ? opts.netPayableAmount : null
+  const useBreakup =
+    isCheckoutPricingFresh(items, opts.groups, opts.pricingSnapshotKey, opts.thyrocarePricing)
+    && opts.thyrocarePricing != null
 
-  const hasBreakup =
-    br != null &&
-    (Number.isFinite(br.net_payable_amount) ||
-      Number.isFinite(br.total_mrp) ||
-      Number.isFinite(br.total_selling_price))
-
-  if (hasBreakup && br) {
-    const subtotal = br.total_mrp > 0 ? br.total_mrp : clientSubtotal
-    const total =
-      netOverride != null && netOverride > 0
-        ? netOverride
-        : br.net_payable_amount > 0
-          ? br.net_payable_amount
-          : clientLineTotal
-    let savings = 0
-    if (br.total_mrp > 0 && br.total_selling_price > 0) {
-      savings = Math.max(0, Math.round(br.total_mrp - br.total_selling_price))
-    } else {
-      savings = Math.max(0, Math.round(subtotal - total))
-    }
-    return { subtotal: Math.round(subtotal), savings, total: Math.round(total) }
+  if (useBreakup) {
+    const p = opts.thyrocarePricing!
+    const subtotal = Math.round(Number(p.total_mrp) || 0)
+    const rawNet =
+      opts.netPayableAmount != null && Number.isFinite(Number(opts.netPayableAmount))
+        ? Number(opts.netPayableAmount)
+        : Number(p.net_payable_amount) || 0
+    const total = Math.round(rawNet)
+    const savings = Math.max(0, subtotal - total)
+    return { subtotal, savings, total }
   }
 
-  const total =
-    netOverride != null && netOverride > 0 ? netOverride : clientLineTotal
-  const savings = Math.max(0, Math.round(clientSubtotal - total))
-  return {
-    subtotal: Math.round(clientSubtotal),
-    savings,
-    total: Math.round(total),
+  let clientSubtotal = 0
+  let clientTotal = 0
+  for (const i of items) {
+    // Match checkout UI: treat missing/0 qty as 1; fractional qty floors (patient counts are whole).
+    const q = Math.max(1, Math.floor(Number(i.quantity) || 1))
+    clientSubtotal += Math.round(parseMoney(i.originalPrice) * q)
+    clientTotal += Math.round(parseMoney(i.price) * q)
   }
+  const savings = Math.max(0, clientSubtotal - clientTotal)
+  return { subtotal: clientSubtotal, savings, total: clientTotal }
 }
 
 // ── Pincode serviceability ────────────────────────────────────────────────────
@@ -800,6 +825,31 @@ export function partitionCartViewLinesForCheckout(
     working = collapseToSingleGroupPerProduct(working, activeGroups, pushStale)
   }
 
+  // If backend returns one row per member, ensure we only keep members that are still selected in the
+  // active Thyrocare group. Otherwise, `/orders/create` will compute totals from stale extra rows.
+  if (activeGroups.length > 0) {
+    const allowedByGidPid = new Map<string, Set<number>>() // `${gid}\0${pid}` -> memberId set
+    for (const g of activeGroups) {
+      const gid = String(g.group_id ?? '').trim()
+      const pid = Number(g.thyrocare_product_id)
+      if (!gid || !Number.isFinite(pid) || pid <= 0) continue
+      const mids = Array.isArray(g.member_ids) ? g.member_ids.map(m => Number(m)).filter(Number.isFinite) : []
+      allowedByGidPid.set(`${gid}\0${pid}`, new Set(mids))
+    }
+    working = working.filter(c => {
+      const r = c as Record<string, unknown>
+      const gid = r.group_id != null ? String(r.group_id).trim() : ''
+      const pid = cartLineThyrocareProductId(c)
+      const mid = cartLineMemberId(c)
+      if (!gid || pid == null || !Number.isFinite(pid) || pid <= 0 || mid == null || !Number.isFinite(mid)) return true
+      const allowed = allowedByGidPid.get(`${gid}\0${pid}`)
+      if (!allowed || allowed.size === 0) return true
+      if (allowed.has(mid)) return true
+      pushStale(c)
+      return false
+    })
+  }
+
   const candidates = working
 
   if (activeGroups.length === 0) {
@@ -866,6 +916,67 @@ function normalizeCardType(t: string | undefined): CartItem['type'] {
   const u = (t || '').toUpperCase()
   if (u === 'MSKU' || u === 'OFFER') return 'Package'
   return 'Single'
+}
+
+/**
+ * `/cart/view` can return one row per member with `quantity=1`.
+ * Collapse to one cart line per product for UI + address flow.
+ * Prefer `activeGroups.member_ids.length` as the true patient count for each product.
+ */
+function collapseCartItemsByProduct(items: CartItem[], groups: CartGroup[]): CartItem[] {
+  const byPid = new Map<number, CartItem[]>()
+  const byName = new Map<string, CartItem[]>()
+
+  for (const it of items) {
+    const pid = it.thyrocareProductId != null ? Number(it.thyrocareProductId) : NaN
+    if (Number.isFinite(pid) && pid > 0) {
+      const arr = byPid.get(pid) ?? []
+      arr.push(it)
+      byPid.set(pid, arr)
+      continue
+    }
+    const nk = (it.name ?? '').trim().toLowerCase()
+    if (!nk) continue
+    const arr = byName.get(nk) ?? []
+    arr.push(it)
+    byName.set(nk, arr)
+  }
+
+  const groupQtyByPid = new Map<number, number>()
+  for (const g of groups) {
+    const pid = Number(g.thyrocare_product_id)
+    if (!Number.isFinite(pid) || pid <= 0) continue
+    const cnt = Array.isArray(g.member_ids) ? g.member_ids.length : 0
+    if (cnt > 0) groupQtyByPid.set(pid, cnt)
+  }
+
+  const out: CartItem[] = []
+  const usedNameKeys = new Set<string>()
+
+  for (const [pid, arr] of byPid) {
+    const first = arr[0]
+    const summed = arr.reduce((s, x) => s + (Number(x.quantity) > 0 ? Number(x.quantity) : 1), 0)
+    const qty = groupQtyByPid.get(pid) ?? summed
+    out.push({
+      ...first,
+      // For collapsed rows, cartItemId is not stable (server has 1 row per member).
+      cartItemId: first.cartItemId,
+      quantity: Math.max(1, Math.floor(qty)),
+    })
+  }
+
+  for (const [nk, arr] of byName) {
+    if (usedNameKeys.has(nk)) continue
+    usedNameKeys.add(nk)
+    const first = arr[0]
+    const summed = arr.reduce((s, x) => s + (Number(x.quantity) > 0 ? Number(x.quantity) : 1), 0)
+    out.push({
+      ...first,
+      quantity: Math.max(1, Math.floor(summed)),
+    })
+  }
+
+  return out
 }
 
 export async function fetchCart(): Promise<CartViewResult> {
@@ -1015,6 +1126,7 @@ export async function pullCheckoutSnapshot(input: {
   }
 
   const hydratedItems = mapCartViewItemsToCartItems(prunedLines)
+  const collapsedHydrated = collapseCartItemsByProduct(hydratedItems, activeGroups)
 
   // /cart/view sometimes omits product pricing; preserve known prices from local/session items.
   const fallbacks = input.fallbackItems ?? input.localOnlyItems
@@ -1026,12 +1138,17 @@ export async function pullCheckoutSnapshot(input: {
     const nk = it.name.trim().toLowerCase()
     if (nk) byName.set(nk, it)
   }
-  const mergedItems = hydratedItems.map(it => {
+  const mergedItems = collapsedHydrated.map(it => {
     const fb =
       (it.thyrocareProductId != null ? byPid.get(it.thyrocareProductId) : undefined) ??
       byName.get(it.name.trim().toLowerCase())
     if (!fb) return it
     const next = { ...it }
+    // Quantity source of truth: user edits patient count on Cart (session/local) must win over
+    // stale server group member count until Address "Continue" upserts the new member_ids.
+    if (Number.isFinite(fb.quantity) && fb.quantity > 0 && fb.quantity !== next.quantity) {
+      next.quantity = fb.quantity
+    }
     if (parseMoney(next.price) <= 0 && parseMoney(fb.price) > 0) next.price = fb.price
     if (parseMoney(next.originalPrice) <= 0 && parseMoney(fb.originalPrice) > 0) next.originalPrice = fb.originalPrice
     if ((next.maxBeneficiaries == null || next.maxBeneficiaries <= 0) && (fb.maxBeneficiaries != null && fb.maxBeneficiaries > 0)) {
@@ -1045,12 +1162,23 @@ export async function pullCheckoutSnapshot(input: {
       ? await fillMissingPricesFromCatalog(mergedItems)
       : mergedItems
 
+  // Merge in local-only lines (e.g. just added on Page-1 / detail page) that are not yet in /cart/view.
+  // Without this, navigating to Address can “drop” newly added products as soon as API returns any lines.
+  const keyOf = (it: CartItem): string => {
+    const pid = it.thyrocareProductId != null ? Number(it.thyrocareProductId) : NaN
+    if (Number.isFinite(pid) && pid > 0) return `tc:${pid}`
+    return `name:${(it.name ?? '').trim().toLowerCase()}`
+  }
+  const apiKeys = new Set(finalItems.map(keyOf))
+  const localAdds = (input.localOnlyItems ?? []).filter(x => !apiKeys.has(keyOf(x)))
+  const combinedItems = localAdds.length > 0 ? [...finalItems, ...localAdds] : finalItems
+
   let nextGroups = activeGroups
   if (nextGroups.length === 0) {
     const pidSet = new Set(
-      hydratedItems.map(i => Number(i.thyrocareProductId)).filter(n => Number.isFinite(n)),
+      collapsedHydrated.map(i => Number(i.thyrocareProductId)).filter(n => Number.isFinite(n)),
     )
-    const nameSet = new Set(hydratedItems.map(i => i.name.trim().toLowerCase()).filter(Boolean))
+    const nameSet = new Set(collapsedHydrated.map(i => i.name.trim().toLowerCase()).filter(Boolean))
     const matched = input.previousGroups.filter(g => {
       const gp = Number(g.thyrocare_product_id)
       if (Number.isFinite(gp) && pidSet.has(gp)) return true
@@ -1060,10 +1188,10 @@ export async function pullCheckoutSnapshot(input: {
     if (matched.length > 0) nextGroups = matched
   }
 
-  nextGroups = filterGroupsToMatchCartItems(nextGroups, finalItems)
+  nextGroups = filterGroupsToMatchCartItems(nextGroups, combinedItems)
 
   return {
-    cartItems: finalItems,
+    cartItems: combinedItems,
     groups: nextGroups,
     hadCartLinesFromApi: true,
   }

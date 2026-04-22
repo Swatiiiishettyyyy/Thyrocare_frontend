@@ -76,6 +76,8 @@ export function useCheckoutSession() {
 
   const clearSession = useCallback(() => {
     sessionStorage.removeItem(KEY)
+    // Also clear Cart Page-1 local selections so /cart becomes empty after successful order.
+    try { localStorage.removeItem('nucleotide_cart_page1_v1') } catch { /* ignore */ }
     setSession(DEFAULTS)
   }, [])
 

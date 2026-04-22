@@ -15,6 +15,13 @@ export interface ThyrocareProduct {
   is_fasting_required: boolean | null
   about: string | null
   short_description: string | null
+  /**
+   * Long-form, structured "About" sections (may be string or array, depending on backend serializer).
+   * Prefer these over client-generated bullets when present.
+   */
+  what_this_test_checks?: string | string[] | null
+  who_should_take_this_test?: string | string[] | null
+  why_doctors_recommend?: string | string[] | null
   category: string | null
   parameters?: { id: number; name: string; group_name?: string | null }[]
   is_home_collectible?: boolean | null
@@ -25,6 +32,7 @@ export interface ThyrocareProduct {
 
 const PAGE_SIZE = 100
 const MAX_PAGES = 50
+const DEFAULT_DISCOUNT_PERCENT = 40
 
 /** Lowercase, collapse spaces; underscores ↔ spaces so UI matches API slugs. */
 function normalizeCategoryKey(c: string): string {
@@ -41,6 +49,9 @@ function categoryMatchTargets(uiCategory: string): Set<string> {
     set.add('popular package')
     set.add('packages')
     set.add('pp')
+    // `normalizeCategoryKey` maps `_` → space but leaves `-` intact; keep hyphen / glued variants.
+    set.add('popular-packages')
+    set.add('popularpackages')
   }
 
   if (t === 'essential tests') {
@@ -59,14 +70,28 @@ function categoryMatchTargets(uiCategory: string): Set<string> {
   }
 
   if (t === "men's health") {
-    for (const c of ['25/men', '25-50/men', '50/men', '50/male']) {
+    for (const c of [
+      // Older patterns
+      '25/men', '25-50/men', '50/men', '50/male', 'under25/men',
+      // New API slugs
+      'under25men', '25-50men', '50+men',
+      // Common variants seen in the wild
+      'under 25 men', '25-50 men', '50+ men', '50 plus men',
+    ]) {
       set.add(c)
     }
   }
 
   if (t === "women's health") {
-    for (const c of ['25/women', '25-50/women', '50/women',
-      'package/25-50women', 'package/under25women']) {
+    for (const c of [
+      // Older patterns
+      '25/women', '25-50/women', '50/women', 'under25/women',
+      'package/25-50women', 'package/under25women',
+      // New API slugs
+      'under25women', '25-50women', '50+women',
+      // Common variants
+      'under 25 women', '25-50 women', '50+ women', '50 plus women',
+    ]) {
       set.add(c)
     }
   }
@@ -137,11 +162,45 @@ function unwrapProductPayload(payload: unknown): Record<string, unknown> | null 
   return null
 }
 
+/**
+ * Normalize `parameters` from list/detail responses (field names and shapes vary by endpoint).
+ * The Test detail "Parameters" tab renders each item's `name`.
+ */
+function normalizeParametersFromRow(row: Record<string, unknown>): NonNullable<ThyrocareProduct['parameters']> {
+  const raw =
+    row.parameters
+    ?? row.tests
+    ?? row.test_parameters
+    ?? row.parameters_list
+    ?? row.parameter_list
+  if (!Array.isArray(raw)) return []
+
+  const out: NonNullable<ThyrocareProduct['parameters']> = []
+  for (let i = 0; i < raw.length; i++) {
+    const item = raw[i]
+    if (typeof item === 'string') {
+      const name = item.trim()
+      if (name) out.push({ id: i + 1, name, group_name: null })
+      continue
+    }
+    if (item == null || typeof item !== 'object') continue
+    const o = item as Record<string, unknown>
+    const id = asNumberId(o.id ?? o.parameter_id ?? o.test_id) ?? i + 1
+    const name = String(o.name ?? o.parameter_name ?? o.test_name ?? o.title ?? '').trim()
+    if (!name) continue
+    const gn = o.group_name ?? o.group ?? o.category
+    const group_name = gn == null || gn === '' ? null : String(gn)
+    out.push({ id, name, group_name })
+  }
+  return out
+}
+
 /** Single product from `GET /thyrocare/products/:id` (full parameters, about, etc.). */
 function asSingleProduct(payload: unknown): ThyrocareProduct | null {
   const row = unwrapProductPayload(payload)
   if (!row) return null
-  return row as unknown as ThyrocareProduct
+  const params = normalizeParametersFromRow(row)
+  return { ...(row as object), parameters: params } as unknown as ThyrocareProduct
 }
 
 export async function fetchProductById(id: number): Promise<ThyrocareProduct> {
@@ -158,19 +217,21 @@ function cardProductType(t: string): 'Single' | 'Package' {
 }
 
 export function toTestCard(p: ThyrocareProduct): TestCardProps {
-  const discount = p.discount_percentage > 0
-    ? `${Math.round(p.discount_percentage)}% OFF`
-    : p.listing_price > p.selling_price
-      ? `${Math.round(((p.listing_price - p.selling_price) / p.listing_price) * 100)}% OFF`
-      : ''
+  // Pricing rule:
+  // - Selling price shown in UI = Thyrocare price.
+  // - Listing MRP shown in UI = our previous “selling” (computed from Thyrocare price + batch discount).
+  // - Default batch/offer is 40% (updated from 33%).
+  const tcSelling = Number(p.selling_price ?? 0) || 0
+  const mrp = tcSelling > 0 ? tcSelling / (1 - DEFAULT_DISCOUNT_PERCENT / 100) : Number(p.listing_price ?? 0) || 0
+  const discount = `${DEFAULT_DISCOUNT_PERCENT}% OFF`
 
   return {
     thyrocareProductId: p.id,
     maxBeneficiaries: p.beneficiaries_max,
     name: p.name,
     description: p.short_description ?? p.about ?? `${p.no_of_tests_included} tests included`,
-    price: String(Math.round(p.selling_price)),
-    originalPrice: String(Math.round(p.listing_price)),
+    price: String(Math.round(tcSelling)),
+    originalPrice: String(Math.round(mrp)),
     offerPercent: discount,
     tests: p.no_of_tests_included,
     fasting: p.is_fasting_required ? 'Fasting Required' : 'No Fasting Required',
@@ -181,9 +242,22 @@ export function toTestCard(p: ThyrocareProduct): TestCardProps {
 export function filterByCategory(products: ThyrocareProduct[], category: string): ThyrocareProduct[] {
   if (!Array.isArray(products)) return []
   const targets = categoryMatchTargets(category)
+  const uiKey = normalizeCategoryKey(category)
   return products.filter(p => {
     if (p.category == null || p.category === '') return false
-    return targets.has(normalizeCategoryKey(p.category))
+    const k = normalizeCategoryKey(p.category)
+    if (targets.has(k)) return true
+    // Compound paths like `package/popular_packages` or prefixes/suffixes around the slug
+    if (uiKey === 'popular packages') {
+      if (/\bpopular\s+packages\b/.test(k)) return true
+      const compact = k.replace(/[\s/|>]+/g, '')
+      if (compact.includes('popularpackages')) return true
+      // Path segments (do not use full `targets`: it includes bare `package`, which is too broad)
+      const popularSeg = new Set(['popular packages', 'popular package', 'popular-packages', 'popularpackages'])
+      const segments = k.split(/\s*\/\s*/).map(s => normalizeCategoryKey(s)).filter(Boolean)
+      if (segments.some(s => popularSeg.has(s))) return true
+    }
+    return false
   })
 }
 
@@ -233,21 +307,63 @@ export function filterByConditionLabel(products: ThyrocareProduct[], uiLabel: st
 }
 
 export type ComprehensiveAgeBand = 'under25' | '25_50' | '50plus'
+export type ComprehensiveGender = 'women' | 'men'
 
 function isWomenCategoryString(cat: string): boolean {
-  return /\bwomen\b/i.test(cat) || /\bwoman\b/i.test(cat)
+  // Categories may appear as `25-50women`, `under25women`, `50+women`, `25/women`, etc.
+  // Avoid `\b` because digits are "word characters" and break boundaries.
+  return /(^|[^a-z])women($|[^a-z])/i.test(cat) || /(^|[^a-z])woman($|[^a-z])/i.test(cat)
 }
 
 function isMenCategoryString(cat: string): boolean {
   if (isWomenCategoryString(cat)) return false
-  return /\/men\b/i.test(cat) || /\bmen\b/i.test(cat) || /\bman\b/i.test(cat)
+  // Categories may appear as `25-50men`, `under25men`, `50+men`, `25/men`, etc.
+  return /(^|[^a-z])men($|[^a-z])/i.test(cat)
+    || /(^|[^a-z])man($|[^a-z])/i.test(cat)
+    || /(^|[^a-z])male($|[^a-z])/i.test(cat)
 }
 
-/** Age segment: part before `/` in `25/women`, or whole string. */
+/**
+ * Age-relevant segment extracted from `product.category`.
+ * Handles:
+ * - `25-50/men` → `25-50` (age in first segment)
+ * - `package/25-50women` → `25-50women` (combined slug in last segment; first is only a bucket)
+ * - `25-50men` → whole string
+ * Also normalizes unicode dash characters to ASCII `-` so `25–50men` still matches.
+ */
 function categoryAgeSegment(cat: string): string {
-  const i = cat.indexOf('/')
-  const raw = (i >= 0 ? cat.slice(0, i) : cat).trim().toLowerCase()
-  return raw
+  let s = cat.trim().toLowerCase()
+  s = s.replace(/[\u2010-\u2015\u2212]/g, '-')
+  // API sometimes uses `25_50men` / `25_50_women` — treat `_` like `-` for age parsing.
+  s = s.replace(/_/g, '-')
+  const slash = s.indexOf('/')
+  if (slash < 0) return s
+
+  const parts = s.split('/').map(p => p.trim()).filter(Boolean)
+  if (parts.length < 2) return parts[0] ?? s
+
+  const first = parts[0]
+  const last = parts[parts.length - 1]
+
+  const lastHasGender = isWomenCategoryString(last) || isMenCategoryString(last)
+  const lastHasAgeMarker =
+    /\d/.test(last)
+    || last.includes('under')
+    || last.includes('25-50')
+    || last.includes('+')
+    || last.includes('plus')
+
+  if (lastHasGender && lastHasAgeMarker) return last
+
+  if (
+    ageBandMatchesSegment(first, 'under25')
+    || ageBandMatchesSegment(first, '25_50')
+    || ageBandMatchesSegment(first, '50plus')
+  ) {
+    return first
+  }
+
+  return last
 }
 
 function ageBandMatchesSegment(segment: string, age: ComprehensiveAgeBand): boolean {
@@ -257,7 +373,7 @@ function ageBandMatchesSegment(segment: string, age: ComprehensiveAgeBand): bool
       || segment.startsWith('under25')
   }
   if (age === '25_50') {
-    if (segment.includes('25-50') || segment.includes('2550')) return true
+    if (segment.includes('25-50') || segment.includes('2550') || segment.includes('25_50')) return true
     const n = parseInt(segment, 10)
     if (!Number.isNaN(n) && n >= 25 && n < 50) return true
     return segment === '25' || segment === '30' || segment === '35' || segment === '40' || segment === '45'
@@ -268,6 +384,34 @@ function ageBandMatchesSegment(segment: string, age: ComprehensiveAgeBand): bool
     return !Number.isNaN(n) && n >= 50
   }
   return false
+}
+
+/**
+ * Derive gender + age band from Thyrocare category strings commonly used for comprehensive packs.
+ * Examples seen:
+ * - `25/women`, `25-50/men`, `50/women`, `under25/men`
+ * - `package/under25women`, `package/25-50women`
+ */
+export function comprehensiveSubcategoryFromProductCategory(
+  category: string | null | undefined,
+): { gender: ComprehensiveGender; age: ComprehensiveAgeBand } | null {
+  const c = (category ?? '').trim()
+  if (!c) return null
+  const lower = c.toLowerCase()
+
+  const gender: ComprehensiveGender | null =
+    isWomenCategoryString(lower) ? 'women' : (isMenCategoryString(lower) ? 'men' : null)
+  if (!gender) return null
+
+  const seg = categoryAgeSegment(lower)
+  const age: ComprehensiveAgeBand | null =
+    ageBandMatchesSegment(seg, 'under25') ? 'under25'
+      : ageBandMatchesSegment(seg, '25_50') ? '25_50'
+        : ageBandMatchesSegment(seg, '50plus') ? '50plus'
+          : null
+  if (!age) return null
+
+  return { gender, age }
 }
 
 /** Gender + age-band packages (API patterns like `25/women`, `under25/men`). */

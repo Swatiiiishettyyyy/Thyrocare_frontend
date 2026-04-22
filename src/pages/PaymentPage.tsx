@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components'
 import { CheckoutStepper } from '../components/CheckoutStepper'
@@ -9,17 +9,15 @@ import { parseMoney } from '../utils/money'
 import {
   fetchCart,
   fetchActiveGroups,
-  fetchPriceBreakup,
   getCheckoutPriceSummary,
-  checkoutPricingSnapshotKey,
+  checkoutPatientCount,
   filterGroupsToMatchCartItems,
   type CartGroup,
   type CartItemAPI,
 } from '../api/cart'
 import { fetchAddresses } from '../api/address'
 import type { Address } from '../api/address'
-import { fetchMembers } from '../api/member'
-import type { Member } from '../api/member'
+
 import type { CheckoutSession } from '../hooks/useCheckoutSession'
 
 function groupsRichnessScore(gs: CartGroup[]): number {
@@ -60,28 +58,6 @@ const CARD: React.CSSProperties = {
   boxSizing: 'border-box',
 }
 
-const SUMMARY_LIKE_CARD: React.CSSProperties = {
-  background: 'linear-gradient(0deg, #E7E1FF 0%, white 100%)',
-  boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)',
-  borderRadius: 18,
-  outline: '1px solid #E7E1FF',
-  outlineOffset: '-1px',
-  padding: 'clamp(16px, 1.2vw, 18px) clamp(16px, 1.4vw, 20px)',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 16,
-  width: '100%',
-  maxWidth: 380,
-  boxSizing: 'border-box',
-}
-
-const SUMMARY_LIKE_TITLE: React.CSSProperties = {
-  fontSize: 21,
-  fontWeight: 500,
-  color: '#161616',
-  fontFamily: 'Poppins, sans-serif',
-  lineHeight: '27px',
-}
 
 interface PaymentPageProps {
   cartCount?: number
@@ -93,8 +69,9 @@ interface PaymentPageProps {
 
 export default function PaymentPage({ cartCount, items, session, onSessionUpdate, onOrderComplete }: PaymentPageProps) {
   const navigate = useNavigate()
-  const { groups, netPayableAmount, thyrocarePricing } = session
+  const { groups } = session
   const firstGroup = groups[0]
+  const patientCount = useMemo(() => checkoutPatientCount(items), [items])
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth <= 768)
   /** Slot may live on any group after set-appointment (we use first that has both fields). */
   const slotGroup =
@@ -109,21 +86,15 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
   const [placing, setPlacing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [address, setAddress] = useState<Address | null>(null)
-  const [members, setMembers] = useState<Member[]>([])
+
 
   /** First non-null address_id across groups (checkout often shares one address). */
   const collectionAddressId =
     groups.map(g => g.address_id).find(id => id != null && Number(id) > 0) ?? null
 
-  // If session groups are missing address_id or slot (refresh / race), pull latest from active-all once resolved.
+  // Refresh groups on Payment load: always pull freshest address/slot data from active-all.
   useEffect(() => {
     if (items.length === 0) return
-    const hasSlot = groups.some(
-      g => String(g.appointment_date ?? '').trim() && String(g.appointment_start_time ?? '').trim(),
-    )
-    const hasAddressId = groups.some(g => g.address_id != null && Number(g.address_id) > 0)
-    if (hasSlot && hasAddressId) return
-
     let cancelled = false
     ;(async () => {
       try {
@@ -137,10 +108,8 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
         /* keep session */
       }
     })()
-    return () => {
-      cancelled = true
-    }
-  }, [items, groups, onSessionUpdate])
+    return () => { cancelled = true }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (collectionAddressId == null) {
@@ -157,9 +126,6 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
       .catch(() => setAddress(null))
   }, [collectionAddressId])
 
-  useEffect(() => {
-    fetchMembers().then(setMembers).catch(() => setMembers([]))
-  }, [])
 
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth <= 768)
@@ -167,42 +133,50 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
     return () => window.removeEventListener('resize', handler)
   }, [])
 
-  useEffect(() => {
-    const ids = session.groups.map(g => g.group_id).filter(Boolean)
-    if (ids.length === 0) return
-    const snap = checkoutPricingSnapshotKey(session.groups, items)
-    if (session.pricingSnapshotKey === snap && session.thyrocarePricing) return
-    let cancelled = false
-    fetchPriceBreakup(ids)
-      .then(pricing => {
-        if (cancelled) return
-        onSessionUpdate({
-          netPayableAmount: pricing.net_payable_amount,
-          thyrocarePricing: pricing,
-          pricingSnapshotKey: checkoutPricingSnapshotKey(session.groups, items),
-        })
-      })
-      .catch(() => {})
-    return () => { cancelled = true }
-  }, [session.groups, session.pricingSnapshotKey, session.thyrocarePricing, items, onSessionUpdate])
-
   const { subtotal, savings, total } = getCheckoutPriceSummary(items, {
-    thyrocarePricing,
-    netPayableAmount,
+    thyrocarePricing: session.thyrocarePricing,
+    netPayableAmount: session.netPayableAmount,
     groups: session.groups,
     pricingSnapshotKey: session.pricingSnapshotKey,
   })
-
-  function memberLabel(id: number): string {
-    const m = members.find(x => x.member_id === id)
-    return m ? `${m.name} (${m.relation})` : `Member #${id}`
-  }
 
   async function handlePlaceOrder() {
     if (placing) return
     setPlacing(true)
     setError(null)
     try {
+      // Final Thyrocare validation gate (new flow): all groups must have address + slot.
+      const freshGroups = await fetchActiveGroups().catch(() => [])
+      if (freshGroups.length > 0) {
+        const pruned = filterGroupsToMatchCartItems(freshGroups, items)
+        if (pruned.length > 0) onSessionUpdate({ groups: pruned })
+        const missingAddress = pruned.some(g => g.address_id == null || Number(g.address_id) <= 0)
+        const missingSlot = pruned.some(g => !String(g.appointment_date ?? '').trim() || !String(g.appointment_start_time ?? '').trim())
+        if (missingAddress) {
+          setPlacing(false)
+          navigate('/address', { state: { checkoutBlockReason: 'Please select an address for all selected tests before payment.' } })
+          return
+        }
+        if (missingSlot) {
+          setPlacing(false)
+          navigate('/timeslot', { state: { checkoutBlockReason: 'Please select a time slot for all selected tests before payment.' } })
+          return
+        }
+      } else if (groups.length > 0) {
+        const missingAddress = groups.some(g => g.address_id == null || Number(g.address_id) <= 0)
+        const missingSlot = groups.some(g => !String(g.appointment_date ?? '').trim() || !String(g.appointment_start_time ?? '').trim())
+        if (missingAddress) {
+          setPlacing(false)
+          navigate('/address', { state: { checkoutBlockReason: 'Please select an address for all selected tests before payment.' } })
+          return
+        }
+        if (missingSlot) {
+          setPlacing(false)
+          navigate('/timeslot', { state: { checkoutBlockReason: 'Please select a time slot for all selected tests before payment.' } })
+          return
+        }
+      }
+
       // Place order: `{ cart_id }` only. Thyrocare (addressLine1, etc.) is sent server-side after payment is confirmed.
       const cartView = await fetchCart().catch((err: unknown) => {
         console.error('fetchCart failed:', err)
@@ -251,14 +225,23 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
             }
           }
           onOrderComplete()
+          const confirmationPayload = {
+            orderId: orderRes.order_id,
+            orderNumber: orderRes.order_number,
+            slotDay,
+            slotTime,
+            items: items.map(i => ({ name: i.name, quantity: i.quantity })),
+            address: address ? `${address.address_label} — ${address.street_address}, ${address.city} - ${address.postal_code}` : null,
+            amountPaid: total,
+          }
+          try {
+            sessionStorage.setItem('nucleotide_last_confirmation_v1', JSON.stringify(confirmationPayload))
+          } catch {
+            /* ignore */
+          }
           navigate('/confirmation', {
             state: {
-              orderId: orderRes.order_id,
-              slotDay,
-              slotTime,
-              itemNames: items.map(i => i.name),
-              address: address ? `${address.address_label} — ${address.street_address}, ${address.city} - ${address.postal_code}` : null,
-              amountPaid: total,
+              ...confirmationPayload,
             },
           })
         },
@@ -287,7 +270,7 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fff', fontFamily: 'Poppins, sans-serif', overflowX: 'hidden' }}>
+    <div className="payment-page-root" style={{ minHeight: '100vh', background: '#fff', fontFamily: 'Poppins, sans-serif', overflowX: 'hidden' }}>
       <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" cartCount={cartCount} hideSearchOnMobile onCtaClick={() => navigate('/cart')} />
 
       {/* Breadcrumb (matches Figma mobile checkout) */}
@@ -324,15 +307,34 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
             <div className="payment-card-body" style={{ padding: '16px 20px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               {items.length > 0 && (
                 <>
-                  <div style={{ fontSize: 12, color: '#161616', fontFamily: 'Poppins, sans-serif', lineHeight: '20px' }}>
-                    {items[0].name} x {items[0].quantity}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {items.map((it, idx) => {
+                      const qty = Math.max(1, Math.floor(Number(it.quantity) || 1))
+                      const lineTotal = parseMoney(it.price) * qty
+                      return (
+                        <div
+                          key={`${it.thyrocareProductId ?? it.name}-${idx}`}
+                          style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}
+                        >
+                          <div style={{ fontSize: 12, color: '#161616', fontFamily: 'Poppins, sans-serif', lineHeight: '20px', flex: 1, minWidth: 0 }}>
+                            <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {it.name}
+                            </span>
+                            <span style={{ color: '#828282', fontFamily: 'Inter, sans-serif' }}>× {qty}</span>
+                          </div>
+                          <div style={{ fontSize: 12, color: '#161616', fontFamily: 'Poppins, sans-serif', lineHeight: '20px', whiteSpace: 'nowrap' }}>
+                            ₹{Math.round(lineTotal)}
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                   <div style={{ height: 0, borderTop: '1px solid #E7E1FF' }} />
                 </>
               )}
 
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#161616', fontFamily: 'Poppins, sans-serif', lineHeight: '20px' }}>
-                <span>Subtotal({items.length} item{items.length !== 1 ? 's' : ''})</span>
+                <span>Subtotal({patientCount} item{patientCount !== 1 ? 's' : ''})</span>
                 <span>₹{subtotal}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontFamily: 'Poppins, sans-serif', lineHeight: '20px' }}>
@@ -408,7 +410,7 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
           {isMobile && (
             <div className="payment-mobile-actions">
               <OrderSummaryCard
-                itemCount={items.length}
+                itemCount={patientCount}
                 subtotal={subtotal}
                 savings={savings}
                 total={total}
@@ -424,7 +426,7 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
         {/* Sidebar */}
         <div className="checkout-summary payment-desktop-sidebar" style={{ flex: '0 1 380px', width: '100%', maxWidth: 380, boxSizing: 'border-box' }}>
           <OrderSummaryCard
-            itemCount={items.length}
+            itemCount={patientCount}
             subtotal={subtotal}
             savings={savings}
             total={total}

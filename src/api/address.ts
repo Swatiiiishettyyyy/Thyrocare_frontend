@@ -11,6 +11,9 @@ export interface Address {
   postal_code: string
   country: string
   save_for_future?: boolean
+  /** Optional: from Mapbox / device; backend may ignore. */
+  latitude?: number
+  longitude?: number
 }
 
 interface AddressListResponse {
@@ -46,7 +49,7 @@ export async function saveThyrocareAddress(data: Address): Promise<Address> {
 }
 
 async function _saveAddressToEndpoint(endpoint: string, data: Address): Promise<Address> {
-  const payload = {
+  const payload: Record<string, unknown> = {
     address_id: 0,
     address_label: data.address_label,
     street_address: data.street_address,
@@ -58,6 +61,8 @@ async function _saveAddressToEndpoint(endpoint: string, data: Address): Promise<
     country: data.country,
     save_for_future: true,
   }
+  if (data.latitude != null && Number.isFinite(data.latitude)) payload.latitude = data.latitude
+  if (data.longitude != null && Number.isFinite(data.longitude)) payload.longitude = data.longitude
   const res = await api.post<any>(endpoint, payload)
   const a = res.data ?? res
   return {

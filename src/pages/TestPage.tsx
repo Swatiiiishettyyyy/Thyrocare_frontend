@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Navbar, HeroSection, Footer } from '../components'
 import { WhyChooseUs } from '../components/WhyChooseUs'
 import { HowItWorks } from '../components/HowItWorks'
@@ -90,7 +90,10 @@ export default function TestPage({ cartCount }: { cartCount?: number }) {
   const [essentialPage, setEssentialPage] = useState(0)
   const [essentialPageSize, setEssentialPageSize] = useState(readEssentialPageSize)
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { products, ready, error: loadError } = useProductCatalog()
+
+  const q = (searchParams.get('q') ?? '').trim()
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)')
@@ -104,6 +107,36 @@ export default function TestPage({ cartCount }: { cartCount?: number }) {
     () => filterByCategory(products, 'Essential Tests').slice(0, ESSENTIAL_MAX_ITEMS).map(toTestCard),
     [products],
   )
+
+  const searchResults = useMemo(() => {
+    if (!q) return []
+    const needle = q.toLowerCase()
+    return products
+      .filter(p => {
+        const name = (p.name ?? '').toLowerCase()
+        const cat = (p.category ?? '').toLowerCase()
+        const shortDesc = ((p as any).short_description ?? '').toString().toLowerCase()
+        const about = ((p as any).about ?? '').toString().toLowerCase()
+        const checks = ((p as any).what_this_test_checks ?? '').toString().toLowerCase()
+        const who = ((p as any).who_should_take_this_test ?? '').toString().toLowerCase()
+        const why = ((p as any).why_doctors_recommend ?? '').toString().toLowerCase()
+        const params = Array.isArray((p as any).parameters)
+          ? (p as any).parameters.map((x: any) => String(x?.name ?? '')).join(' ').toLowerCase()
+          : ''
+        return (
+          name.includes(needle)
+          || cat.includes(needle)
+          || shortDesc.includes(needle)
+          || about.includes(needle)
+          || checks.includes(needle)
+          || who.includes(needle)
+          || why.includes(needle)
+          || params.includes(needle)
+        )
+      })
+      .slice(0, 60)
+      .map(toTestCard)
+  }, [products, q])
   const essentialPages = Math.max(1, Math.ceil(essentialCards.length / essentialPageSize) || 1)
   const isEssentialMobileCarousel = essentialPageSize === ESSENTIAL_PAGE_SIZE_MOBILE
 
@@ -146,6 +179,59 @@ export default function TestPage({ cartCount }: { cartCount?: number }) {
 
       <main>
         <HeroSection />
+
+        {/* Global keyword search results (from Navbar search) */}
+        {q ? (
+          <section className="page-section" style={{ background: '#fff' }}>
+            <div className="page-inner" style={{ maxWidth: 1200 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
+                <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: 14, color: '#828282' }}>
+                  Showing results for <strong style={{ color: '#101129' }}>"{q}"</strong>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSearchParams({})}
+                  style={{
+                    height: 36,
+                    padding: '0 14px',
+                    borderRadius: 999,
+                    border: '1px solid #E7E1FF',
+                    background: 'transparent',
+                    color: '#6B7280',
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: 13,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Clear
+                </button>
+              </div>
+
+              {loadError && (
+                <p style={{ color: '#E12D2D', fontFamily: 'Inter,sans-serif', fontSize: 13 }}>
+                  Failed to load: {loadError}
+                </p>
+              )}
+              {!loadError && !ready && (
+                <p style={{ color: '#828282', fontFamily: 'Inter,sans-serif', fontSize: 13 }}>
+                  Searching…
+                </p>
+              )}
+              {!loadError && ready && searchResults.length === 0 && (
+                <p style={{ color: '#828282', fontFamily: 'Inter,sans-serif', fontSize: 13 }}>
+                  No results found. Try another keyword.
+                </p>
+              )}
+              {!loadError && ready && searchResults.length > 0 && (
+                <div className="grid-3">
+                  {searchResults.map((t, i) => (
+                    <TestCard key={`${t.thyrocareProductId ?? t.name}-${q}-${i}`} {...t} />
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        ) : null}
 
         {/* Essential Tests */}
         <section id="tests" className="page-section home-section--essential">

@@ -4,12 +4,39 @@ import { fetchProducts, type ThyrocareProduct } from '../api/products'
 let cached: ThyrocareProduct[] | null = null
 let inflight: Promise<ThyrocareProduct[]> | null = null
 
+const LS_KEY = 'nucleotide_catalog_v2'
+const TTL_MS = 30 * 60 * 1000 // 30 minutes
+
+function readLS(): ThyrocareProduct[] | null {
+  try {
+    const raw = localStorage.getItem(LS_KEY)
+    if (!raw) return null
+    const { ts, data } = JSON.parse(raw) as { ts: number; data: ThyrocareProduct[] }
+    if (!Array.isArray(data) || data.length === 0) return null
+    if (Date.now() - ts > TTL_MS) return null
+    return data
+  } catch {
+    return null
+  }
+}
+
+function writeLS(data: ThyrocareProduct[]): void {
+  try { localStorage.setItem(LS_KEY, JSON.stringify({ ts: Date.now(), data })) } catch { /* quota */ }
+}
+
+// Warm the in-memory cache from localStorage on first import (before any component mounts).
+if (!cached) {
+  const fromLS = readLS()
+  if (fromLS) cached = fromLS
+}
+
 function loadCatalog(): Promise<ThyrocareProduct[]> {
   if (cached) return Promise.resolve(cached)
   if (!inflight) {
     inflight = fetchProducts()
       .then((p) => {
         cached = p
+        writeLS(p)
         return p
       })
       .finally(() => {

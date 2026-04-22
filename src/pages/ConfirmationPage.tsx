@@ -1,5 +1,8 @@
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Navbar } from '../components'
+import { fetchOrders } from '../api/orders'
+import type { Order } from '../api/orders'
 
 const NAV_LINKS = [
   { label: 'Tests', href: '/' },
@@ -12,14 +15,82 @@ const NAV_LINKS = [
 export default function ConfirmationPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const state = location.state as { orderId?: number | null; slotDay?: string; slotTime?: string; itemNames?: string[]; address?: string | null; amountPaid?: number } | null
+  const state = location.state as {
+    orderId?: number | null
+    orderNumber?: string | null
+    slotDay?: string
+    slotTime?: string
+    itemNames?: string[]
+    items?: { name: string; quantity: number }[]
+    address?: string | null
+    amountPaid?: number
+  } | null
 
-  const orderId = state?.orderId ? `#NUC-${state.orderId}` : null
-  const slotDay = state?.slotDay || null
-  const slotTime = state?.slotTime || null
-  const itemNames = state?.itemNames ?? []
-  const address = state?.address || null
-  const amountPaid = state?.amountPaid ?? null
+  const persisted = (() => {
+    try {
+      const raw = sessionStorage.getItem('nucleotide_last_confirmation_v1')
+      if (!raw) return null
+      return JSON.parse(raw) as typeof state
+    } catch {
+      return null
+    }
+  })()
+
+  const data = state ?? persisted
+
+  const orderId =
+    (typeof data?.orderNumber === 'string' && data.orderNumber.trim())
+      ? `#${data.orderNumber.trim()}`
+      : (data?.orderId ? `#NUC-${data.orderId}` : null)
+  const slotDay = data?.slotDay || null
+  const slotTime = data?.slotTime || null
+  const items = data?.items ?? null
+  const itemNames = data?.itemNames ?? []
+  const address = data?.address || null
+  const amountPaid = data?.amountPaid ?? null
+
+  const [orderFromDb, setOrderFromDb] = useState<Order | null>(null)
+
+  useEffect(() => {
+    const ordNo = (typeof data?.orderNumber === 'string' && data.orderNumber.trim()) ? data.orderNumber.trim() : null
+    if (!ordNo) {
+      setOrderFromDb(null)
+      return
+    }
+    let cancelled = false
+    fetchOrders()
+      .then(list => {
+        if (cancelled) return
+        const found = list.find(o => String(o.order_number ?? '').trim() === ordNo)
+        setOrderFromDb(found ?? null)
+      })
+      .catch(() => { if (!cancelled) setOrderFromDb(null) })
+    return () => { cancelled = true }
+  }, [data?.orderNumber])
+
+  const membersFromDb = useMemo(() => {
+    if (!orderFromDb) return []
+    const out: Array<{ key: string; label: string }> = []
+    const seen = new Set<string>()
+    for (const it of orderFromDb.items ?? []) {
+      for (const row of it.member_address_map ?? []) {
+        const m = row.member
+        if (!m) continue
+        const name = String(m.name ?? '').trim()
+        if (!name) continue
+        const age = Number(m.age)
+        const relation = String(m.relation ?? '').trim()
+        const key = `${name}\0${age}\0${relation}`
+        if (seen.has(key)) continue
+        seen.add(key)
+        const ageTxt = Number.isFinite(age) && age > 0 ? `${age}y` : ''
+        const relTxt = relation ? relation : ''
+        const parts = [name, relTxt, ageTxt].filter(Boolean).join(' • ')
+        out.push({ key, label: parts })
+      }
+    }
+    return out
+  }, [orderFromDb])
 
   return (
     <div style={{
@@ -134,7 +205,7 @@ export default function ConfirmationPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <span style={{ color: '#161616', fontSize: 'clamp(13px, 1.1vw, 20px)', fontWeight: 400, lineHeight: 1.45 }}>
-                  Order ID
+                  Order No
                 </span>
                 <span style={{ color: '#161616', fontSize: 'clamp(16px, 1.5vw, 24px)', fontWeight: 500, lineHeight: 1.125 }}>
                   {orderId ?? '—'}
@@ -156,17 +227,48 @@ export default function ConfirmationPage() {
             <div style={{ height: 1, background: '#E7E1FF' }} />
 
             {/* Products booked */}
-            {itemNames.length > 0 && (
+            {((items && items.length > 0) || itemNames.length > 0) && (
               <>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <span style={{ color: '#828282', fontSize: 'clamp(13px, 1.1vw, 18px)', fontWeight: 400 }}>Tests / Packages</span>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {itemNames.map((name, i) => (
-                      <span key={i} style={{
+                    {(items && items.length > 0
+                      ? items.map((it, i) => ({ key: `${it.name}-${i}`, label: `${it.name} × ${Math.max(1, Number(it.quantity) || 1)}` }))
+                      : itemNames.map((name, i) => ({ key: `${name}-${i}`, label: name }))
+                    ).map((row) => (
+                      <span key={row.key} style={{
                         background: '#F5F3FF', borderRadius: 122, padding: '3px 12px',
                         fontSize: 'clamp(12px, 1vw, 16px)', color: '#8B5CF6',
                         fontFamily: 'Inter, sans-serif', border: '1px solid #E7E1FF',
-                      }}>{name}</span>
+                      }}>{row.label}</span>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ height: 1, background: '#E7E1FF' }} />
+              </>
+            )}
+
+            {/* Members */}
+            {membersFromDb.length > 0 && (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ color: '#828282', fontSize: 'clamp(13px, 1.1vw, 18px)', fontWeight: 400 }}>Members</span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {membersFromDb.map(m => (
+                      <span
+                        key={m.key}
+                        style={{
+                          background: '#fff',
+                          borderRadius: 122,
+                          padding: '3px 12px',
+                          fontSize: 'clamp(12px, 1vw, 16px)',
+                          color: '#101129',
+                          fontFamily: 'Inter, sans-serif',
+                          border: '1px solid #E7E1FF',
+                        }}
+                      >
+                        {m.label}
+                      </span>
                     ))}
                   </div>
                 </div>
@@ -208,7 +310,14 @@ export default function ConfirmationPage() {
           {/* Action buttons */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, width: '100%', maxWidth: 964 }}>
             <button
-              onClick={() => navigate('/orders')}
+              onClick={() => {
+                const ordNo = (typeof data?.orderNumber === 'string' && data.orderNumber.trim()) ? data.orderNumber.trim() : null
+                if (ordNo) {
+                  navigate('/order-details', { state: { order: orderFromDb ?? undefined, orderNumber: ordNo } })
+                } else {
+                  navigate('/orders')
+                }
+              }}
               style={{
                 flex: '1 1 200px',
                 height: 58,

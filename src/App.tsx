@@ -26,18 +26,14 @@ import VitalsOrganPage from './pages/VitalsOrganPage'
 import ComprehensiveBrowsePage from './pages/ComprehensiveBrowsePage'
 import type { TestCardProps } from './types'
 import {
-  updateCartItem,
-  removeCartLineBestEffort,
-  fetchActiveGroups,
   checkoutPricingSnapshotKey,
-  upsertCart,
   pullCheckoutSnapshot,
-  addBloodTestToCart,
 } from './api/cart'
 import { useCheckoutSession } from './hooks/useCheckoutSession'
-import { cartLineKey, findExistingLineForAdd, memberIdsForQuantity } from './utils/cartLineKey'
+import { cartLineKey, findExistingLineForAdd } from './utils/cartLineKey'
 
-const CHECKOUT_PATHS = ['/cart', '/address', '/timeslot', '/payment']
+// Page-1 Cart is now local-only; server hydration starts from Address onward.
+const CHECKOUT_PATHS = ['/address', '/timeslot', '/payment']
 
 function ScrollToTopOnRouteChange() {
   const location = useLocation()
@@ -101,15 +97,11 @@ export default function App() {
   }, [runCheckoutHydrateWithErrorBanner])
 
   // Align session with server cart + Thyrocare groups (replaces merge-only upsert that left stale groups).
-  // Runs once on first paint, then again whenever user opens a checkout step.
+  // Runs when user opens a checkout step (Page-1 cart is local-only).
   useEffect(() => {
     const onCheckout = CHECKOUT_PATHS.includes(location.pathname)
-    if (didInitialSync.current) {
-      if (!onCheckout) return
-    } else {
-      didInitialSync.current = true
-    }
-
+    if (!onCheckout) return
+    if (!didInitialSync.current) didInitialSync.current = true
     void runCheckoutHydrateWithErrorBanner()
   }, [location.pathname, runCheckoutHydrateWithErrorBanner])
 
@@ -150,211 +142,7 @@ export default function App() {
       thyrocarePricing: null,
       pricingSnapshotKey: null,
     })
-
-    const pid = test.thyrocareProductId != null ? Number(test.thyrocareProductId) : NaN
-    if (!Number.isFinite(pid)) return
-
-    void (async () => {
-      try {
-        const g = sessionRef.current.groups.find(x => x.thyrocare_product_id === pid)
-        const hasCheckoutContext =
-          g?.address_id != null && Array.isArray(g.member_ids) && g.member_ids.length > 0
-
-        if (existing?.cartItemId != null) {
-          await updateCartItem(existing.cartItemId, newQuantity)
-        } else {
-          const qty = existing ? newQuantity : addQty
-          if (hasCheckoutContext) {
-            const mids = memberIdsForQuantity(g!.member_ids!, qty)
-            if (mids != null) {
-              await addBloodTestToCart({
-                thyrocare_product_id: pid,
-                quantity: qty,
-                address_id: g!.address_id!,
-                member_ids: mids,
-              })
-            }
-            /* else: not enough selected members for qty — keep local line; user fixes on Address */
-          }
-          /* no address/members yet — keep local-only line; Address Continue uses thyrocare/cart/add */
-        }
-        const snap = await pullCheckoutSnapshot({
-          previousGroups: sessionRef.current.groups,
-          localOnlyItems: sessionRef.current.cartItems.filter(i => !i.cartItemId),
-          fallbackItems: sessionRef.current.cartItems,
-        })
-        update({
-          cartItems: snap.cartItems,
-          groups: snap.groups,
-          checkoutSyncError: null,
-          netPayableAmount: null,
-          thyrocarePricing: null,
-          pricingSnapshotKey: null,
-        })
-      } catch (e) {
-        console.error('Cart sync after add failed:', e)
-      }
-    })()
   }, [cartItems, update])
-
-  const handleUpdateQty = useCallback(async (lineKey: string, delta: number) => {
-    const item = cartItems.find(i => cartLineKey(i) === lineKey)
-    if (!item || item.thyrocareProductId == null) return
-    const newQty = item.quantity + delta
-    if (newQty < 1) return
-    const maxB = item.maxBeneficiaries
-    if (maxB != null && newQty > maxB) return
-
-    let group = session.groups.find(g => g.thyrocare_product_id === item.thyrocareProductId)
-    let canUpsert =
-      !!group?.group_id &&
-      group.address_id != null &&
-      Array.isArray(group.member_ids) &&
-      group.member_ids.length > 0
-
-    if (!canUpsert) {
-      try {
-        const active = await fetchActiveGroups()
-        const g = active.find(
-          x =>
-            x.thyrocare_product_id === item.thyrocareProductId &&
-            String(x.group_id ?? '').trim() &&
-            x.address_id != null &&
-            Array.isArray(x.member_ids) &&
-            x.member_ids.length > 0,
-        )
-        if (g) {
-          group = g
-          canUpsert = true
-        }
-      } catch {
-        /* use generic cart update below */
-      }
-    }
-
-    if (canUpsert && group) {
-      const memberIds = memberIdsForQuantity(group.member_ids, newQty)
-      if (memberIds != null) {
-        try {
-          await upsertCart(group.group_id, item.thyrocareProductId, memberIds, group.address_id!)
-          const snap = await pullCheckoutSnapshot({
-            previousGroups: sessionRef.current.groups,
-            localOnlyItems: sessionRef.current.cartItems.filter(i => !i.cartItemId),
-            fallbackItems: sessionRef.current.cartItems,
-          })
-          if (snap.hadCartLinesFromApi) {
-            update({
-              cartItems: snap.cartItems,
-              groups: snap.groups,
-              checkoutSyncError: null,
-              netPayableAmount: null,
-              thyrocarePricing: null,
-              pricingSnapshotKey: null,
-            })
-            return
-          }
-        } catch {
-          /* fall through to generic update / local */
-        }
-      }
-    }
-
-    if (item.cartItemId) {
-      try {
-        await updateCartItem(item.cartItemId, newQty)
-        const snap = await pullCheckoutSnapshot({
-          previousGroups: sessionRef.current.groups,
-          localOnlyItems: sessionRef.current.cartItems.filter(i => !i.cartItemId),
-          fallbackItems: sessionRef.current.cartItems,
-        })
-        if (snap.hadCartLinesFromApi) {
-          update({
-            cartItems: snap.cartItems,
-            groups: snap.groups,
-            checkoutSyncError: null,
-            netPayableAmount: null,
-            thyrocarePricing: null,
-            pricingSnapshotKey: null,
-          })
-          return
-        }
-      } catch { /* API failed — still update local state */ }
-    }
-    update({
-      cartItems: cartItems.map(i => (cartLineKey(i) === lineKey ? { ...i, quantity: newQty } : i)),
-      netPayableAmount: null,
-      thyrocarePricing: null,
-      pricingSnapshotKey: null,
-    })
-  }, [cartItems, session.groups, update])
-
-  const handleRemoveLine = useCallback(async (lineKey: string) => {
-    const item = cartItems.find(i => cartLineKey(i) === lineKey)
-    if (!item) return
-    if (!item.cartItemId) {
-      const pid = item.thyrocareProductId
-      const displayName = item.name
-      update({
-        cartItems: cartItems.filter(i => cartLineKey(i) !== lineKey),
-        groups: session.groups.filter(g =>
-          pid != null ? g.thyrocare_product_id !== pid : g.product_name !== displayName,
-        ),
-        netPayableAmount: null,
-        thyrocarePricing: null,
-        pricingSnapshotKey: null,
-      })
-      return
-    }
-    if (import.meta.env.DEV) {
-      console.log('[cart/remove] DELETE line', item.cartItemId, item.name)
-    }
-    try {
-      await removeCartLineBestEffort(item.cartItemId)
-    } catch { /* refetch anyway */ }
-    try {
-      const snap = await pullCheckoutSnapshot({
-        previousGroups: sessionRef.current.groups,
-        localOnlyItems: sessionRef.current.cartItems.filter(
-          i => !i.cartItemId && cartLineKey(i) !== lineKey,
-        ),
-        fallbackItems: sessionRef.current.cartItems,
-      })
-      update({
-        cartItems: snap.cartItems,
-        groups: snap.groups,
-        checkoutSyncError: null,
-        netPayableAmount: null,
-        thyrocarePricing: null,
-        pricingSnapshotKey: null,
-      })
-    } catch {
-      const pid = item.thyrocareProductId
-      const displayName = item.name
-      update({
-        cartItems: cartItems.filter(i => cartLineKey(i) !== lineKey),
-        groups: session.groups.filter(g =>
-          pid != null ? g.thyrocare_product_id !== pid : g.product_name !== displayName,
-        ),
-        netPayableAmount: null,
-        thyrocarePricing: null,
-        pricingSnapshotKey: null,
-      })
-    }
-  }, [cartItems, session.groups, update])
-
-  /** Cart step → Address: rehydrate from `/cart/view`; lines stay local until Address Continue (`thyrocare/cart/add`). */
-  const prepareCartBeforeAddress = useCallback(async () => {
-    const hadItems = sessionRef.current.cartItems.length > 0
-    const snap = await pullCheckoutSnapshot({
-      previousGroups: sessionRef.current.groups,
-      localOnlyItems: sessionRef.current.cartItems.filter(i => !i.cartItemId),
-      fallbackItems: sessionRef.current.cartItems,
-    })
-    applyCheckoutSnapshot(snap)
-    if (hadItems && snap.cartItems.length === 0) {
-      throw new Error('Cart sync returned no items')
-    }
-  }, [applyCheckoutSnapshot])
 
   const showCheckoutSyncBanner =
     CHECKOUT_PATHS.includes(location.pathname) && session.checkoutSyncError
@@ -410,17 +198,15 @@ export default function App() {
       <Route path="/women-health" element={<WomenHealthSegmentPage cartCount={cartLineCount} />} />
       <Route path="/men-health/:segment" element={<MenHealthSegmentPage cartCount={cartLineCount} />} />
       <Route path="/men-health" element={<MenHealthSegmentPage cartCount={cartLineCount} />} />
-      <Route path="/test/:id" element={<TestDetailPage cartCount={cartLineCount} onAddToCart={handleAddToCart} />} />
+      {/* Detail route: keep it short under basename (/labtest/:id) */}
+      <Route path="/:id" element={<TestDetailPage cartCount={cartLineCount} onAddToCart={handleAddToCart} />} />
       <Route
         path="/cart"
         element={
           <CartPage
             cartCount={cartLineCount}
             items={cartItems}
-            groups={session.groups}
-            onUpdateQty={handleUpdateQty}
-            onRemoveLine={handleRemoveLine}
-            onSyncCartBeforeAddress={prepareCartBeforeAddress}
+            onSessionUpdate={update}
           />
         }
       />

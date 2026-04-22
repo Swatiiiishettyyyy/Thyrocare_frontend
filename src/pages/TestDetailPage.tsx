@@ -30,6 +30,7 @@ const NAV_LINKS = [
 ]
 
 const TABS = ['About', 'Parameters', 'Preparation'] as const
+const DEFAULT_OFFER_LABEL = '40% OFF'
 
 function findProduct(products: ThyrocareProduct[], idParam: string | undefined): ThyrocareProduct | undefined {
   if (!idParam || products.length === 0) return undefined
@@ -135,14 +136,27 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
     return null
   }, [product, stateTest])
 
-  const parameters = product?.parameters ?? []
+  /** Prefer full parameter list from detail API; catalog rows often omit `parameters`. */
+  const parameters = useMemo(() => {
+    const fromDetail = detailFromApi?.parameters
+    if (Array.isArray(fromDetail) && fromDetail.length > 0) return fromDetail
+    const fromCatalog = catalogProduct?.parameters
+    if (Array.isArray(fromCatalog) && fromCatalog.length > 0) return fromCatalog
+    return product?.parameters ?? []
+  }, [detailFromApi, catalogProduct, product])
   /** Long `about` from detail row, then catalog row (detail-only `null` must not hide list text). */
   const aboutLong = pickAboutText(detailFromApi?.about, catalogProduct?.about)
   const shortDesc = pickAboutText(detailFromApi?.short_description, catalogProduct?.short_description)
 
+  // UI requirement: show `no_of_tests_included` in the "Parameters" stat tile (even if the detail API
+  // also provides a `parameters[]` list). Fall back only when API value is missing/invalid.
   const paramCount = product
-    ? (parameters.length > 0 ? parameters.length : product.no_of_tests_included)
+    ? (Number.isFinite(Number(product.no_of_tests_included)) && Number(product.no_of_tests_included) > 0
+      ? Number(product.no_of_tests_included)
+      : (parameters.length > 0 ? parameters.length : 0))
     : (card?.tests ?? 0)
+
+  const paramCountDisplay = Math.max(1, paramCount)
 
   const maxPatients = product?.beneficiaries_max ?? card?.maxBeneficiaries ?? 10
   const minPatients = product?.beneficiaries_min ?? 1
@@ -225,6 +239,80 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
     || 'No description available for this test.'
 
   const heroSubtitle = shortDesc || description || 'A quick overview of your overall health and immunity.'
+
+  function normalizeAboutField(v: string | string[] | null | undefined): string[] {
+    if (v == null) return []
+    if (Array.isArray(v)) {
+      return v.map(x => String(x ?? '').trim()).filter(Boolean)
+    }
+    const s = String(v).trim()
+    if (!s) return []
+    // Split common bullet/newline formats safely.
+    return s
+      .split(/\r?\n|•|·|^\s*-\s+/m)
+      .map(x => x.trim())
+      .filter(Boolean)
+      .slice(0, 8)
+  }
+
+  const dynamicAboutSections = useMemo(() => {
+    const p = product
+    const apiChecks = normalizeAboutField(p?.what_this_test_checks ?? null)
+    const apiWho = normalizeAboutField(p?.who_should_take_this_test ?? null)
+    const apiWhy = normalizeAboutField(p?.why_doctors_recommend ?? null)
+
+    const paramNames = (p?.parameters ?? []).map(x => String(x?.name ?? '').trim()).filter(Boolean)
+    const uniqueParams: string[] = []
+    const seen = new Set<string>()
+    for (const n of paramNames) {
+      const k = n.toLowerCase()
+      if (seen.has(k)) continue
+      seen.add(k)
+      uniqueParams.push(n)
+      if (uniqueParams.length >= 6) break
+    }
+
+    const checksItems =
+      apiChecks.length > 0
+        ? apiChecks
+        : uniqueParams.length > 0
+        ? uniqueParams
+        : [
+            `Includes ${paramCountDisplay} ${type === 'Package' ? 'tests' : 'parameters'}`,
+            p?.category ? `Category: ${p.category}` : null,
+          ].filter((x): x is string => typeof x === 'string' && x.trim().length > 0)
+
+    const minB = p?.beneficiaries_min
+    const maxB = p?.beneficiaries_max
+    const patientRange =
+      typeof minB === 'number' && typeof maxB === 'number' && Number.isFinite(minB) && Number.isFinite(maxB)
+        ? `${minB}-${maxB}`
+        : maxPatients
+          ? `1-${maxPatients}`
+          : null
+
+    const whoItems = [
+      patientRange ? `Suitable for ${patientRange} patient(s) in one booking` : null,
+      p?.is_fasting_required == null ? null : (p.is_fasting_required ? 'Fasting is required before sample collection' : 'No fasting required'),
+      p?.is_home_collectible == null ? null : (p.is_home_collectible ? 'Home sample collection available' : 'Home sample collection may not be available'),
+    ].filter((x): x is string => typeof x === 'string' && x.trim().length > 0)
+
+    const whyItems =
+      apiWhy.length > 0
+        ? apiWhy
+        : [
+            shortDesc ? shortDesc : null,
+            p?.about ? (p.about.length > 160 ? `${p.about.slice(0, 160).trim()}…` : p.about.trim()) : null,
+          ].filter((x): x is string => typeof x === 'string' && x.trim().length > 0)
+
+    const whoFinal = apiWho.length > 0 ? apiWho : whoItems
+
+    return [
+      { title: 'What this test checks', icon: aboutIconChecks, items: checksItems },
+      { title: 'Who should take this test', icon: aboutIconWho, items: whoFinal },
+      { title: 'Why doctors recommend this', icon: aboutIconWhy, items: whyItems },
+    ].filter(s => s.items.length > 0)
+  }, [product, paramCount, type, maxPatients, shortDesc])
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff', fontFamily: 'Poppins, sans-serif', overflowX: 'hidden' }}>
@@ -424,7 +512,7 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
                 <div style={{ minWidth: 0 }}>
                   <div style={{ color: '#828282', fontSize: 13, fontFamily: 'Inter, sans-serif' }}>Parameters</div>
                   <div style={{ color: '#fff', fontSize: 14, fontWeight: 500 }}>
-                    {paramCount}
+                    {paramCountDisplay}
                   </div>
                 </div>
               </div>
@@ -505,7 +593,7 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {offerPercent?.trim() || '33% OFF'}
+                      {offerPercent?.trim() || DEFAULT_OFFER_LABEL}
                     </span>
                   </div>
                 </div>
@@ -743,38 +831,7 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
                     gap: 'clamp(22px, 3.2vmin, 31px)',
                   }}
                 >
-                  {[
-                    {
-                      title: 'What this test checks',
-                      icon: aboutIconChecks,
-                      items: [
-                        'Red blood cell count, hemoglobin levels, and hematocrit to assess oxygen-carrying capacity',
-                        'White blood cell count and differential to evaluate immune system health',
-                        'Platelet count to check blood clotting ability',
-                        'Erythrocyte Sedimentation Rate (ESR) to detect inflammation in the body',
-                      ],
-                    },
-                    {
-                      title: 'Who should take this test',
-                      icon: aboutIconWho,
-                      items: [
-                        'Individuals experiencing fatigue, weakness, or shortness of breath',
-                        'Those with suspected infections, anemia, or bleeding disorders',
-                        'People with chronic conditions like diabetes, kidney disease, or autoimmune disorders',
-                        'Anyone undergoing pre-operative evaluation or health screening',
-                      ],
-                    },
-                    {
-                      title: 'Why doctors recommend this',
-                      icon: aboutIconWhy,
-                      items: [
-                        'Most comprehensive initial blood test for diagnosing various conditions',
-                        'Helps monitor treatment effectiveness for blood-related disorders',
-                        'Early detection of infections, anemia, and other abnormalities',
-                        'Essential baseline test for overall health assessment',
-                      ],
-                    },
-                  ].map(section => {
+                  {dynamicAboutSections.map(section => {
                     const aboutBulletBlock = (
                       <div
                         style={{
@@ -802,15 +859,15 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
                             <img
                               src={aboutBulletCheck}
                               alt=""
-                              width={isMobile ? 16 : 22}
-                              height={isMobile ? 12 : 17}
+                              width={isMobile ? 14 : 18}
+                              height={isMobile ? 11 : 14}
                               style={{
                                 display: 'block',
-                                marginTop: isMobile ? 5 : 4,
+                                marginTop: isMobile ? 4 : 3,
                                 flexShrink: 0,
                                 /* Pull tick into the left gutter (32 icon col + 10 col gap ≈ 42px). */
-                                marginLeft: isMobile ? -34 : 0,
-                                marginRight: isMobile ? 12 : 0,
+                                marginLeft: isMobile ? -30 : 0,
+                                marginRight: isMobile ? 10 : 0,
                               }}
                             />
                             <div
@@ -834,8 +891,8 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
 
                     if (isMobile) {
                       /* One grid row: fixed icon column | text column stacks title then bullets (same inset + gap for every section). */
-                      const mobileAboutIcon = 32
-                      const mobileAboutGlyph = 16
+                      const mobileAboutIcon = 28
+                      const mobileAboutGlyph = 14
                       const mobileAboutBodyGap = 12
                       return (
                         <div
@@ -914,15 +971,15 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
                         className="test-detail-about-section"
                         style={{
                           display: 'grid',
-                          gridTemplateColumns: 'clamp(56px, 7vmin, 75px) 1fr',
-                          gap: 'clamp(14px, 2.2vmin, 22px)',
+                          gridTemplateColumns: 'clamp(40px, 5vmin, 52px) 1fr',
+                          gap: 'clamp(12px, 1.8vmin, 18px)',
                           alignItems: 'start',
                         }}
                       >
                         <div
                           style={{
-                            width: 'clamp(56px, 7vmin, 75px)',
-                            height: 'clamp(56px, 7vmin, 75px)',
+                            width: 'clamp(40px, 5vmin, 52px)',
+                            height: 'clamp(40px, 5vmin, 52px)',
                             borderRadius: 999,
                             background: '#fff',
                             display: 'flex',
@@ -934,12 +991,13 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
                           <img
                             src={section.icon}
                             alt=""
-                            width={24}
-                            height={24}
+                            width={20}
+                            height={20}
                             style={{
                               display: 'block',
-                              width: 'clamp(18px, 2.2vmin, 24px)',
-                              height: 'clamp(18px, 2.2vmin, 24px)',
+                              width: 'clamp(14px, 1.75vmin, 20px)',
+                              height: 'clamp(14px, 1.75vmin, 20px)',
+                              objectFit: 'contain',
                             }}
                           />
                         </div>
@@ -977,9 +1035,29 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
                 {detailLoading && parameters.length === 0 ? (
                   <p style={{ color: '#828282', fontSize: 15, margin: 0 }}>Loading parameters…</p>
                 ) : parameters.length === 0 ? (
-                  <p style={{ color: '#828282', fontSize: 15, margin: 0 }}>
-                    No parameter list returned for this product.
-                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+                    <div>
+                      <h3 style={{
+                        margin: '0 0 12px', fontSize: 15, fontWeight: 600, color: '#101129',
+                        fontFamily: 'Poppins, sans-serif',
+                      }}>
+                        Parameters
+                      </h3>
+                      <div style={{
+                        borderRadius: 12, border: '1px solid #E7E1FF', overflow: 'hidden', background: '#fff',
+                      }}>
+                        <div
+                          style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            gap: 16, padding: '14px 18px',
+                            fontFamily: 'Inter, sans-serif', fontSize: 14, color: '#374151',
+                          }}
+                        >
+                          <span style={{ flex: 1, minWidth: 0 }}>{(name || '').trim() || '—'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
                     {groupParameters(parameters).map(([groupName, rows]) => (
@@ -1090,10 +1168,19 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
                       <span style={{ fontSize: 'clamp(16px, 1.9vmin, 24px)', fontWeight: 500, color: '#101129', fontFamily: 'Poppins, sans-serif', letterSpacing: '-0.02em' }}>Do’s</span>
                     </div>
                     {[
-                      'Fast for 8–12 hours before the test (water is allowed)',
-                      'Drink plenty of water to stay hydrated',
-                      'Get a good night\'s sleep before the test',
-                      'Wear comfortable, loose-fitting clothing',
+                      ...(product?.is_fasting_required
+                        ? [
+                            'Fast for 8–12 hours before the test (water is allowed)',
+                            'Drink plenty of water to stay hydrated',
+                            'Get a good night\'s sleep before the test',
+                            'Wear comfortable, loose-fitting clothing',
+                          ]
+                        : [
+                            'No fasting required for this test',
+                            'Follow your normal diet unless your doctor advised otherwise',
+                            'Carry any previous reports/prescriptions if available',
+                            'Stay hydrated and rest well before sample collection',
+                          ]),
                     ].map((item, i) => (
                       <div key={i} style={{
                         background: '#E8FFFB',
@@ -1118,10 +1205,19 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
                       <span style={{ fontSize: 'clamp(16px, 1.9vmin, 24px)', fontWeight: 500, color: '#101129', fontFamily: 'Poppins, sans-serif', letterSpacing: '-0.02em' }}>Don’ts</span>
                     </div>
                     {[
-                      'Avoid eating or drinking anything except water before the test',
-                      'Do not smoke or consume alcohol 24 hours before',
-                      'Avoid strenuous exercise the day before',
-                      'Do not take medications without consulting your doctor',
+                      ...(product?.is_fasting_required
+                        ? [
+                            'Avoid eating or drinking anything except water before the test',
+                            'Do not smoke or consume alcohol 24 hours before',
+                            'Avoid strenuous exercise the day before',
+                            'Do not take medications without consulting your doctor',
+                          ]
+                        : [
+                            'Avoid heavy workouts right before sample collection',
+                            'Do not consume alcohol 24 hours before the test',
+                            'Avoid smoking 2–3 hours before sample collection',
+                            'Do not change medicines without consulting your doctor',
+                          ]),
                     ].map((item, i) => (
                       <div key={i} style={{
                         background: '#FFF0F0',

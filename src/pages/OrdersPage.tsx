@@ -139,7 +139,7 @@ export default function OrdersPage() {
         {/* Header */}
         <div className="orders-header" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 'clamp(12px, 1.8vmin, 18px)', marginBottom: 'clamp(18px, 3vmin, 28px)', position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(6px, 1.2vmin, 10px)', maxWidth: 'min(520px, 100%)' }}>
-            <span style={{ fontSize: 'var(--type-subhead)', fontWeight: 500, color: '#161616', letterSpacing: '-0.02em', lineHeight: 'var(--lh-snug)' }}>
+            <span className="orders-title" style={{ fontWeight: 500, color: '#161616', letterSpacing: '-0.02em', lineHeight: 'var(--lh-snug)' }}>
               Order Management
             </span>
             <span className="orders-subtitle" style={{ fontSize: 'var(--type-lead)', color: '#828282', lineHeight: 'var(--lh-body)' }}>
@@ -188,6 +188,7 @@ export default function OrdersPage() {
           <p style={{ color: '#828282', fontSize: 14, fontFamily: 'Inter, sans-serif' }}>Loading orders...</p>
         ) : filtered.length === 0 ? (
           <div
+            className="orders-empty"
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -265,7 +266,12 @@ export default function OrdersPage() {
                 <div
                   key={i}
                   className="orders-card"
-                  onClick={() => navigate('/order-details', { state: { order } })}
+                  onClick={() => navigate('/order-details', {
+                    state: {
+                      order,
+                      orderNumber: String(order.order_number ?? '').trim(),
+                    },
+                  })}
                   style={{
                     background: '#fff',
                     boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)',
