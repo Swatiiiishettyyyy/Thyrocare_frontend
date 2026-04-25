@@ -1,10 +1,11 @@
 import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Navbar, UploadReportStepper } from '../components'
 import backChevron from '../assets/figma/upload-report/Frame-1.svg'
 import chevronDown from '../assets/figma/upload-report/Frame-4.svg'
 import chevronRightWhite from '../assets/figma/upload-report/Frame.svg'
 import breadcrumbChevron from '../assets/figma/upload-report/Vector.svg'
+import { useAuth } from '../context/AuthContext'
 
 const NAV_LINKS = [
   { label: 'Tests', href: '/' },
@@ -16,8 +17,48 @@ const NAV_LINKS = [
 
 export default function UploadReportDetailsPage() {
   const navigate = useNavigate()
-  const [reportFor, setReportFor] = React.useState('Self')
-  const [labName, setLabName] = React.useState('Self')
+  const location = useLocation()
+  const { currentMember, members } = useAuth()
+  const file = (location.state as any)?.file as File | undefined
+
+  const initialMemberId =
+    (location.state as any)?.memberId != null
+      ? Number((location.state as any)?.memberId)
+      : (currentMember as any)?.member_id != null
+        ? Number((currentMember as any).member_id)
+        : undefined
+
+  const [memberId, setMemberId] = React.useState<number | undefined>(
+    Number.isFinite(Number(initialMemberId)) ? Number(initialMemberId) : undefined,
+  )
+  const [labName, setLabName] = React.useState('')
+
+  // If user refreshes this page without state, go back to upload step.
+  React.useEffect(() => {
+    if (!file) navigate('/upload-report', { replace: true })
+  }, [file, navigate])
+
+  const memberOptions = React.useMemo(() => {
+    const arr = Array.isArray(members) ? members : []
+    const seen = new Set<number>()
+    const out: Array<{ id: number; label: string }> = []
+    for (const m of arr) {
+      const idRaw = (m as any)?.member_id ?? (m as any)?.id
+      const id = Number(idRaw)
+      if (!Number.isFinite(id) || seen.has(id)) continue
+      seen.add(id)
+      const name = String((m as any)?.name ?? '').trim()
+      const relation = String((m as any)?.relation ?? '').trim()
+      out.push({ id, label: relation && name ? `${name} (${relation})` : name || relation || `Member ${id}` })
+    }
+    out.sort((a, b) => a.label.localeCompare(b.label))
+    return out
+  }, [members])
+
+  const LAB_OPTIONS = React.useMemo(
+    () => ['', 'Apollo', 'Thyrocare', 'Lal Path Labs', 'SRL', 'Metropolis', 'Other'],
+    [],
+  )
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff', fontFamily: 'Poppins, sans-serif', overflowX: 'hidden' }}>
@@ -90,10 +131,10 @@ export default function UploadReportDetailsPage() {
             }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, flex: 1 }}>
                 <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, fontSize: 'var(--type-ui)', color: '#161616', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  Frame 1948759968.png
+                  {file?.name ?? 'No file selected'}
                 </div>
                 <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: 'var(--type-body)', color: '#414141' }}>
-                  0.42 MB
+                  {file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : '—'}
                 </div>
               </div>
               <button
@@ -118,68 +159,89 @@ export default function UploadReportDetailsPage() {
             {/* Report For */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, fontSize: 'var(--type-ui)', color: '#161616' }}>Report For</div>
-              <button
-                type="button"
-                onClick={() => {}}
-                style={{
-                  width: '100%',
-                  background: '#F9F9F9',
-                  border: 'none',
-                  borderRadius: 'clamp(14px, 2vmin, 20px)',
-                  padding: 'clamp(14px, 2.2vmin, 18px) clamp(14px, 2vmin, 16px)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 12,
-                  cursor: 'default',
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 400,
-                  fontSize: 'var(--type-body)',
-                  color: '#414141',
-                }}
-              >
-                <span>{reportFor}</span>
-                <img src={chevronDown} alt="" style={{ width: 24, height: 24, display: 'block' }} />
-              </button>
-              {/* Keep actual value in state for later wiring */}
-              <select value={reportFor} onChange={e => setReportFor(e.target.value)} style={{ display: 'none' }}>
-                <option>Self</option>
-                <option>Family Member</option>
-              </select>
+              <div style={{ position: 'relative' }}>
+                <select
+                  value={memberId ?? ''}
+                  onChange={e => {
+                    const v = e.target.value
+                    const n = v ? Number(v) : undefined
+                    setMemberId(Number.isFinite(Number(n)) ? Number(n) : undefined)
+                  }}
+                  style={{
+                    width: '100%',
+                    background: '#F9F9F9',
+                    border: 'none',
+                    borderRadius: 'clamp(14px, 2vmin, 20px)',
+                    padding: 'clamp(14px, 2.2vmin, 18px) clamp(14px, 2vmin, 16px)',
+                    paddingRight: 44,
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: 'var(--type-body)',
+                    color: '#414141',
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    MozAppearance: 'none',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {memberOptions.length === 0 ? (
+                    <option value="">Self</option>
+                  ) : (
+                    memberOptions.map(opt => (
+                      <option key={opt.id} value={String(opt.id)}>
+                        {opt.label}
+                      </option>
+                    ))
+                  )}
+                </select>
+                <img
+                  src={chevronDown}
+                  alt=""
+                  style={{ width: 24, height: 24, display: 'block', position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+                />
+              </div>
             </div>
 
             {/* Lab Name */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, fontSize: 'var(--type-ui)', color: '#161616' }}>Lab Name (optional)</div>
-              <button
-                type="button"
-                onClick={() => {}}
-                style={{
-                  width: '100%',
-                  background: '#F9F9F9',
-                  border: 'none',
-                  borderRadius: 'clamp(14px, 2vmin, 20px)',
-                  padding: 'clamp(14px, 2.2vmin, 18px) clamp(14px, 2vmin, 16px)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 12,
-                  cursor: 'default',
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 400,
-                  fontSize: 'var(--type-body)',
-                  color: '#414141',
-                }}
-              >
-                <span>{labName}</span>
-                <img src={chevronDown} alt="" style={{ width: 24, height: 24, display: 'block' }} />
-              </button>
-              <select value={labName} onChange={e => setLabName(e.target.value)} style={{ display: 'none' }}>
-                <option>Self</option>
-                <option>Apollo</option>
-                <option>Thyrocare</option>
-                <option>Lal Path Labs</option>
-              </select>
+              <div style={{ position: 'relative' }}>
+                <select
+                  value={labName}
+                  onChange={e => setLabName(e.target.value)}
+                  style={{
+                    width: '100%',
+                    background: '#F9F9F9',
+                    border: 'none',
+                    borderRadius: 'clamp(14px, 2vmin, 20px)',
+                    padding: 'clamp(14px, 2.2vmin, 18px) clamp(14px, 2vmin, 16px)',
+                    paddingRight: 44,
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: 'var(--type-body)',
+                    color: '#414141',
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    MozAppearance: 'none',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {LAB_OPTIONS.map(opt => (
+                    <option key={opt || 'none'} value={opt}>
+                      {opt ? opt : 'Select lab'}
+                    </option>
+                  ))}
+                </select>
+                <img
+                  src={chevronDown}
+                  alt=""
+                  style={{ width: 24, height: 24, display: 'block', position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+                />
+              </div>
             </div>
 
             {/* Bottom actions */}
@@ -209,13 +271,20 @@ export default function UploadReportDetailsPage() {
               </button>
               <button
                 type="button"
-                onClick={() => navigate('/analysing-report')}
+                disabled={!file}
+                onClick={() => file && navigate('/analysing-report', {
+                  state: {
+                    file,
+                    labName,
+                    memberId,
+                  },
+                })}
                 style={{
                   flex: '1 1 280px',
                   minHeight: 'clamp(48px, 6vmin, 58px)',
                   borderRadius: 'clamp(8px, 1vmin, 10px)',
                   border: 'none',
-                  background: '#8B5CF6',
+                  background: file ? '#8B5CF6' : '#E7E1FF',
                   cursor: 'pointer',
                   fontFamily: 'Poppins, sans-serif',
                   fontWeight: 500,

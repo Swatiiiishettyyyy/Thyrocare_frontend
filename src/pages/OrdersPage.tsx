@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components'
 import { fetchOrders, getEarliestScheduledDate } from '../api/orders'
 import type { Order } from '../api/orders'
+import { useAuth } from '../context/AuthContext'
 import noOrdersIllustration from '../assets/figma/No_orders/fi_17569011.svg'
 import orderIconGreen from '../assets/figma/order-listing/Frame.svg'
 import orderIconPurple from '../assets/figma/order-listing/Frame-2.svg'
@@ -45,18 +46,21 @@ function formatDate(dateStr: string): string {
 
 export default function OrdersPage() {
   const navigate = useNavigate()
+  const { currentMember } = useAuth()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('All')
   const tabs = ['All', 'Active', 'Completed']
 
   // Rows use GET /orders/list only; Thyrocare order-details are not fetched per row (avoids N+1).
+  // Re-fetch whenever the selected member changes so the list always reflects the active profile.
   useEffect(() => {
+    setLoading(true)
     fetchOrders()
       .then(setOrders)
       .catch(() => setOrders([]))
       .finally(() => setLoading(false))
-  }, [])
+  }, [currentMember?.member_id])
 
   const filtered = orders.filter(o => {
     if (activeTab === 'All') return true

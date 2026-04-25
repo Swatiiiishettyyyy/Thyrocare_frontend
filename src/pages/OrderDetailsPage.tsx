@@ -19,6 +19,7 @@ import {
   thyrocareCombinedStatusDisplayLabel,
   thyrocareHistoryStepDisplayLabel,
   thyrocareFallbackTimelineStage,
+  thyrocareMilestoneIndexForLabel,
   isThyrocareOrderPlacedDuplicateHistoryRow,
 } from '../api/orders'
 import { API_BASE_URL } from '../api/client'
@@ -268,12 +269,9 @@ function clientOnlyFallbackStage(input: {
   scheduledDate?: string | null | undefined
 }): number {
   const s = String(input.statusRaw ?? '').trim().toUpperCase()
-  const hasSched = !!(input.scheduledDate && String(input.scheduledDate).trim())
   if (s === 'COMPLETED') return 4
   if (s === 'CANCELLED') return 0
-  // If we have a scheduled date, at least "Collection scheduled" is reached.
-  if (hasSched) return 1
-  // Otherwise only booked is known.
+  // Without vendor (Thyrocare) tracking, avoid showing intermediary milestones.
   return 0
 }
 
@@ -285,8 +283,8 @@ function clientOnlyVisitSteps(
   const stage = clientOnlyFallbackStage(opts)
   const labels = [
     'Order booked',
-    'Collection scheduled',
     'Sample collected',
+    'Sample received by lab',
     'Processing',
     'Report ready',
   ] as const
@@ -295,9 +293,7 @@ function clientOnlyVisitSteps(
     time:
       i === 0
         ? formatDateTime(order.order_date || order.created_at)
-        : i === 1 && opts.scheduledDate
-          ? formatDate(opts.scheduledDate)
-          : '',
+        : '',
     done: i <= stage,
   }))
 }
@@ -309,19 +305,41 @@ function buildVisitStepsWithOrderBooked(
   myRow: ThyrocareMyOrderRow | undefined,
   d: ThyrocareOrderDetails | undefined,
 ): Array<{ label: string; time: string; done: boolean }> {
-  const orderBookedFromNucleotide = {
-    label: 'Order booked',
-    time: formatDateTime(order.order_date),
-    done: true,
-  }
   if (!hist || hist.length === 0) {
     return fallbackVisitSteps(order, myRow, d)
   }
-  const filtered = hist.filter(row => !isThyrocareOrderPlacedDuplicateHistoryRow(row))
-  if (filtered.length === 0) {
-    return fallbackVisitSteps(order, myRow, d)
+
+  // Compute the highest milestone (0-4) reached across all history rows + current status fields.
+  // Renders the fixed 5-stage list with proper done/greyed states instead of raw DB rows.
+  let maxStage = thyrocareFallbackTimelineStage(myRow, d)
+  for (const row of hist) {
+    const mapped = thyrocareHistoryStepDisplayLabel(row, '')
+    if (mapped && mapped !== '—') {
+      maxStage = Math.max(maxStage, thyrocareMilestoneIndexForLabel(mapped))
+    }
   }
-  return [orderBookedFromNucleotide, ...mapStatusHistoryToSteps(filtered)]
+
+  const appt =
+    myRow?.appointment_date
+    ?? d?.appointment_date
+    ?? (d as any)?.patients?.[0]?.appointment_date
+  const labels = [
+    'Order booked',
+    'Sample collected',
+    'Sample received by lab',
+    'Processing',
+    'Report ready',
+  ] as const
+  return labels.map((label, i) => ({
+    label,
+    time:
+      i === 0
+        ? formatDateTime(order.order_date || order.created_at)
+        : i === 1 && appt
+          ? formatDate(appt)
+          : '',
+    done: i <= maxStage,
+  }))
 }
 
 /** Matches the timeline: current milestone = first incomplete step, else last step. */
@@ -625,7 +643,7 @@ export default function OrderDetailsPage() {
     const patients: any[] = Array.isArray((details as any)?.patients) ? (details as any).patients : []
     const m = entry.member
     const match = patients.find((p: any) => String(p?.name ?? '').toLowerCase() === String(m?.name ?? '').toLowerCase())
-    const p = match ?? patients[0]
+    const p = match ?? (patients.length === 1 ? patients[0] : undefined)
     return p?.id ?? p?.lead_id ?? p?.patient_id
   }
 
@@ -743,7 +761,7 @@ export default function OrderDetailsPage() {
           Back to Orders
         </button>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(18px, 3vmin, 28px)', marginTop: 'clamp(14px, 2.2vmin, 20px)' }}>
+        <div className="order-detail-stack" style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(18px, 3vmin, 28px)', marginTop: 'clamp(14px, 2.2vmin, 20px)' }}>
 
           <div className="order-detail-hero" style={{
             background: 'linear-gradient(90deg, #101129 0%, #2A2C5B 100%)',
@@ -836,7 +854,6 @@ export default function OrderDetailsPage() {
                           </span>
                         )}
                       </span>
-                      <span style={LABEL}>₹{it.total_amount} · {it.member_ids.length} member{it.member_ids.length !== 1 ? 's' : ''}</span>
                     </button>
 
                     {canTrack && productOpen && (
@@ -891,10 +908,7 @@ export default function OrderDetailsPage() {
                                       {phleboContact && <div style={{ ...LABEL }}>{phleboContact}</div>}
                                     </div>
                                   )}
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
-                                    <span style={LABEL}>Current stage</span>
-                                    <span style={VALUE}>{timelineHeadlineFromSteps(visitSteps)}</span>
-                                  </div>
+                                  {/* Current stage headline removed (timeline below is sufficient) */}
                                   <div className="order-detail-trackingCard" style={{ ...CARD, boxShadow: 'none', padding: '12px 0', background: 'transparent', outline: 'none' }}>
                                     <div className="order-detail-trackList">
                                       <div className="order-detail-trackLine" aria-hidden="true" />
@@ -967,13 +981,7 @@ export default function OrderDetailsPage() {
 
                     {!canTrack && (
                       <div className="order-detail-trackingCard" style={{ ...CARD, boxShadow: 'none', padding: '12px 0', background: 'transparent', outline: 'none' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
-                          <span style={LABEL}>Current stage</span>
-                          <span style={VALUE}>{timelineHeadlineFromSteps(clientOnlyVisitSteps(order, {
-                            statusRaw: it.member_address_map[0]?.order_status ?? order.order_status,
-                            scheduledDate: it.member_address_map[0]?.scheduled_date,
-                          }))}</span>
-                        </div>
+                        {/* Current stage headline removed (timeline below is sufficient) */}
                         <div className="order-detail-trackList">
                           <div className="order-detail-trackLine" aria-hidden="true" />
                           {clientOnlyVisitSteps(order, {
@@ -1050,10 +1058,10 @@ export default function OrderDetailsPage() {
                             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
                               <div>
                                 <div style={VALUE}>{m.name}</div>
-                                <div style={LABEL}>{m.relation} · {m.age} yrs · {formatMemberGender(m.gender)}</div>
+                                <div className="order-detail-memberMeta" style={LABEL}>{m.relation} · {m.age} yrs · {formatMemberGender(m.gender)}</div>
                               </div>
                             </div>
-                            <div style={LABEL}>
+                            <div className="order-detail-addressLine" style={LABEL}>
                               {addr.street_address}, {addr.city}, {addr.state} {addr.postal_code}
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

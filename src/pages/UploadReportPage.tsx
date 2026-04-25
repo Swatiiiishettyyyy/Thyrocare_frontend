@@ -244,13 +244,14 @@ export default function UploadReportPage() {
               </button>
               <button
                 type="button"
-                onClick={() => navigate('/upload-report-details')}
+                onClick={() => file && navigate('/upload-report-details', { state: { file } })}
+                disabled={!file}
                 style={{
                   flex: '1 1 280px',
                   minHeight: 'clamp(48px, 6vmin, 58px)',
                   borderRadius: 'clamp(8px, 1vmin, 10px)',
                   border: 'none',
-                  background: '#8B5CF6',
+                  background: file ? '#8B5CF6' : '#E7E1FF',
                   cursor: 'pointer',
                   fontFamily: 'Poppins, sans-serif',
                   fontWeight: 500,

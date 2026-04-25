@@ -4,6 +4,7 @@ import type { NavbarProps } from '../../types'
 import nucleotideLogo from '../../assets/figma/Property 1=Tests.png'
 import { checkPincodeServiceability } from '../../api/cart'
 import { mapboxGeocodeErrorMessage, mapboxReverseGeocode } from '../../lib/mapboxGeocode'
+import MemberSwitchDropdown from '../MemberSwitchDropdown/MemberSwitchDropdown'
 
 const PINCODE_LS_KEY = 'nucleotide_pincode_v1'
 
@@ -185,32 +186,8 @@ const Navbar = React.memo(function Navbar({
         </Link>
 
         <div className="navbar-trailing-actions" style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-          <div className="navbar-bell-wrap" style={{ position: 'relative' }}>
-            <button
-              type="button"
-              className="navbar-bell-btn"
-              aria-label="Notifications"
-              style={{
-                width: 44, height: 44, borderRadius: '50%',
-                background: '#F9F9F9', border: '1px solid #E7E1FF',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', boxSizing: 'border-box',
-              }}
-            >
-              <svg width="18" height="20" viewBox="0 0 20 22" fill="none" aria-hidden>
-                <path d="M10 2C6.69 2 4 4.69 4 8V13L2 15V16H18V15L16 13V8C16 4.69 13.31 2 10 2Z" fill="url(#bell_grad)" />
-                <path d="M8 17C8 18.1 8.9 19 10 19C11.1 19 12 18.1 12 17H8Z" fill="url(#bell_grad2)" />
-                <defs>
-                  <linearGradient id="bell_grad" x1="2" y1="2" x2="18" y2="16" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#101129" /><stop offset="1" stopColor="#2A2C5B" />
-                  </linearGradient>
-                  <linearGradient id="bell_grad2" x1="8" y1="17" x2="12" y2="19" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#101129" /><stop offset="1" stopColor="#2A2C5B" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </button>
-            <span aria-hidden style={{ position: 'absolute', top: 5, right: 5, width: 8, height: 8, borderRadius: '50%', background: '#EF4444', border: '1.5px solid #fff', pointerEvents: 'none', boxSizing: 'border-box' }} />
+          <div className="navbar-member-switch-inline">
+            <MemberSwitchDropdown />
           </div>
 
           <div className="navbar-cart-wrap" style={{ position: 'relative', flexShrink: 0 }}>
@@ -559,7 +536,10 @@ const Navbar = React.memo(function Navbar({
                 <path d="M1 1l12 12M13 1L1 13" stroke="#24254F" strokeWidth="1.8" strokeLinecap="round" />
               </svg>
             </button>
-            <nav style={{ display: 'flex', flexDirection: 'column', padding: '48px 0 0' }}>
+            <div className="navbar-member-switch-drawer" style={{ padding: '48px 16px 12px' }}>
+              <MemberSwitchDropdown />
+            </div>
+            <nav style={{ display: 'flex', flexDirection: 'column', padding: '0' }}>
               {links.map((link) => (
                 <Link
                   key={link.label}

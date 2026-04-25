@@ -193,7 +193,7 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
       const orderRes = await createOrder({ cart_id: cartId })
 
       const options = {
-        key: 'rzp_test_SaSxoTBvjZTK6C',
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: orderRes.amount,
         currency: 'INR',
         name: 'Nucleotide',

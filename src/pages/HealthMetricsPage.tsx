@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components'
+import { fetchMyReports, pickSampleCollectedTimestampFromReport, type MyReportRow } from '../api/orders'
+import { useAuth } from '../context/AuthContext'
 
 import heartIcon    from '../assets/figma/Health metrics/heart.svg'
 import kidneyIcon   from '../assets/figma/Health metrics/kidney.svg'
@@ -29,20 +31,107 @@ const STATUS_STYLE: Record<StatusType, { bg: string; color: string }> = {
   'No Data': { bg: '#F4F4F4', color: '#828282' },
 }
 
-const ORGANS = [
-  { name: 'Heart',    icon: heartIcon,    status: 'Monitor'   as StatusType, score: 72,   updated: 'Updated 15th Nov', trend: 'up'   as const },
-  { name: 'Kidney',   icon: kidneyIcon,   status: 'Good'      as StatusType, score: 88,   updated: 'Updated 15th Nov', trend: null },
-  { name: 'Liver',    icon: liverIcon,    status: 'Good'      as StatusType, score: 88,   updated: 'Updated 15th Nov', trend: null },
-  { name: 'Bone',     icon: boneIcon,     status: 'Good'      as StatusType, score: 88,   updated: 'Updated 15th Nov', trend: null },
-  { name: 'Gut',      icon: gutIcon,      status: 'Good'      as StatusType, score: 88,   updated: 'Updated 15th Nov', trend: null },
-  { name: 'Thyroid',  icon: thyroidIcon,  status: 'No Data'   as StatusType, score: null, updated: 'No Data Available', trend: null },
-  { name: 'Blood',    icon: bloodIcon,    status: 'Good'      as StatusType, score: 88,   updated: 'Updated 15th Nov', trend: null },
-  { name: 'Vitamins', icon: vitaminsIcon, status: 'Attention' as StatusType, score: 72,   updated: 'Updated 15th Nov', trend: 'down' as const },
-]
+type OrganName = 'Heart' | 'Kidney' | 'Liver' | 'Bone' | 'Gut' | 'Thyroid' | 'Blood' | 'Vitamins'
 
-const FILTERS = ['All', 'Heart', 'Kidney', 'Liver', 'Gut', 'Bone', 'Thyroid', 'Blood', 'Vitamins']
+const ORGAN_ICON: Record<OrganName, string> = {
+  Heart: heartIcon,
+  Kidney: kidneyIcon,
+  Liver: liverIcon,
+  Bone: boneIcon,
+  Gut: gutIcon,
+  Thyroid: thyroidIcon,
+  Blood: bloodIcon,
+  Vitamins: vitaminsIcon,
+}
 
-function OrganCard({ organ, onClick }: { organ: typeof ORGANS[0]; onClick: () => void }) {
+const ORGAN_ORDER: OrganName[] = ['Heart', 'Kidney', 'Liver', 'Bone', 'Gut', 'Thyroid', 'Blood', 'Vitamins']
+
+type Trend = 'up' | 'down' | null
+
+type OrganCardModel = {
+  name: OrganName
+  icon: string
+  status: StatusType
+  score: number | null
+  updated: string
+  trend: Trend
+}
+
+type Status = 'Normal' | 'High' | 'Low'
+
+function parseReportDate(row: MyReportRow): Date | null {
+  const picked = pickSampleCollectedTimestampFromReport(row)
+  const raw = String(
+    picked ??
+      row.sample_date ??
+      row.sampleDate ??
+      row.report_date ??
+      row.reportDate ??
+      row.completed_at ??
+      row.created_at ??
+      '',
+  ).trim()
+  if (!raw) return null
+  const d = new Date(raw)
+  if (Number.isNaN(d.getTime())) return null
+  return d
+}
+
+function formatUpdated(d: Date | null): string {
+  if (!d) return 'No Data Available'
+  return `Updated ${d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`
+}
+
+function normalizeOrganName(raw: unknown): OrganName | null {
+  const t = String(raw ?? '').trim()
+  if (!t) return null
+  const low = t.toLowerCase()
+  for (const name of ORGAN_ORDER) {
+    if (name.toLowerCase() === low) return name
+  }
+  return null
+}
+
+function statusFromItem(o: Record<string, unknown>): Status {
+  const ind = String(o.indicator ?? '').trim().toUpperCase()
+  if (ind === 'RED' || ind === 'HIGH' || ind === 'H') return 'High'
+  if (ind === 'LOW' || ind === 'L') return 'Low'
+  const st = String(o.status ?? o.flag ?? o.interpretation ?? '').toLowerCase()
+  if (st.includes('high') || st === 'h') return 'High'
+  if (st.includes('low') || st === 'l') return 'Low'
+  return 'Normal'
+}
+
+function extractReportLines(row: MyReportRow): Record<string, unknown>[] {
+  const keys = [
+    'results',
+    'lab_results',
+    'thyrocare_results',
+    'biomarkers',
+    'parameters',
+    'report_lines',
+    'report_details',
+    'tests',
+  ] as const
+  for (const k of keys) {
+    const v = row[k]
+    if (Array.isArray(v) && v.length) {
+      return v.filter((x): x is Record<string, unknown> => x != null && typeof x === 'object' && !Array.isArray(x))
+    }
+  }
+  return []
+}
+
+function computeStatusFromScore(score: number | null): StatusType {
+  if (score == null) return 'No Data'
+  if (score >= 80) return 'Good'
+  if (score >= 60) return 'Monitor'
+  return 'Attention'
+}
+
+const FILTERS: Array<'All' | OrganName> = ['All', ...ORGAN_ORDER]
+
+function OrganCard({ organ, onClick }: { organ: OrganCardModel; onClick: () => void }) {
   const st = STATUS_STYLE[organ.status]
   return (
     <div onClick={onClick} style={{
@@ -102,9 +191,88 @@ function OrganCard({ organ, onClick }: { organ: typeof ORGANS[0]; onClick: () =>
 
 export default function HealthMetricsPage({ cartCount }: { cartCount?: number } = {}) {
   const navigate = useNavigate()
+  const { currentMember } = useAuth()
   const [activeFilter, setActiveFilter] = useState('All')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [reports, setReports] = useState<MyReportRow[]>([])
 
-  const filtered = activeFilter === 'All' ? ORGANS : ORGANS.filter(o => o.name === activeFilter)
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+    void fetchMyReports(currentMember?.member_id ?? undefined)
+      .then(list => {
+        if (cancelled) return
+        setReports(list)
+      })
+      .catch(() => {
+        if (!cancelled) setError('Could not load health metrics yet.')
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [currentMember?.member_id])
+
+  const organCards = useMemo<OrganCardModel[]>(() => {
+    const byOrgan = new Map<OrganName, Array<{ date: Date; normal: number; abnormal: number; total: number }>>()
+
+    for (const r of reports) {
+      const d = parseReportDate(r)
+      if (!d) continue
+      const lines = extractReportLines(r)
+      if (!lines.length) continue
+
+      const counts = new Map<OrganName, { normal: number; abnormal: number; total: number }>()
+      for (const line of lines) {
+        // Prefer `category` (we fill it with organ in DB), then `organ`, then fallback.
+        const organ = normalizeOrganName(line.category ?? line.organ ?? null)
+        if (!organ) continue
+        const st = statusFromItem(line)
+        const c = counts.get(organ) ?? { normal: 0, abnormal: 0, total: 0 }
+        c.total += 1
+        if (st === 'Normal') c.normal += 1
+        else c.abnormal += 1
+        counts.set(organ, c)
+      }
+
+      for (const [organ, c] of counts) {
+        const arr = byOrgan.get(organ) ?? []
+        arr.push({ date: d, normal: c.normal, abnormal: c.abnormal, total: c.total })
+        byOrgan.set(organ, arr)
+      }
+    }
+
+    const out: OrganCardModel[] = []
+    for (const organ of ORGAN_ORDER) {
+      const history = (byOrgan.get(organ) ?? []).sort((a, b) => a.date.getTime() - b.date.getTime())
+      const latest = history.length ? history[history.length - 1]! : null
+      const prev = history.length >= 2 ? history[history.length - 2]! : null
+
+      const scoreLatest =
+        latest && latest.total > 0 ? Math.round((latest.normal / latest.total) * 100) : null
+      const scorePrev =
+        prev && prev.total > 0 ? Math.round((prev.normal / prev.total) * 100) : null
+
+      const trend: Trend =
+        scoreLatest != null && scorePrev != null
+          ? (scoreLatest > scorePrev ? 'up' : scoreLatest < scorePrev ? 'down' : null)
+          : null
+
+      out.push({
+        name: organ,
+        icon: ORGAN_ICON[organ],
+        score: scoreLatest,
+        status: computeStatusFromScore(scoreLatest),
+        updated: formatUpdated(latest?.date ?? null),
+        trend,
+      })
+    }
+    return out
+  }, [reports])
+
+  const filtered = activeFilter === 'All' ? organCards : organCards.filter(o => o.name === activeFilter)
   const leftCol  = filtered.filter((_, i) => i < 4)
   const rightCol = filtered.filter((_, i) => i >= 4)
 
@@ -143,21 +311,6 @@ export default function HealthMetricsPage({ cartCount }: { cartCount?: number } 
               <h1 className="metrics-title" style={{ fontSize: 28, fontWeight: 500, color: '#161616', margin: 0, lineHeight: 1.1 }}>
                 Health Metrics
               </h1>
-              <button className="metrics-selfBtn" style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '8px 34px', background: '#fff',
-                boxShadow: '0px 4px 27.3px rgba(0,0,0,0.05)',
-                borderRadius: 8, outline: '1px solid #E7E1FF', outlineOffset: -1,
-                border: 'none', cursor: 'pointer',
-                minWidth: 140,
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                <span style={{ fontSize: 15, fontWeight: 500, color: '#161616' }}>Self</span>
-                <svg width="10" height="6" viewBox="0 0 12 8" fill="none" aria-hidden="true">
-                  <path d="M1 1l5 5 5-5" stroke="#161616" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              </button>
             </div>
             <p className="metrics-subtitle" style={{ fontSize: 15, color: '#828282', margin: '6px 0 0', fontFamily: 'Poppins, sans-serif' }}>
               Track your organ health over time with smart insights.
@@ -196,9 +349,15 @@ export default function HealthMetricsPage({ cartCount }: { cartCount?: number } 
 
         {/* Mobile grid (CSS shows on small screens) */}
         <div className="metrics-mobile-grid">
-          {filtered.map(o => (
-            <OrganCard key={o.name} organ={o} onClick={() => navigate(`/metrics/${o.name.toLowerCase()}`)} />
-          ))}
+          {loading ? (
+            <div style={{ padding: 18, color: '#828282' }}>Loading metrics…</div>
+          ) : error ? (
+            <div style={{ padding: 18, color: '#B91C1C' }}>{error}</div>
+          ) : (
+            filtered.map(o => (
+              <OrganCard key={o.name} organ={o} onClick={() => navigate(`/metrics/${o.name.toLowerCase()}`)} />
+            ))
+          )}
         </div>
 
         {/* Desktop 3-column layout: left cards | body | right cards */}
@@ -206,7 +365,13 @@ export default function HealthMetricsPage({ cartCount }: { cartCount?: number } 
 
           {/* Left column */}
           <div className="metrics-col metrics-col--left" style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {leftCol.map(o => <OrganCard key={o.name} organ={o} onClick={() => navigate(`/metrics/${o.name.toLowerCase()}`)} />)}
+            {loading ? (
+              <div style={{ padding: 18, color: '#828282' }}>Loading…</div>
+            ) : error ? (
+              <div style={{ padding: 18, color: '#B91C1C' }}>{error}</div>
+            ) : (
+              leftCol.map(o => <OrganCard key={o.name} organ={o} onClick={() => navigate(`/metrics/${o.name.toLowerCase()}`)} />)
+            )}
           </div>
 
           {/* Body illustration — fixed center, vertically centered */}
@@ -230,7 +395,9 @@ export default function HealthMetricsPage({ cartCount }: { cartCount?: number } 
 
           {/* Right column */}
           <div className="metrics-col metrics-col--right" style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {rightCol.map(o => <OrganCard key={o.name} organ={o} onClick={() => navigate(`/metrics/${o.name.toLowerCase()}`)} />)}
+            {loading ? null : error ? null : rightCol.map(o => (
+              <OrganCard key={o.name} organ={o} onClick={() => navigate(`/metrics/${o.name.toLowerCase()}`)} />
+            ))}
           </div>
 
         </div>

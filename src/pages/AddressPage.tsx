@@ -519,11 +519,34 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                         <span style={{ fontSize: 15, fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif' }}>
                           Selected <span style={{ fontSize: 12, color: '#828282', fontWeight: 400 }}>({memberIds.length}/{needed})</span>
                         </span>
-                        <button type="button" onClick={() => setMemberModalProductId(productId)} style={{ padding: '4px 14px', borderRadius: 56, outline: '1px solid #8B5CF6', outlineOffset: '-1px', border: 'none', background: 'transparent', fontSize: 13, fontFamily: 'Inter, sans-serif', color: '#101129', cursor: 'pointer' }}>Add New +</button>
+                        <button
+                          type="button"
+                          onClick={() => setMemberModalProductId(productId)}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            height: 32,
+                            padding: '0 14px',
+                            borderRadius: 56,
+                            outline: '1px solid #8B5CF6',
+                            outlineOffset: '-1px',
+                            border: 'none',
+                            background: 'transparent',
+                            fontSize: 13,
+                            fontFamily: 'Inter, sans-serif',
+                            color: '#101129',
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0,
+                          }}
+                        >
+                          Add New +
+                        </button>
                       </div>
 
                       {showProfileList && (
@@ -561,11 +584,33 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
                 const serviceability = serviceabilityMap[pid] ?? { checking: false, serviceable: null as boolean | null, message: undefined as string | undefined }
                 return (
                   <div key={`addr-${pid}`} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 15, fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif' }}>
                         {item.name} — Collection Address
                       </span>
-                      <button onClick={() => setShowAddressModal(true)} style={{ padding: '4px 14px', borderRadius: 56, outline: '1px solid #8B5CF6', outlineOffset: '-1px', border: 'none', background: 'transparent', fontSize: 13, fontFamily: 'Inter, sans-serif', color: '#101129', cursor: 'pointer' }}>Add New +</button>
+                      <button
+                        onClick={() => setShowAddressModal(true)}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          height: 32,
+                          padding: '0 14px',
+                          borderRadius: 56,
+                          outline: '1px solid #8B5CF6',
+                          outlineOffset: '-1px',
+                          border: 'none',
+                          background: 'transparent',
+                          fontSize: 13,
+                          fontFamily: 'Inter, sans-serif',
+                          color: '#101129',
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
+                        }}
+                      >
+                        Add New +
+                      </button>
                     </div>
                     {addresses.map(addr => (
                       <div key={`${pid}-${addr.address_id}`} onClick={() => selectProductAddress(pid, addr.address_id)}

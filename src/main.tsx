@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import './responsive.css'
 import App from './App'
+import { AuthProvider } from './context/AuthContext'
 
 const BASENAME = '/labtest'
 
@@ -19,7 +20,9 @@ if (typeof window !== 'undefined') {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter basename={BASENAME}>
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </BrowserRouter>
   </StrictMode>,
 )

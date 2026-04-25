@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
+import { useAuth } from './context/AuthContext'
+import LoginModal from './components/LoginModal/LoginModal'
+import OTPModal from './components/OTPModal/OTPModal'
+import CompleteProfileModal from './components/CompleteProfileModal/CompleteProfileModal'
+import AddMemberModal from './components/AddMemberModal/AddMemberModal'
 import CartPage from './pages/CartPage'
 import AddressPage from './pages/AddressPage'
 import PaymentPage from './pages/PaymentPage'
@@ -35,6 +40,22 @@ import { cartLineKey, findExistingLineForAdd } from './utils/cartLineKey'
 // Page-1 Cart is now local-only; server hydration starts from Address onward.
 const CHECKOUT_PATHS = ['/address', '/timeslot', '/payment']
 
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isLoggedIn, openLoginModal } = useAuth()
+  const triggered = useRef(false)
+
+  useEffect(() => {
+    if (!isLoggedIn && !triggered.current) {
+      triggered.current = true
+      openLoginModal()
+    }
+    if (isLoggedIn) triggered.current = false
+  }, [isLoggedIn, openLoginModal])
+
+  if (!isLoggedIn) return <Navigate to="/" replace />
+  return <>{children}</>
+}
+
 function ScrollToTopOnRouteChange() {
   const location = useLocation()
   useEffect(() => {
@@ -46,6 +67,7 @@ function ScrollToTopOnRouteChange() {
 export default function App() {
   const location = useLocation()
   const { session, update, upsertGroup, clearSession } = useCheckoutSession()
+  const { isLoggedIn, members, openLoginModal, openCompleteProfileModal } = useAuth()
   const cartItems = session.cartItems
   const cartLineCount = cartItems.length
   const didInitialSync = useRef(false)
@@ -118,7 +140,21 @@ export default function App() {
     }
   }, [session.groups, session.cartItems, session.pricingSnapshotKey, session.thyrocarePricing, session.netPayableAmount, update])
 
-  const handleAddToCart = useCallback((test: TestCardProps) => {
+  const handleAddToCart = useCallback((test: TestCardProps): boolean => {
+    const hasSelf =
+      members.some(m => String(m.relation ?? '').trim().toLowerCase() === 'self' || m.is_self === true)
+
+    // Requirement: if profile isn't completed, prompt for Self profile when attempting to add to cart.
+    if (!isLoggedIn) {
+      openLoginModal()
+      return false
+    }
+    if (!hasSelf) {
+      openCompleteProfileModal()
+      // Block add-to-cart until Self profile exists.
+      return false
+    }
+
     const addQty = test.quantity != null && test.quantity > 0 ? test.quantity : 1
     const existing = findExistingLineForAdd(cartItems, test)
     const newQuantity = existing ? existing.quantity + addQty : addQty
@@ -142,7 +178,8 @@ export default function App() {
       thyrocarePricing: null,
       pricingSnapshotKey: null,
     })
-  }, [cartItems, update])
+    return true
+  }, [cartItems, update, isLoggedIn, members, openLoginModal, openCompleteProfileModal])
 
   const showCheckoutSyncBanner =
     CHECKOUT_PATHS.includes(location.pathname) && session.checkoutSyncError
@@ -150,6 +187,11 @@ export default function App() {
   return (
     <>
       <ScrollToTopOnRouteChange />
+      {/* Auth modals — always in DOM, shown via AuthContext state */}
+      <LoginModal />
+      <OTPModal />
+      <CompleteProfileModal />
+      <AddMemberModal />
       {showCheckoutSyncBanner && (
         <div
           role="alert"
@@ -203,27 +245,29 @@ export default function App() {
       <Route
         path="/cart"
         element={
-          <CartPage
-            cartCount={cartLineCount}
-            items={cartItems}
-            onSessionUpdate={update}
-          />
+          <ProtectedRoute>
+            <CartPage
+              cartCount={cartLineCount}
+              items={cartItems}
+              onSessionUpdate={update}
+            />
+          </ProtectedRoute>
         }
       />
-      <Route path="/address" element={<AddressPage cartCount={cartLineCount} items={cartItems} session={session} onSessionUpdate={update} onUpsertGroup={upsertGroup} />} />
-      <Route path="/timeslot" element={<TimeSlotPage cartCount={cartLineCount} items={cartItems} session={session} onSessionUpdate={update} onUpsertGroup={upsertGroup} />} />
-      <Route path="/payment" element={<PaymentPage cartCount={cartLineCount} items={cartItems} session={session} onSessionUpdate={update} onOrderComplete={clearSession} />} />
-      <Route path="/confirmation" element={<ConfirmationPage />} />
-      <Route path="/orders" element={<OrdersPage />} />
-      <Route path="/order-details" element={<OrderDetailsPage />} />
-      <Route path="/report" element={<ReportPage />} />
-      <Route path="/reports" element={<ReportsListPage />} />
-      <Route path="/empty-report" element={<EmptyReportPage />} />
-      <Route path="/compare-reports" element={<CompareReportsPage />} />
-      <Route path="/upload-report" element={<UploadReportPage />} />
-      <Route path="/upload-report-details" element={<UploadReportDetailsPage />} />
-      <Route path="/analysing-report" element={<AnalysingReportPage />} />
-      <Route path="/review-report" element={<ReviewReportPage />} />
+      <Route path="/address" element={<ProtectedRoute><AddressPage cartCount={cartLineCount} items={cartItems} session={session} onSessionUpdate={update} onUpsertGroup={upsertGroup} /></ProtectedRoute>} />
+      <Route path="/timeslot" element={<ProtectedRoute><TimeSlotPage cartCount={cartLineCount} items={cartItems} session={session} onSessionUpdate={update} onUpsertGroup={upsertGroup} /></ProtectedRoute>} />
+      <Route path="/payment" element={<ProtectedRoute><PaymentPage cartCount={cartLineCount} items={cartItems} session={session} onSessionUpdate={update} onOrderComplete={clearSession} /></ProtectedRoute>} />
+      <Route path="/confirmation" element={<ProtectedRoute><ConfirmationPage /></ProtectedRoute>} />
+      <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
+      <Route path="/order-details" element={<ProtectedRoute><OrderDetailsPage /></ProtectedRoute>} />
+      <Route path="/report" element={<ProtectedRoute><ReportPage /></ProtectedRoute>} />
+      <Route path="/reports" element={<ProtectedRoute><ReportsListPage /></ProtectedRoute>} />
+      <Route path="/empty-report" element={<ProtectedRoute><EmptyReportPage /></ProtectedRoute>} />
+      <Route path="/compare-reports" element={<ProtectedRoute><CompareReportsPage /></ProtectedRoute>} />
+      <Route path="/upload-report" element={<ProtectedRoute><UploadReportPage /></ProtectedRoute>} />
+      <Route path="/upload-report-details" element={<ProtectedRoute><UploadReportDetailsPage /></ProtectedRoute>} />
+      <Route path="/analysing-report" element={<ProtectedRoute><AnalysingReportPage /></ProtectedRoute>} />
+      <Route path="/review-report" element={<ProtectedRoute><ReviewReportPage /></ProtectedRoute>} />
       <Route path="/packages" element={<PackagesPage cartCount={cartLineCount} />} />
       <Route path="/metrics" element={<HealthMetricsPage cartCount={cartLineCount} />} />
       <Route path="/metrics/:organ" element={<OrganDetailPage cartCount={cartLineCount} />} />

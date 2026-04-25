@@ -13,6 +13,7 @@ import {
   type ThyrocareMyOrderRow,
 } from '../api/orders'
 import { fetchMembers, type Member } from '../api/member'
+import { useAuth } from '../context/AuthContext'
 
 const NAV_LINKS = [
   { label: 'Tests', href: '/' },
@@ -246,6 +247,7 @@ function mapRowToListItem(
 
 export default function ReportsListPage() {
   const navigate = useNavigate()
+  const { currentMember } = useAuth()
   const [searchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState(() => {
     const t = searchParams.get('tab') || 'All'
@@ -280,7 +282,7 @@ export default function ReportsListPage() {
     void fetchThyrocareMyOrders()
       .then(setThyrocareMyOrders)
       .catch(() => setThyrocareMyOrders([]))
-    fetchMyReports()
+    fetchMyReports(currentMember?.member_id ?? undefined)
       .then(setReports)
       .catch((e: unknown) => {
         const err = e as { status?: number; data?: unknown }
@@ -300,7 +302,7 @@ export default function ReportsListPage() {
         )
       })
       .finally(() => setLoading(false))
-  }, [])
+  }, [currentMember?.member_id])
 
   useEffect(() => {
     load()
@@ -363,6 +365,29 @@ export default function ReportsListPage() {
             <h1 className="reports-page-title">My Reports</h1>
             <p style={{ fontSize: 15, color: '#9CA3AF', margin: 0 }}>View, track, and understand your health data</p>
           </div>
+          <div className="reports-header-actions" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button
+              type="button"
+              onClick={() => navigate('/upload-report')}
+              className="reports-upload-btn"
+              style={{
+                height: 42,
+                padding: '0 16px',
+                width: 'clamp(160px, 55vw, 220px)',
+                borderRadius: 12,
+                border: '1px solid #E7E1FF',
+                background: 'linear-gradient(90deg, #101129 0%, #2A2C5B 100%)',
+                color: '#fff',
+                fontFamily: 'Poppins, sans-serif',
+                fontSize: 14,
+                fontWeight: 500,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Upload Report
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -390,16 +415,6 @@ export default function ReportsListPage() {
                 </button>
               ))}
             </div>
-          </div>
-          <div className="reports-filter-group">
-            <button type="button" className="reports-filter-btn">
-              Filter
-              <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </button>
-            <button type="button" className="reports-filter-btn">
-              Sorting
-              <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </button>
           </div>
         </div>
 

@@ -21,7 +21,6 @@ export async function fetchMembers(): Promise<Member[]> {
   const res = await api.get<MemberListResponse | Member[]>('/member/list')
   if (Array.isArray(res)) return res
   const list = (res as MemberListResponse).data ?? (res as MemberListResponse).members ?? []
-  // Map API field names to our Member interface
   return list.map((m: any) => ({
     member_id: m.member_id,
     name: m.name,
@@ -44,7 +43,6 @@ export async function saveMember(data: Member): Promise<Member> {
     mobile: data.mobile,
   }
   const res = await api.post<any>('/member/save', payload)
-  // API returns { status, message, data: MemberData }
   const m = res.data ?? res
   return {
     member_id: m.member_id,
@@ -56,3 +54,16 @@ export async function saveMember(data: Member): Promise<Member> {
     mobile: m.mobile ?? data.mobile,
   }
 }
+
+// Re-exports from the full service layer for code that imports from here
+export {
+  getMemberList,
+  getCurrentMember,
+  selectMember,
+  editMember,
+  deleteMember,
+  uploadPhoto,
+  deletePhoto,
+  memberService,
+} from '../services/memberService'
+export type { MemberProfile } from '../services/memberService'

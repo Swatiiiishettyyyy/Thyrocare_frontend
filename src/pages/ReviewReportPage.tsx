@@ -1,5 +1,5 @@
-import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useMemo } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Navbar, UploadReportStepper } from '../components'
 import breadcrumbChevron from '../assets/figma/upload-report/Vector.svg'
 import chevronDown from '../assets/figma/upload-report/Frame-4.svg'
@@ -13,17 +13,17 @@ const NAV_LINKS = [
   { label: 'Orders', href: '/orders' },
 ]
 
-const PARAMS = [
-  { name: 'Hemoglobin', range: '12–17 g/dL', value: '13.5G/dl', dot: '#10B981' },
-  { name: 'White Blood Cells', range: '12–17 g/dL', value: '13.5G/dl', dot: '#10B981' },
-  { name: 'Red Blood Cells', range: '12–17 g/dL', value: '13.5G/dl', dot: '#10B981' },
-  { name: 'Platelets', range: '12–17 g/dL', value: '13.5G/dl', dot: '#10B981' },
-  { name: 'Fasting Blood Sugar', range: '12–17 g/dL', value: '13.5G/dl', dot: '#F59E0B' },
-  { name: 'Total Cholesterol', range: '12–17 g/dL', value: '13.5G/dl', dot: '#F59E0B' },
-]
+type UploadedPayload = Record<string, unknown> | null
 
 export default function ReviewReportPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const uploaded = ((location.state as any)?.uploaded ?? null) as UploadedPayload
+
+  const fileName = useMemo(() => {
+    const d = uploaded && typeof uploaded === 'object' ? (uploaded as any).data ?? uploaded : null
+    return String(d?.report_name ?? d?.file_name ?? d?.fileName ?? 'Uploaded report').trim() || 'Uploaded report'
+  }, [uploaded])
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff', fontFamily: 'Poppins, sans-serif', overflowX: 'hidden' }}>
@@ -105,7 +105,7 @@ export default function ReviewReportPage() {
                 Review Extracted Data
               </div>
               <div className="review-extracted-subtitle" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: 'var(--type-body)', lineHeight: 'var(--lh-body)', color: '#414141' }}>
-                6 parameters found · 2 abnormal
+                Your report has been uploaded successfully.
               </div>
             </div>
 
@@ -136,37 +136,27 @@ export default function ReviewReportPage() {
 
             {/* Parameters */}
             <div className="review-extracted-params" style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(8px, 1.2vmin, 9px)' }}>
-              {PARAMS.map((p, i) => (
-                <div
-                  key={i}
-                  className="review-extracted-paramRow"
-                  style={{
-                    border: '1px solid #E7E1FF',
-                    borderRadius: 'clamp(14px, 2vmin, 20px)',
-                    padding: 'clamp(8px, 1.4vmin, 10px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 'clamp(24px, 12vw, 60px)',
-                  }}
-                >
-                  <div className="review-extracted-paramLeft" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(12px, 4vw, 17px)', minWidth: 0 }}>
-                    <div className="review-extracted-dot" style={{ width: 7, height: 7, borderRadius: 999, background: p.dot, flexShrink: 0 }} />
-                    <div style={{ minWidth: 0 }}>
-                      <div className="review-extracted-paramName" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'var(--type-body)', lineHeight: '20px', color: '#161616', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {p.name}
-                      </div>
-                      <div className="review-extracted-paramRange" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 400, fontSize: 'var(--type-body)', lineHeight: '20px', color: '#828282', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        Range: {p.range}
-                      </div>
-                    </div>
+              <div
+                className="review-extracted-paramRow"
+                style={{
+                  border: '1px solid #E7E1FF',
+                  borderRadius: 'clamp(14px, 2vmin, 20px)',
+                  padding: 'clamp(10px, 1.4vmin, 12px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 24,
+                }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+                  <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'var(--type-body)', color: '#161616', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {fileName}
                   </div>
-
-                  <div className="review-extracted-paramValue" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 400, fontSize: 'var(--type-body)', lineHeight: '20px', color: '#161616', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                    {p.value}
+                  <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 400, fontSize: 'var(--type-body)', color: '#828282' }}>
+                    Saved to your uploaded reports.
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
 
             {/* CTA */}

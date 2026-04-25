@@ -1,4 +1,5 @@
 import { api } from './client'
+import { fetchUploadedReports } from './upload'
 
 /**
  * POST /orders/create — Orders module: create internal order + Razorpay order from cart.
@@ -203,6 +204,7 @@ const THYROCARE_STATUS_LABEL_BY_CODE: Record<string, string> = {
   COLLECTION_DONE: 'Sample collected',
   COLLECTED: 'Sample collected',
   SERVICE_COMPLETED: 'Sample collected',
+  SERVICED: 'Sample collected',
 
   APPOINTMENT_DATE: 'Sample received by lab',
   APPOINTMENT: 'Sample received by lab',
@@ -211,6 +213,7 @@ const THYROCARE_STATUS_LABEL_BY_CODE: Record<string, string> = {
   SAMPLE_RECEIVED: 'Sample received by lab',
   SAMPLE_RECEIVED_BY_LAB: 'Sample received by lab',
   LAB_RECEIVED: 'Sample received by lab',
+  IMPORTED: 'Sample received by lab',
   IMPORTED_TO_LAB: 'Sample received by lab',
   RECEIVED_AT_LAB: 'Sample received by lab',
   AT_LAB: 'Sample received by lab',
@@ -236,12 +239,15 @@ const THYROCARE_STATUS_LABEL_BY_PHRASE: Record<string, string> = {
   'order booked': 'Order booked',
   assigned: 'Sample collected',
   'sample collected': 'Sample collected',
+  'serviced': 'Sample collected',
   'phlebo assigned': 'Sample collected',
   scheduled: 'Sample received by lab',
+  imported: 'Sample received by lab',
   'sample imported': 'Sample received by lab',
   'sample received': 'Sample received by lab',
   'sample received by lab': 'Sample received by lab',
   processing: 'Processing',
+  'under processing': 'Processing',
   'in progress': 'Processing',
   done: 'Report ready',
   'report ready': 'Report ready',
@@ -513,7 +519,7 @@ export function thyrocareCombinedStatusDisplayLabel(
   return 'Order booked'
 }
 
-function thyrocareMilestoneIndexForLabel(label: string): number {
+export function thyrocareMilestoneIndexForLabel(label: string): number {
   switch (label) {
     case 'Order placed':
     case 'Order booked': return 0
@@ -900,12 +906,77 @@ export function getMyReportRowKey(r: MyReportRow, index: number): string {
  * Primary: `GET /thyrocare/reports/my-reports` (see deployed API on App Runner).
  * On 404 only, falls back to `GET /thyrocare/orders/my-orders`.
  */
-export async function fetchMyReports(): Promise<MyReportRow[]> {
+export async function fetchMyReports(memberId?: number): Promise<MyReportRow[]> {
   try {
-    const res = await api.get<any>('/thyrocare/reports/my-reports')
-    return normalizeMyReportsPayload(res)
+    const qs = memberId != null ? `?member_id=${encodeURIComponent(String(memberId))}` : ''
+    const res = await api.get<any>(`/thyrocare/reports/my-reports${qs}`)
+    const labRows = normalizeMyReportsPayload(res)
       .map(enrichMyReportRowFromNestedResults)
       .map(attachCanonicalPatientAndOrderIds)
+    // External uploads (best-effort; older backends may not have this).
+    let uploaded: MyReportRow[] = []
+    try {
+      uploaded = normalizeMyReportsPayload(await fetchUploadedReports(memberId))
+        .map(enrichMyReportRowFromNestedResults)
+        .map(attachCanonicalPatientAndOrderIds)
+    } catch {
+      uploaded = []
+    }
+    const normalizeUploadedPath = (raw: string): string => {
+      let s = String(raw ?? '').trim()
+      if (!s) return ''
+      // Remove query/hash
+      s = s.split('#')[0]!.split('?')[0]!
+      // If absolute URL, keep only pathname.
+      if (/^https?:\/\//i.test(s)) {
+        try {
+          const u = new URL(s)
+          s = u.pathname || ''
+        } catch {
+          // ignore parse errors
+        }
+      }
+      // Normalize slashes + leading slash.
+      s = s.replace(/\\/g, '/')
+      if (s && !s.startsWith('/')) s = `/${s}`
+      // Collapse duplicate slashes.
+      s = s.replace(/\/{2,}/g, '/')
+      return s
+    }
+    const dedupeKey = (r: MyReportRow, i: number): string => {
+      // Prefer the same key we use for routing when it is stable.
+      const k = getMyReportRowKey(r, i)
+      if (k && !k.startsWith('idx-')) return k
+      // Fallback for external uploads when ids are missing/renamed across endpoints.
+      const rec = r as Record<string, unknown>
+      const data =
+        rec.data != null && typeof rec.data === 'object' && !Array.isArray(rec.data)
+          ? (rec.data as Record<string, unknown>)
+          : rec
+      const mid = String((data.member_id ?? data.memberId ?? '') as any).trim()
+      const name = String((data.report_name ?? data.file_name ?? data.fileName ?? '') as any).trim()
+      const pathRaw = String((data.file_path ?? data.path ?? data.url ?? '') as any).trim()
+      const path = normalizeUploadedPath(pathRaw)
+      const created = String((data.created_at ?? data.uploaded_at ?? data.report_date ?? data.updated_at ?? data.timestamp ?? '') as any).trim()
+      const id = String((data.upload_id ?? data.report_id ?? data.id ?? '') as any).trim()
+      const size = String((data.file_size ?? data.size ?? '') as any).trim()
+      // If we have a stored file path, it’s the strongest identity across endpoints.
+      // This collapses duplicates where the same uploaded file is returned by both APIs.
+      if (path) return ['uploaded', mid || '', path].filter(Boolean).join('|')
+      return [id || '', mid || '', name || '', created || '', size || ''].filter(Boolean).join('|') || k
+    }
+
+    const merged = [...labRows, ...uploaded]
+    const out: MyReportRow[] = []
+    const seen = new Set<string>()
+    for (let i = 0; i < merged.length; i++) {
+      const row = merged[i]!
+      const key = dedupeKey(row, i)
+      if (seen.has(key)) continue
+      seen.add(key)
+      out.push(row)
+    }
+    return out
   } catch (e: unknown) {
     const status = (e as { status?: number })?.status
     if (status === 404) {

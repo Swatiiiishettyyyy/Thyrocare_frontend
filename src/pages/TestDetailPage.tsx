@@ -64,7 +64,7 @@ function groupParameters(list: { id: number; name: string; group_name?: string |
   return [...map.entries()].sort(([a], [b]) => a.localeCompare(b))
 }
 
-export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?: number; onAddToCart?: (test: TestCardProps) => void }) {
+export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?: number; onAddToCart?: (test: TestCardProps) => boolean }) {
   const navigate = useNavigate()
   const location = useLocation()
   const { id } = useParams<{ id: string }>()
@@ -215,7 +215,7 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
   function submitAddToCart() {
     if (!onAddToCart) return
     if (!card) return
-    onAddToCart({
+    const ok = onAddToCart({
       ...card,
       name: card.name || 'Test',
       price: card.price || '0',
@@ -224,7 +224,7 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
       thyrocareProductId: product?.id ?? thyrocareProductId,
       quantity: qty,
     })
-    navigate('/cart')
+    if (ok) navigate('/cart')
   }
 
   /** Only block About text while detail is loading if we still have no `about` (catalog row may omit it). */

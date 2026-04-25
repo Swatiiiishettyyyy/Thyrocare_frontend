@@ -175,10 +175,15 @@ export default function TimeSlotPage({ cartCount, items, session, onSessionUpdat
           [gid]: { ...prev[gid], slots: daySlots, loadingSlots: false, dropdownOpen: true, slotError: null },
         }))
       }
-    } catch {
+    } catch (e: any) {
+      const msg =
+        (typeof e?.data?.message === 'string' && e.data.message) ||
+        (typeof e?.message === 'string' && e.message) ||
+        'Unable to load slots from the server. Please try again or pick another date.'
+      console.error('[timeslot] searchSlots failed', { group_id: gid, date: dateStr, err: e })
       setGroupUi(prev => ({
         ...prev,
-        [gid]: { ...prev[gid], slots: [], loadingSlots: false, dropdownOpen: false, slotError: 'Unable to load slots from the server. Please try again or pick another date.' },
+        [gid]: { ...prev[gid], slots: [], loadingSlots: false, dropdownOpen: false, slotError: msg },
       }))
     }
   }
@@ -196,10 +201,15 @@ export default function TimeSlotPage({ cartCount, items, session, onSessionUpdat
     const dateStr = toDateStr(ui.selectedDate)
     try {
       await setAppointment(gid, dateStr, slot.start_time)
-    } catch {
+    } catch (e: any) {
+      const msg =
+        (typeof e?.data?.message === 'string' && e.data.message) ||
+        (typeof e?.message === 'string' && e.message) ||
+        'Could not save this time slot. Please try again.'
+      console.error('[timeslot] setAppointment failed', { group_id: gid, date: dateStr, slot: slot.start_time, err: e })
       setGroupUi(prev => ({
         ...prev,
-        [gid]: { ...prev[gid], settingAppt: false, slotError: 'Could not save this time slot. Please try again.' },
+        [gid]: { ...prev[gid], settingAppt: false, slotError: msg },
       }))
       return
     }

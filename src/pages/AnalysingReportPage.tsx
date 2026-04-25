@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Navbar, UploadReportStepper } from '../components'
 import breadcrumbChevron from '../assets/figma/upload-report/Vector.svg'
+import { uploadExternalReport } from '../api/upload'
+import { useAuth } from '../context/AuthContext'
 
 const NAV_LINKS = [
   { label: 'Tests', href: '/' },
@@ -13,21 +15,55 @@ const NAV_LINKS = [
 
 export default function AnalysingReportPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { currentMember } = useAuth()
   const [progress, setProgress] = useState(0)
+  const [error, setError] = useState<string | null>(null)
+  const startedRef = useRef(false)
 
   useEffect(() => {
+    // React StrictMode runs effects twice in dev; avoid double-upload (which creates duplicates in DB).
+    if (startedRef.current) return
+    startedRef.current = true
+
+    const file = (location.state as any)?.file as File | undefined
+    const labName = String((location.state as any)?.labName ?? '').trim() || undefined
+    const memberIdFromState = (location.state as any)?.memberId
+    const memberId =
+      memberIdFromState != null && String(memberIdFromState).trim() !== ''
+        ? Number(memberIdFromState)
+        : (currentMember as any)?.member_id != null
+          ? Number((currentMember as any).member_id)
+          : undefined
+    if (!file) {
+      setError('No file selected.')
+      return
+    }
+
+    let cancelled = false
+    void uploadExternalReport(file, Number.isFinite(Number(memberId)) ? Number(memberId) : undefined, labName)
+      .then((payload) => {
+        if (cancelled) return
+        // Pass created row to review page
+        setProgress(100)
+        setTimeout(() => navigate('/review-report', { state: { uploaded: payload } }), 400)
+      })
+      .catch((e: any) => {
+        if (cancelled) return
+        setError(e?.message || 'Upload failed.')
+      })
+
     const interval = setInterval(() => {
       setProgress(p => {
         if (p >= 100) {
           clearInterval(interval)
-          setTimeout(() => navigate('/review-report'), 500)
           return 100
         }
         return p + 2
       })
     }, 60)
-    return () => clearInterval(interval)
-  }, [navigate])
+    return () => { cancelled = true; clearInterval(interval) }
+  }, [navigate, location.state, currentMember])
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Poppins', sans-serif" }}>
@@ -59,7 +95,7 @@ export default function AnalysingReportPage() {
           }} />
 
           <p style={{ fontSize: 14, color: '#9CA3AF', margin: 0, textAlign: 'center' }}>
-            This may take a few seconds. We are analysing your report
+            {error ? error : 'This may take a few seconds. We are analysing your report'}
           </p>
 
           {/* Progress bar */}

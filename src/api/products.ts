@@ -4,6 +4,9 @@ import type { TestCardProps } from '../types'
 export interface ThyrocareProduct {
   id: number
   thyrocare_id: string
+  /** Display name from DB/view layer (preferred for UI). */
+  product_name?: string
+  /** Fallback name (legacy). */
   name: string
   type: string
   no_of_tests_included: number
@@ -28,6 +31,10 @@ export interface ThyrocareProduct {
   is_active?: boolean
   updated_at?: string | null
   created_at?: string | null
+  /** Actual Thyrocare price (used as UI selling price). */
+  thyrocare_price?: number | null
+  /** Thyrocare listing/MRP (used as UI strike-off price). */
+  thyrocare_listing_price?: number | null
 }
 
 const PAGE_SIZE = 100
@@ -217,21 +224,23 @@ function cardProductType(t: string): 'Single' | 'Package' {
 }
 
 export function toTestCard(p: ThyrocareProduct): TestCardProps {
-  // Pricing rule:
-  // - Selling price shown in UI = Thyrocare price.
-  // - Listing MRP shown in UI = our previous “selling” (computed from Thyrocare price + batch discount).
-  // - Default batch/offer is 40% (updated from 33%).
-  const tcSelling = Number(p.selling_price ?? 0) || 0
-  const mrp = tcSelling > 0 ? tcSelling / (1 - DEFAULT_DISCOUNT_PERCENT / 100) : Number(p.listing_price ?? 0) || 0
-  const discount = `${DEFAULT_DISCOUNT_PERCENT}% OFF`
+  // Pricing rule (as per backend schema):
+  // - Actual price shown in UI = `thyrocare_price`
+  // - Strike-off price shown in UI = `thyrocare_listing_price`
+  const actual = Number(p.thyrocare_price ?? 0) || 0
+  const strike = Number(p.thyrocare_listing_price ?? 0) || 0
+  const discount =
+    Number.isFinite(Number(p.discount_percentage))
+      ? `${Math.round(Number(p.discount_percentage))}% OFF`
+      : `${DEFAULT_DISCOUNT_PERCENT}% OFF`
 
   return {
     thyrocareProductId: p.id,
     maxBeneficiaries: p.beneficiaries_max,
-    name: p.name,
+    name: String(p.product_name ?? p.name ?? '').trim() || String(p.name ?? '').trim(),
     description: p.short_description ?? p.about ?? `${p.no_of_tests_included} tests included`,
-    price: String(Math.round(tcSelling)),
-    originalPrice: String(Math.round(mrp)),
+    price: String(Math.round(actual)),
+    originalPrice: String(Math.round(strike)),
     offerPercent: discount,
     tests: p.no_of_tests_included,
     fasting: p.is_fasting_required ? 'Fasting Required' : 'No Fasting Required',

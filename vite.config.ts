@@ -27,6 +27,20 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       strictPort: true,
+      proxy: {
+        '/auth': { target: 'https://7qmg64nu2z.ap-south-1.awsapprunner.com', changeOrigin: true, secure: true },
+        '/member': { target: 'https://7qmg64nu2z.ap-south-1.awsapprunner.com', changeOrigin: true, secure: true },
+        '/cart': { target: 'https://7qmg64nu2z.ap-south-1.awsapprunner.com', changeOrigin: true, secure: true },
+        '/order': { target: 'https://7qmg64nu2z.ap-south-1.awsapprunner.com', changeOrigin: true, secure: true },
+        '/report': { target: 'https://7qmg64nu2z.ap-south-1.awsapprunner.com', changeOrigin: true, secure: true },
+        '/test': { target: 'https://7qmg64nu2z.ap-south-1.awsapprunner.com', changeOrigin: true, secure: true },
+        '/package': { target: 'https://7qmg64nu2z.ap-south-1.awsapprunner.com', changeOrigin: true, secure: true },
+        '/address': { target: 'https://7qmg64nu2z.ap-south-1.awsapprunner.com', changeOrigin: true, secure: true },
+        '/slot': { target: 'https://7qmg64nu2z.ap-south-1.awsapprunner.com', changeOrigin: true, secure: true },
+        '/thyrocare': { target: 'https://7qmg64nu2z.ap-south-1.awsapprunner.com', changeOrigin: true, secure: true },
+        '/pincode': { target: 'https://7qmg64nu2z.ap-south-1.awsapprunner.com', changeOrigin: true, secure: true },
+        '/upload': { target: 'https://7qmg64nu2z.ap-south-1.awsapprunner.com', changeOrigin: true, secure: true },
+      },
     },
     test: {
       globals: true,

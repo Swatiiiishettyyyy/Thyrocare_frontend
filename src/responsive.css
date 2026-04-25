@@ -558,7 +558,7 @@
   }
   .organ-paramValue {
     font-size: 16px !important;
-    line-height: 31px !important;
+    line-height: 20px !important;
     letter-spacing: -0.035em !important;
   }
   .organ-paramUnit {
@@ -729,7 +729,7 @@
 @media (max-width: 768px) {
   .order-detail-inner {
     max-width: 100% !important;
-    padding: clamp(14px, 4.2vw, 18px) clamp(12px, 4vw, 16px) clamp(28px, 8vw, 44px) !important;
+    padding: clamp(10px, 3.2vw, 14px) clamp(12px, 4vw, 16px) clamp(28px, 8vw, 44px) !important;
   }
 
   /* Mobile: blobs can create perceived misalignment */
@@ -740,6 +740,19 @@
   .order-detail-backBtn {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  /* Reduce the extra gap between "Back to Orders" and the hero card on mobile */
+  .order-detail-stack {
+    margin-top: 10px !important;
+    gap: 16px !important;
+  }
+
+  /* Members & addresses: secondary text smaller on mobile */
+  .order-detail-memberMeta,
+  .order-detail-addressLine {
+    font-size: 12px !important;
+    line-height: 18px !important;
   }
 }
 .order-detail-bg {
@@ -2610,7 +2623,7 @@
     grid-template-rows: auto auto auto;
     align-items: center;
     column-gap: 12px;
-    row-gap: 16px;
+    row-gap: 10px;
     padding: 10px 12px !important;
     height: auto !important;
     min-height: 0;
@@ -2664,30 +2677,40 @@
     min-height: 29px;
   }
 
+  /* Ensure the whole search wrapper participates in the grid (not just the inner form). */
+  .navbar-search-wrap {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
   .navbar-search {
     display: flex !important;
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
     flex: none !important;
-    height: 44px;
+    height: 42px;
     border-radius: 153px;
     box-sizing: border-box;
     padding-left: 16px;
     padding-right: 8px;
   }
 
-  /* Hide location row + search bar on mobile */
-  .navbar-location-mobile {
-    display: none !important;
+  .navbar-search-input {
+    font-size: 12px !important;
   }
-  .navbar-search-wrap {
-    display: none !important;
-  }
+
+  /* Hide location + search on mobile (keep just top row actions). */
+  .navbar-location-mobile,
+  .navbar-search-wrap,
   .navbar-search {
     display: none !important;
   }
-  /* Collapse navbar grid back to a single row */
+
   .navbar-inner {
     grid-template-rows: auto !important;
     row-gap: 0 !important;
@@ -2749,6 +2772,34 @@
   .navbar-cart-btn svg {
     width: 20px !important;
     height: 20px !important;
+  }
+
+  /* On mobile, move account/login into the hamburger drawer */
+  .navbar-member-switch-inline {
+    display: none !important;
+  }
+  .navbar-member-switch-drawer {
+    display: block !important;
+  }
+
+  /* Login button (when logged out) should match the navbar action sizing on mobile */
+  .navbar-login-btn {
+    height: 32px !important;
+    padding: 0 12px !important;
+    border-radius: 999px !important;
+    font-size: 13px !important;
+    gap: 8px !important;
+  }
+
+  /* Keep dropdown as a normal popover inside the drawer */
+  .member-switch-panel {
+    position: absolute !important;
+    left: auto !important;
+    right: 0 !important;
+    top: 100% !important;
+    width: 280px !important;
+    max-width: calc(100vw - 24px) !important;
+    margin-top: 8px !important;
   }
 }
 
@@ -3915,6 +3966,14 @@
     align-items: stretch;
     margin-bottom: 22px;
   }
+  .reports-page-title {
+    text-align: center;
+  }
+  .reports-header-actions {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
   .reports-upload-btn {
     width: 100%;
     justify-content: center;
@@ -3928,6 +3987,11 @@
     width: 100%;
     margin: 0;
     padding-bottom: 8px;
+    display: flex;
+    justify-content: center;
+  }
+  .reports-tab-group {
+    margin: 0 auto;
   }
   .reports-tab-btn {
     padding: 8px 12px;

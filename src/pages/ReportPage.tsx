@@ -294,7 +294,7 @@ function BiomarkerCard({ b }: { b: Biomarker }) {
         <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 13, fontWeight: 400, color: '#828282' }}>Normal range: {b.normalRange}</span>
       </div>
 
-      <div style={{ position: 'relative', height: 55 }}>
+      <div style={{ position: 'relative', height: 63 }}>
         <div style={{ position: 'absolute', left: `${p}%`, top: 0, transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
           <div style={{ width: 10, height: 10, borderRadius: '50%', background: ss.dot }} />
           <div style={{
@@ -339,6 +339,14 @@ export default function ReportPage() {
   const [pdfLoading, setPdfLoading] = useState(false)
   const [pdfError, setPdfError] = useState<string | null>(null)
   const [members, setMembers] = useState<Member[]>([])
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth <= 520)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const onResize = () => setIsMobile(window.innerWidth <= 520)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -610,7 +618,7 @@ export default function ReportPage() {
     <div style={{ minHeight: '100vh', background: '#F9FAFB', fontFamily: "'Poppins', sans-serif" }}>
       <Navbar logoSrc="/favicon.svg" logoAlt="Nucleotide" links={NAV_LINKS} ctaLabel="My Cart" onCtaClick={() => navigate('/cart')} />
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 40px 40px' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: isMobile ? '0 16px 32px' : '0 40px 40px' }}>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 0 0', marginBottom: 20 }}>
           <span onClick={() => navigate('/reports')} style={{ fontSize: 15, color: '#9CA3AF', cursor: 'pointer', fontWeight: 400 }}>Reports</span>
@@ -618,7 +626,7 @@ export default function ReportPage() {
           <span style={{ fontSize: 15, color: '#1B1F3B', fontWeight: 600 }}>Report Detail</span>
         </div>
 
-        <div style={{ background: '#1B1F3B', borderRadius: 16, padding: '36px 36px 32px', marginBottom: 12 }}>
+        <div className="report-detail-heroCard" style={{ background: '#1B1F3B', borderRadius: 16, padding: isMobile ? '22px 16px 18px' : '36px 36px 32px', marginBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10, flexWrap: 'wrap' }}>
             <h2 style={{ fontSize: 24, fontWeight: 500, color: '#fff', margin: 0 }}>{title}</h2>
             <span style={{ fontSize: 12, color: '#9CA3AF', border: '1px solid #4B5280', borderRadius: 20, padding: '3px 14px', whiteSpace: 'nowrap' }}>{typeBadge}</span>
@@ -638,17 +646,29 @@ export default function ReportPage() {
                 Patient: {patientDisplay}
               </span>
             </div>
-            <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
+            <div className="report-detail-heroActions" style={{ display: 'flex', gap: 10, flexShrink: 0, flexWrap: 'wrap', justifyContent: isMobile ? 'stretch' : 'flex-end', width: isMobile ? '100%' : undefined }}>
               <button
                 type="button"
                 onClick={() => void handleDownloadPdf()}
                 disabled={pdfLoading}
-                style={{ background: 'none', border: '1.5px solid #4B5280', color: '#fff', borderRadius: 10, padding: '10px 20px', fontSize: 13, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7 }}
+                className="report-detail-heroActionBtn"
+                style={{ background: 'none', border: '1.5px solid #4B5280', color: '#fff', borderRadius: 10, padding: '10px clamp(12px, 3.2vw, 20px)', fontSize: 13, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, flex: isMobile ? '1 1 100%' : '1 1 150px', width: isMobile ? '100%' : undefined, whiteSpace: isMobile ? 'normal' : 'nowrap' }}
               >
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M5 7l3 3 3-3M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1" stroke="#fff" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 {pdfLoading ? 'Loading…' : 'Download PDF'}
               </button>
-              <button type="button" style={{ background: 'none', border: '1.5px solid #4B5280', color: '#fff', borderRadius: 10, padding: '10px 20px', fontSize: 13, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7 }}>
+              <button
+                type="button"
+                onClick={() => navigate('/compare-reports', { state: { report } })}
+                className="report-detail-heroActionBtn"
+                style={{ background: 'none', border: '1.5px solid #4B5280', color: '#fff', borderRadius: 10, padding: '10px clamp(12px, 3.2vw, 20px)', fontSize: 13, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, flex: isMobile ? '1 1 100%' : '1 1 170px', width: isMobile ? '100%' : undefined, whiteSpace: isMobile ? 'normal' : 'nowrap' }}
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M2 12V4M2 12h12M5 10l2-3 3 2 3-5" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Compare reports
+              </button>
+              <button type="button" className="report-detail-heroActionBtn" style={{ background: 'none', border: '1.5px solid #4B5280', color: '#fff', borderRadius: 10, padding: '10px clamp(12px, 3.2vw, 20px)', fontSize: 13, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, flex: isMobile ? '1 1 100%' : '1 1 120px', width: isMobile ? '100%' : undefined, whiteSpace: isMobile ? 'normal' : 'nowrap' }}>
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M11 2a2 2 0 110 4 2 2 0 010-4zM5 7a2 2 0 110 4A2 2 0 015 7zm6 3a2 2 0 110 4 2 2 0 010-4zM7 8.5l2-1.5M7 9.5l2 1.5" stroke="#fff" strokeWidth="1.2" strokeLinecap="round"/></svg>
                 Share
               </button>
