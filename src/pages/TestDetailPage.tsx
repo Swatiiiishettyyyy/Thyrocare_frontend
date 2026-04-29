@@ -146,7 +146,7 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
   }, [detailFromApi, catalogProduct, product])
   /** Long `about` from detail row, then catalog row (detail-only `null` must not hide list text). */
   const aboutLong = pickAboutText(detailFromApi?.about, catalogProduct?.about)
-  const shortDesc = pickAboutText(detailFromApi?.short_description, catalogProduct?.short_description)
+  const shortDesc = pickAboutText(detailFromApi?.about, catalogProduct?.about)
 
   // UI requirement: show `no_of_tests_included` in the "Parameters" stat tile (even if the detail API
   // also provides a `parameters[]` list). Fall back only when API value is missing/invalid.
@@ -162,6 +162,7 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
   const minPatients = product?.beneficiaries_min ?? 1
 
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>('About')
+  const tabsCardRef = useRef<HTMLDivElement>(null)
   const [qty, setQty] = useState(1)
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth <= 768)
 
@@ -379,15 +380,17 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
           <div className="test-detail-hero" style={{
             background: 'linear-gradient(90deg, #101129 0%, #2A2C5B 100%)',
             borderRadius: 20,
-            padding: isMobile ? '22px' : 'clamp(24px, 2.8vmin, 36px)',
+            padding: isMobile ? '22px 22px 18px' : 'clamp(24px, 2.8vmin, 36px)',
             display: 'flex',
             flexDirection: isMobile ? 'column' : 'row',
             gap: isMobile ? 16 : 28,
-            alignItems: 'flex-start',
+            alignItems: isMobile ? 'stretch' : 'flex-start',
             position: 'relative',
             overflow: 'hidden',
-            /* Keep pills directly under the hero (card can overlap via heroWrap paddingBottom). */
             marginBottom: 0,
+            alignSelf: isMobile ? 'flex-start' : undefined,
+            width: isMobile ? '100%' : undefined,
+            height: isMobile ? 'fit-content' : undefined,
           }}>
             <div className="test-detail-typeRibbon" style={{
               position: 'absolute', top: 0, right: 0,
@@ -415,7 +418,7 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
             }}>{type === 'Single' ? 'Single Test' : type}</div>
 
             <div className="test-detail-info" style={{
-              flex: '1 1 400px', display: 'flex', flexDirection: 'column', gap: isMobile ? 18 : 20,
+              flex: isMobile ? '0 0 auto' : '1 1 400px', display: 'flex', flexDirection: 'column', gap: isMobile ? 12 : 20,
               /* Reserve space for the pricing card so tiles don't wrap */
               paddingRight: isMobile ? 0 : 'clamp(280px, 26vw, 420px)',
               /* More room above fasting + below meta tiles (Figma-like) */
@@ -699,7 +702,7 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
                   ? '0 4px 18px rgba(124, 58, 237, 0.38), inset 0 1px 0 rgba(255,255,255,0.2)'
                   : undefined,
                 /* Let the button "hang" below the card */
-                marginBottom: 'calc(-1 * clamp(18px, 3vmin, 28px))',
+                marginBottom: isMobile ? 0 : 'calc(-1 * clamp(18px, 3vmin, 28px))',
                 position: 'relative',
                 zIndex: 3,
                 width: isMobile ? '100%' : undefined,
@@ -715,7 +718,7 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
                 justifyContent: 'center',
                 gap: 9,
                 flexWrap: 'wrap',
-                marginTop: 'clamp(18px, 3vmin, 28px)', /* keep NABL text readable under the hanging button */
+                marginTop: isMobile ? 0 : 'clamp(18px, 3vmin, 28px)', /* keep NABL text readable under the hanging button */
               }}>
                 <img src={nablIcon} alt="" width={22} height={21} style={{ display: 'block' }} />
                 <span style={{ color: '#828282', fontSize: 'clamp(12px, 1.45vmin, 14px)', fontFamily: 'Inter, sans-serif' }}>
@@ -730,20 +733,15 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
           className="test-detail-pills"
           style={{
             display: 'flex',
-            gap: isMobile ? 0 : 'clamp(18px, 4.2vmin, 58px)', /* mobile gap controlled in responsive.css */
+            gap: isMobile ? 16 : 'clamp(18px, 4.2vmin, 58px)',
             alignItems: 'center',
             justifyContent: isMobile ? 'center' : 'flex-start',
-            flexWrap: 'nowrap',
+            flexWrap: isMobile ? 'wrap' : 'nowrap',
             width: isMobile ? '100%' : undefined,
             boxSizing: 'border-box',
-            padding: isMobile ? '14px 0 18px' : '18px 0 22px',
-            paddingLeft: isMobile ? 0 : 'clamp(24px, 2.8vmin, 36px)',
-            /*
-              Keep this row visually *right under* the blue hero,
-              without changing the vertical placement of the sections below.
-            */
+            padding: isMobile ? '16px 12px 20px' : '18px 0 22px',
+            paddingLeft: isMobile ? 12 : 'clamp(24px, 2.8vmin, 36px)',
             marginTop: isMobile ? 0 : 'calc(-1 * clamp(110px, 14vmin, 170px))',
-            /* Allow tabs to sit closer — right under pricing card */
             marginBottom: isMobile ? 0 : 'clamp(34px, 5.2vmin, 72px)',
             color: '#101129',
             fontFamily: 'Poppins, sans-serif',
@@ -759,7 +757,7 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: isMobile ? 2 : 'clamp(8px, 1.2vmin, 10px)',
+                gap: isMobile ? 6 : 'clamp(8px, 1.2vmin, 10px)',
                 flexShrink: 0,
               }}
             >
@@ -770,16 +768,16 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
                 height={24}
                 style={{
                   display: 'block',
-                  width: isMobile ? 'clamp(12px, 3.4vw, 15px)' : 'clamp(20px, 2.8vmin, 28px)',
+                  width: isMobile ? 18 : 'clamp(20px, 2.8vmin, 28px)',
                   height: 'auto',
                   flexShrink: 0,
                 }}
               />
               <span
                 style={{
-                  fontSize: isMobile ? 'clamp(10px, 2.75vw, 11px)' : 'clamp(14px, 2vmin, 20px)',
+                  fontSize: isMobile ? 12 : 'clamp(14px, 2vmin, 20px)',
                   color: '#101129',
-                  lineHeight: isMobile ? 1.25 : 1.45,
+                  lineHeight: 1.4,
                   whiteSpace: 'nowrap',
                 }}
               >
@@ -789,12 +787,17 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
           ))}
         </div>
 
-        <div className="test-detail-tabsCard" style={{ borderRadius: 20, border: '1px solid #E7E1FF', overflow: 'hidden', marginTop: isMobile ? 24 : 0 }}>
+        <div ref={tabsCardRef} className="test-detail-tabsCard" style={{ borderRadius: 20, border: '1px solid #E7E1FF', overflow: 'hidden', marginTop: isMobile ? 24 : 0 }}>
           <div className="test-detail-tabs" style={{ display: 'flex', justifyContent: 'center', borderBottom: '1px solid #E7E1FF', background: '#fff', padding: isMobile ? '0 12px' : '0 20px' }}>
             {TABS.map(tab => (
-              <button key={tab} type="button" onClick={() => setActiveTab(tab)} style={{
-                padding: isMobile ? '16px 14px' : '18px 22px', border: 'none', background: 'none', cursor: 'pointer',
-                fontFamily: 'Poppins, sans-serif', fontSize: 16, fontWeight: 500,
+              <button key={tab} type="button" onClick={() => {
+                setActiveTab(tab)
+                setTimeout(() => {
+                  tabsCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }, 10)
+              }} style={{
+                padding: isMobile ? '14px 12px' : '18px 22px', border: 'none', background: 'none', cursor: 'pointer',
+                fontFamily: 'Poppins, sans-serif', fontSize: isMobile ? 14 : 16, fontWeight: 500,
                 color: activeTab === tab ? '#8B5CF6' : '#161616',
                 borderBottom: activeTab === tab ? '3px solid #8B5CF6' : '3px solid transparent',
                 marginBottom: -1,
@@ -802,15 +805,15 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
             ))}
           </div>
 
-          <div className="test-detail-tab-content" style={{ background: 'linear-gradient(0deg, #E7E1FF 0%, #fff 100%)', padding: '24px 32px 32px' }}>
+          <div className="test-detail-tab-content" style={{ background: 'linear-gradient(0deg, #E7E1FF 0%, #fff 100%)', padding: isMobile ? '20px 16px 24px' : '24px 32px 32px' }}>
             {activeTab === 'About' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(14px, 2.2vmin, 20px)' }}>
                 {aboutLoading ? (
                   <p style={{ color: '#828282', margin: 0, fontFamily: 'Inter, sans-serif' }}>Loading product details…</p>
-                ) : !isMobile ? (
+                ) : (
                   <p style={{
                     margin: 0,
-                    fontSize: 'clamp(13px, 1.6vmin, 15px)',
+                    fontSize: isMobile ? 13 : 'clamp(13px, 1.6vmin, 15px)',
                     color: '#414141',
                     fontFamily: 'Poppins, sans-serif',
                     lineHeight: 1.75,
@@ -818,7 +821,7 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
                   }}>
                     {aboutTabBody}
                   </p>
-                ) : null}
+                )}
 
                 <div
                   style={{
@@ -1107,6 +1110,7 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
                     gap: isMobile ? 10 : 'clamp(14px, 2.2vmin, 22px)',
                     width: 'min(100%, 664px)',
                     boxSizing: 'border-box',
+                    overflow: 'hidden',
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                       <img src={bestTimeIcon} alt="" width={20} height={20} style={{ display: 'block', flexShrink: 0 }} />
@@ -1115,7 +1119,6 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
                         fontWeight: 500,
                         color: '#101129',
                         fontFamily: 'Poppins, sans-serif',
-                        whiteSpace: 'nowrap',
                       }}>
                         Best Time for Sample
                       </span>
@@ -1124,27 +1127,28 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
                     <div style={{
                       background: '#E7E1FF',
                       borderRadius: 'clamp(8px, 1.2vmin, 10px)',
-                      padding: isMobile ? '10px 10px' : 'clamp(10px, 1.7vmin, 14px) clamp(14px, 2.2vmin, 18px)',
+                      padding: isMobile ? '8px 10px' : 'clamp(10px, 1.7vmin, 14px) clamp(14px, 2.2vmin, 18px)',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
-                      gap: 3,
-                      minWidth: isMobile ? 168 : 'clamp(220px, 28vmin, 369px)',
+                      gap: 2,
+                      minWidth: isMobile ? 0 : 'clamp(220px, 28vmin, 369px)',
+                      flex: isMobile ? '0 0 auto' : undefined,
                       textAlign: 'center',
                       boxSizing: 'border-box',
                     }}>
                       <span style={{
-                        fontSize: isMobile ? 11 : 'clamp(12px, 1.35vmin, 18px)',
+                        fontSize: isMobile ? 10 : 'clamp(12px, 1.35vmin, 18px)',
                         color: '#414141',
                         fontFamily: 'Inter, sans-serif',
-                        lineHeight: 1.5,
-                        whiteSpace: isMobile ? 'nowrap' : undefined,
+                        lineHeight: 1.4,
+                        whiteSpace: 'nowrap',
                       }}>
                         {isMobile ? 'Recommended time' : 'Recommended time for accurate results'}
                       </span>
                       <span style={{
-                        fontSize: isMobile ? 16 : 'clamp(14px, 1.7vmin, 24px)',
-                        fontWeight: 500,
+                        fontSize: isMobile ? 13 : 'clamp(14px, 1.7vmin, 24px)',
+                        fontWeight: 600,
                         color: '#101129',
                         fontFamily: 'Poppins, sans-serif',
                         letterSpacing: '-0.02em',

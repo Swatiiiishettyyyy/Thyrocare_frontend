@@ -6,16 +6,9 @@ import './responsive.css'
 import App from './App'
 import { AuthProvider } from './context/AuthContext'
 
-const BASENAME = '/labtest'
+const BASENAME = '/'
 
-// If this micro-frontend is opened at `/`, bounce to `/labtest/` so the basename matches
-// and the Router can render normally.
-if (typeof window !== 'undefined') {
-  const { pathname, search, hash } = window.location
-  if (!pathname.startsWith('/labtest')) {
-    window.location.replace(`/labtest${search}${hash}`)
-  }
-}
+
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

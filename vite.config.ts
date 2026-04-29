@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     // Deployed under the main web app at https://host/labtest/ (see nucleotide-web-app).
-    base: '/labtest/',
+    base: './',
     define: defineFromEnv,
     envDir: __dirname,
     plugins: [tailwindcss(), react()],

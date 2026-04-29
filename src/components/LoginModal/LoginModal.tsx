@@ -10,6 +10,16 @@ const LoginModal: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    const lock = isLoginModalOpen
+    document.body.style.overflow = lock ? 'hidden' : ''
+    document.documentElement.style.overflow = lock ? 'hidden' : ''
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+    }
+  }, [isLoginModalOpen])
+
+  useEffect(() => {
     if (isLoginModalOpen) {
       setMobile('')
       setError(null)
@@ -47,78 +57,113 @@ const LoginModal: React.FC = () => {
     if (error) setError(null)
   }
 
+  const isDisabled = isLoading || mobile.length < 10
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        backgroundColor: 'rgba(0,0,0,0.5)', padding: '70px 16px 16px',
+      }}
       onClick={closeLoginModal}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 sm:p-8 relative"
-        style={{ fontFamily: 'Poppins, sans-serif' }}
+        style={{
+          background: '#fff', borderRadius: 20, boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+          width: '100%', maxWidth: 420, padding: '32px 28px',
+          fontFamily: 'Poppins, sans-serif', position: 'relative',
+          boxSizing: 'border-box',
+        }}
         onClick={e => e.stopPropagation()}
       >
         {/* Close button */}
         <button
           onClick={closeLoginModal}
-          className="absolute top-3 right-3"
           aria-label="Close"
           type="button"
           style={{
-            width: 40,
-            height: 40,
-            borderRadius: 999,
-            background: '#F7F7F7',
-            border: '1px solid rgba(231, 225, 255, 0.95)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            position: 'absolute', top: 16, right: 16,
+            width: 36, height: 36, borderRadius: '50%',
+            background: '#F7F7F7', border: '1px solid #E7E1FF',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer',
           }}
         >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden>
             <path d="M1 1l12 12M13 1L1 13" stroke="#24254F" strokeWidth="1.8" strokeLinecap="round" />
           </svg>
         </button>
 
         {/* Header */}
-        <div className="mb-6 text-center">
-          <div
-            className="mx-auto mb-4"
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 999,
-              background: '#E7E1FF',
-              border: '1px solid rgba(231, 225, 255, 0.95)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+          <div style={{
+            width: 52, height: 52, borderRadius: '50%',
+            background: '#E7E1FF', border: '1px solid #E7E1FF',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto 16px',
+          }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
               <path
                 d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                stroke="#101129"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                stroke="#8B5CF6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
               />
             </svg>
           </div>
-          <h2 style={{ fontSize: 22, fontWeight: 600, color: '#101129', margin: 0, lineHeight: 1.15 }}>
+          <h2 style={{ fontSize: 22, fontWeight: 600, color: '#101129', margin: 0, lineHeight: 1.2 }}>
             Login to Nucleotide
           </h2>
-          <p style={{ fontSize: 13, color: '#828282', margin: '8px 0 0', lineHeight: 1.4 }}>
+          <p style={{ fontSize: 13, color: '#828282', margin: '8px 0 0', lineHeight: 1.5, fontFamily: 'Inter, sans-serif' }}>
             Enter your mobile number to receive an OTP
           </p>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Mobile Number</label>
-            <div className="flex items-center border rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 border-gray-300">
-              <span className="px-3 py-3 bg-gray-50 text-gray-600 text-sm font-medium border-r border-gray-300 select-none">
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <label style={{ fontSize: 13, fontWeight: 500, color: '#374151', fontFamily: 'Inter, sans-serif' }}>
+                Mobile Number
+              </label>
+              {'contacts' in navigator && (navigator as any).contacts?.select && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const contacts = await (navigator as any).contacts.select(['tel'], { multiple: false })
+                      if (contacts?.[0]?.tel?.[0]) {
+                        const raw = contacts[0].tel[0].replace(/\D/g, '').slice(-10)
+                        setMobile(raw)
+                        if (error) setError(null)
+                      }
+                    } catch { /* user cancelled */ }
+                  }}
+                  style={{
+                    background: 'none', border: 'none', padding: 0,
+                    color: '#8B5CF6', fontSize: 12, fontWeight: 500,
+                    fontFamily: 'Inter, sans-serif', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 4,
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="#8B5CF6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  From contacts
+                </button>
+              )}
+            </div>
+            <div style={{
+              display: 'flex', alignItems: 'center',
+              border: `1.5px solid ${error ? '#EF4444' : '#E7E1FF'}`,
+              borderRadius: 12,
+              transition: 'border-color 0.15s',
+            }}>
+              <span style={{
+                padding: '0 12px', height: 48, display: 'flex', alignItems: 'center',
+                background: '#F9FAFB', color: '#6B7280', fontSize: 14, fontWeight: 500,
+                borderRight: '1.5px solid #E7E1FF', fontFamily: 'Inter, sans-serif',
+                flexShrink: 0, userSelect: 'none',
+                borderRadius: '10px 0 0 10px',
+              }}>
                 +91
               </span>
               <input
@@ -129,37 +174,43 @@ const LoginModal: React.FC = () => {
                 value={mobile}
                 onChange={handleMobileChange}
                 placeholder="Enter 10-digit number"
-                className="flex-1 px-3 py-3 text-sm outline-none bg-white"
+                style={{
+                  flex: 1, height: 48, padding: '0 14px', border: 'none', outline: 'none',
+                  fontSize: 14, color: '#101129', background: '#fff',
+                  fontFamily: 'Inter, sans-serif',
+                  borderRadius: '0 10px 10px 0',
+                  minWidth: 0,
+                }}
                 maxLength={10}
                 disabled={isLoading}
               />
             </div>
             {error && (
-              <p className="mt-2 text-xs text-red-500">{error}</p>
+              <p style={{ marginTop: 6, fontSize: 12, color: '#EF4444', fontFamily: 'Inter, sans-serif' }}>{error}</p>
             )}
           </div>
 
           <button
             type="submit"
-            disabled={isLoading || mobile.length < 10}
-            className="w-full py-3 rounded-xl text-sm font-semibold transition-colors"
+            disabled={isDisabled}
             style={{
-              background: isLoading || mobile.length < 10
-                ? '#9CA3AF'
-                : 'linear-gradient(90deg, #101129 0%, #2A2C5B 100%)',
-              color: '#fff',
-              cursor: isLoading || mobile.length < 10 ? 'not-allowed' : 'pointer',
+              width: '100%', height: 48, borderRadius: 12, border: 'none',
+              background: isDisabled ? '#D1D5DB' : 'linear-gradient(90deg, #101129 0%, #2A2C5B 100%)',
+              color: '#fff', fontSize: 15, fontWeight: 600,
+              fontFamily: 'Poppins, sans-serif',
+              cursor: isDisabled ? 'not-allowed' : 'pointer',
+              transition: 'background 0.2s',
             }}
           >
             {isLoading ? 'Sending OTP…' : 'Send OTP'}
           </button>
         </form>
 
-        <p className="mt-4 text-center text-xs text-gray-400">
+        <p style={{ marginTop: 20, textAlign: 'center', fontSize: 12, color: '#9CA3AF', fontFamily: 'Inter, sans-serif' }}>
           By continuing, you agree to our{' '}
-          <a href="/terms" className="text-blue-500 hover:underline">Terms of Service</a>{' '}
+          <a href="/terms" style={{ color: '#8B5CF6', textDecoration: 'none' }}>Terms of Service</a>{' '}
           and{' '}
-          <a href="/privacy" className="text-blue-500 hover:underline">Privacy Policy</a>
+          <a href="/privacy" style={{ color: '#8B5CF6', textDecoration: 'none' }}>Privacy Policy</a>
         </p>
       </div>
     </div>

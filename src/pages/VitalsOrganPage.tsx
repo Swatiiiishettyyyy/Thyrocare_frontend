@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Navbar, Footer } from '../components'
 import { TestCard } from '../components/TestCard'
@@ -40,12 +40,24 @@ export default function VitalsOrganPage({ cartCount }: { cartCount?: number }) {
   const { organId } = useParams<{ organId: string }>()
   const navigate = useNavigate()
   const { products, ready, error } = useProductCatalog()
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   const activeOrgan = ORGANS.find(o => o.id === organId) ?? ORGANS[0]
 
   const cards = useMemo(() => {
     return filterByOrganId(products, activeOrgan.id).map(toTestCard)
   }, [products, activeOrgan.id])
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff', fontFamily: 'Poppins, sans-serif', overflowX: 'hidden' }}>
@@ -65,6 +77,8 @@ export default function VitalsOrganPage({ cartCount }: { cartCount?: number }) {
             <svg width="8" height="12" viewBox="0 0 8 12" fill="none"><path d="M1 1l6 5-6 5" stroke="#828282" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             <span style={{ color: '#101129' }}>{activeOrgan.label}</span>
           </div>
+
+          {/* Desktop: native select */}
           <select
             className="vitals-organ-select"
             style={DROPDOWN}
@@ -73,6 +87,55 @@ export default function VitalsOrganPage({ cartCount }: { cartCount?: number }) {
           >
             {ORGANS.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
           </select>
+
+          {/* Mobile: custom dropdown */}
+          <div ref={dropdownRef} className="vitals-organ-select-mobile" style={{ position: 'relative' }}>
+            <button
+              type="button"
+              onClick={() => setDropdownOpen(o => !o)}
+              style={{
+                height: 40, padding: '0 36px 0 16px',
+                background: '#fff', borderRadius: 999,
+                border: '1px solid #E7E1FF',
+                boxShadow: '0px 2px 12px rgba(136,107,249,0.15)',
+                fontFamily: 'Inter, sans-serif', fontSize: 14, color: '#161616',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+                position: 'relative', whiteSpace: 'nowrap',
+              }}
+            >
+              {activeOrgan.label}
+              <svg width="12" height="8" viewBox="0 0 12 8" fill="none" style={{ position: 'absolute', right: 12, top: '50%', transform: `translateY(-50%) rotate(${dropdownOpen ? 180 : 0}deg)`, transition: 'transform 0.2s' }}>
+                <path d="M1 1l5 5 5-5" stroke="#161616" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </button>
+            {dropdownOpen && (
+              <div style={{
+                position: 'absolute', top: 'calc(100% + 6px)', right: 0,
+                background: '#fff', border: '1px solid #E7E1FF',
+                borderRadius: 16, boxShadow: '0 8px 24px rgba(16,17,41,0.12)',
+                zIndex: 50, overflow: 'hidden', minWidth: 140,
+              }}>
+                {ORGANS.map(o => (
+                  <button
+                    key={o.id}
+                    type="button"
+                    onClick={() => { navigate(`/vitals/${o.id}`); setDropdownOpen(false) }}
+                    style={{
+                      display: 'block', width: '100%', textAlign: 'left',
+                      padding: '11px 16px', fontSize: 14,
+                      fontFamily: 'Inter, sans-serif',
+                      background: o.id === activeOrgan.id ? '#F3F0FF' : '#fff',
+                      color: o.id === activeOrgan.id ? '#101129' : '#374151',
+                      fontWeight: o.id === activeOrgan.id ? 600 : 400,
+                      border: 'none', cursor: 'pointer',
+                    }}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {error && <p style={{ color: '#E12D2D', fontSize: 14, marginBottom: 16 }}>{error}</p>}

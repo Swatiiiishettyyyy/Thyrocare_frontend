@@ -13,6 +13,7 @@
 @media (max-width: 768px) {
   .page-section.home-section--conditions {
     padding-top: var(--pad-section-y) !important;
+    overflow: visible !important;
   }
 }
 
@@ -609,36 +610,32 @@
    ════════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
   .empty-report-content {
-    /* Reduce global section side padding so centered block is truly centered */
-    padding-left: clamp(12px, 4vw, 16px) !important;
-    padding-right: clamp(12px, 4vw, 16px) !important;
-    padding-top: 18px !important;
-    padding-bottom: 18px !important;
+    padding: 32px 24px 48px !important;
     max-width: 100% !important;
-    min-height: calc(100vh - clamp(84px, 10vmin, 96px)) !important;
+    min-height: calc(100vh - 72px) !important;
     justify-content: center !important;
-    gap: 16px !important;
+    gap: 24px !important;
   }
 
   .empty-report-block {
     margin-left: auto !important;
     margin-right: auto !important;
-    max-width: 364px !important;
+    max-width: 100% !important;
     gap: 16px !important;
-    padding: 18px 0 !important;
     text-align: center !important;
   }
 
   .empty-report-ctas {
-    justify-content: center !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: 320px !important;
+    margin: 0 auto !important;
   }
 
   .empty-report-cta {
     width: 100% !important;
-    max-width: min(320px, 100%) !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    flex: 0 1 auto !important;
+    flex: none !important;
   }
 }
 .footer-subscribe {
@@ -1502,11 +1499,18 @@
     position: relative;
   }
 
+  /* Remove the outer visit card box on mobile — tracking card itself provides the border */
+  .order-detail-visit-card {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+  }
   .order-detail-trackList {
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: clamp(12px, 4.2vw, 16px); /* figma: 16 */
+    gap: 0;
   }
 
   .order-detail-trackLine {
@@ -1523,6 +1527,7 @@
     display: flex;
     align-items: flex-start;
     gap: clamp(14px, 5.4vw, 20px); /* figma: 20 */
+    min-height: 44px;
   }
 
   .order-detail-trackMarker {
@@ -1572,10 +1577,10 @@
   }
 
   .order-detail-trackTime {
-    font-family: Poppins, sans-serif;
+    font-family: Inter, sans-serif;
     font-weight: 400;
-    font-size: clamp(13px, 3.6vw, 14px);
-    line-height: 20px;
+    font-size: 11px;
+    line-height: 16px;
     color: #828282;
     white-space: nowrap;
   }
@@ -2619,7 +2624,7 @@
 @media (max-width: 768px) {
   .navbar-inner {
     display: grid !important;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: 1fr auto 1fr;
     grid-template-rows: auto auto auto;
     align-items: center;
     column-gap: 12px;
@@ -2632,6 +2637,7 @@
     box-sizing: border-box;
     flex-wrap: unset !important;
     overflow: visible;
+    position: relative;
   }
 
   .navbar-hamburger {
@@ -2647,6 +2653,7 @@
     grid-row: 1;
     min-width: 0;
     justify-self: center;
+    align-self: center;
   }
 
   .navbar-logo-img {
@@ -2704,14 +2711,15 @@
     font-size: 12px !important;
   }
 
-  /* Hide location + search on mobile (keep just top row actions). */
-  .navbar-location-mobile,
-  .navbar-search-wrap,
-  .navbar-search {
+  /* Hide location + search only on pages that opt out (checkout, cart, etc.) */
+  .site-navbar-header--no-search .navbar-location-mobile,
+  .site-navbar-header--no-search .navbar-search-wrap,
+  .site-navbar-header--no-search .navbar-search {
     display: none !important;
   }
 
-  .navbar-inner {
+  /* On pages WITH search: collapse grid rows when hidden */
+  .site-navbar-header--no-search .navbar-inner {
     grid-template-rows: auto !important;
     row-gap: 0 !important;
   }
@@ -2843,6 +2851,27 @@
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
+   TIMESLOT CALENDAR — DESKTOP (side by side)
+   ════════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 769px) {
+  .timeslot-picker {
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    flex-wrap: wrap !important;
+    gap: 20px !important;
+  }
+  .timeslot-calendar-container {
+    flex: 0 0 auto !important;
+    width: 280px !important;
+    max-width: 320px !important;
+  }
+  .timeslot-slotcol {
+    flex: 1 1 180px !important;
+    width: auto !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
    MOBILE TEST PAGE SECTIONS
    ════════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
@@ -2894,9 +2923,12 @@
     --lh-ui: 1.25; /* 20 / 16 */
   }
 
-  /* Vitals organ page: hide dropdown on mobile (use tiles instead). */
+  /* Vitals organ page: hide desktop dropdown on mobile, show custom one */
   .vitals-organ-select {
     display: none !important;
+  }
+  .vitals-organ-select-mobile {
+    display: block !important;
   }
 
   /* Vertical rhythm between hero + stacked sections (Test home, Packages, etc.) */
@@ -2909,7 +2941,7 @@
 
   /* Mobile: remove extra gap between Essential Tests → Check Your Vitals */
   .home-section--essential + .home-section--vitals {
-    margin-top: 0 !important;
+    margin-top: 24px !important;
   }
 
   /* Mobile: tighten padding between Essential ↔ Vitals */
@@ -2917,7 +2949,7 @@
     padding-bottom: 6px !important;
   }
   .home-section--vitals {
-    padding-top: 4px !important;
+    padding-top: 24px !important;
   }
 
   /* Prevent huge price text from overwhelming mobile layout */
@@ -2948,15 +2980,20 @@
   .timeslot-picker {
     flex-direction: column !important;
     gap: 14px !important;
+    align-items: stretch !important;
   }
-  .timeslot-picker > div {
+  .timeslot-calendar-container {
     width: 100% !important;
+    max-width: 100% !important;
+    flex: none !important;
+    padding: 10px 8px !important;
   }
   .timeslot-slotcol {
+    width: 100% !important;
     flex: none !important;
     min-width: 0 !important;
     padding-top: 0 !important;
-    gap: 6px !important; /* label closer to dropdown */
+    gap: 6px !important;
   }
 
   /* Banner on mobile: show single static image (no carousel motion) */
@@ -3116,6 +3153,29 @@
   .test-card__intro {
     min-height: 0 !important;
     flex: 0 0 auto !important;
+  }
+
+  /* Conditions grid — horizontal scroll on mobile */
+  .conditions-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    gap: 12px !important;
+    padding: 0 2px 8px !important;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    grid-template-columns: unset !important;
+  }
+  .conditions-grid > * {
+    flex: 0 0 92% !important;
+    max-width: 92% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    scroll-snap-align: start;
   }
 
   /* Essential tests — one card per page (carousel prev/next + dots); no horizontal peek-scroll */
@@ -3537,10 +3597,12 @@
   /* Hero: stack vertically, no overflow */
   .test-detail-hero {
     flex-direction: column !important;
-    padding: 14px 10px 4px !important; /* tighter overall */
+    padding: 14px 10px 14px !important; /* tighter overall */
     margin-bottom: 0 !important;
     overflow: hidden !important;
     border-radius: 16px !important;
+    height: auto !important;
+    align-items: flex-start !important;
   }
 
   /* Ribbon (Single Test): smaller on mobile + vertically centered text */
@@ -3574,7 +3636,8 @@
   /* Tighten bottom gap under "Parameters" tile in navy ribbon */
   .test-detail-info {
     gap: 12px !important;
-    margin-bottom: -12px !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
   }
   .test-detail-statsRow {
     margin-top: 6px;
@@ -3613,22 +3676,27 @@
 
   /* Feature pills: single row, no horizontal scroll — size down icons/type to fit */
   .test-detail-pills {
-    gap: clamp(10px, 3.2vw, 14px) !important; /* equal gap between 3 items */
-    padding: 6px 0 8px !important;
+    gap: 12px !important;
+    padding: 12px 16px 14px !important;
     flex-wrap: nowrap !important;
     width: 100%;
     box-sizing: border-box;
-    justify-content: center !important;
+    justify-content: space-between !important;
     overflow-x: visible;
     overflow-y: visible;
   }
   .test-detail-pills > div {
-    flex: 0 0 auto !important;
+    flex: 1 1 0 !important;
+    justify-content: center !important;
   }
   .test-detail-pills span {
-    font-size: clamp(10px, 2.75vw, 11px) !important;
-    line-height: 1.25 !important;
+    font-size: 11px !important;
+    line-height: 1.3 !important;
     white-space: nowrap !important;
+  }
+  .test-detail-pills img {
+    width: 16px !important;
+    height: 16px !important;
   }
 
   /* Tab bar: smaller padding */
@@ -3679,6 +3747,23 @@
   .test-detail-tab-content {
     background: linear-gradient(0deg, #E7E1FF 37.338%, #FFFFFF 82.888%) !important;
     padding: 24px 14px 28px !important;
+  }
+
+  /* Preparation tab: compact pills on mobile */
+  .test-detail-tab-content [style*="E8FFFB"],
+  .test-detail-tab-content [style*="FFF0F0"] {
+    min-height: 36px !important;
+    padding: 8px 12px !important;
+    gap: 10px !important;
+  }
+  .test-detail-tab-content [style*="E8FFFB"] img,
+  .test-detail-tab-content [style*="FFF0F0"] img {
+    width: 14px !important;
+    height: 14px !important;
+  }
+  .test-detail-tab-content [style*="E8FFFB"] span,
+  .test-detail-tab-content [style*="FFF0F0"] span {
+    font-size: 12px !important;
   }
 
   /* About tab: bullets start-aligned; mobile layout is driven in TestDetailPage */
@@ -3736,6 +3821,7 @@
 @media (max-width: 768px) {
   .checkout-layout {
     flex-direction: column !important;
+    align-items: stretch !important;
     padding: 0 16px 40px !important;
     gap: 20px !important;
   }

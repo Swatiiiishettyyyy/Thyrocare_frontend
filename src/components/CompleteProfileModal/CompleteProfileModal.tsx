@@ -30,6 +30,16 @@ const CompleteProfileModal: React.FC = () => {
   const [apiError, setApiError] = useState<string | null>(null)
 
   useEffect(() => {
+    const lock = isCompleteProfileModalOpen
+    document.body.style.overflow = lock ? 'hidden' : ''
+    document.documentElement.style.overflow = lock ? 'hidden' : ''
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+    }
+  }, [isCompleteProfileModalOpen])
+
+  useEffect(() => {
     if (!isCompleteProfileModalOpen) return
     const loginMobile = getLoginMobileNumber()
     setMobile(loginMobile || user?.mobileNumber || '')
@@ -80,7 +90,7 @@ const CompleteProfileModal: React.FC = () => {
       const isSelf = (rel: unknown): boolean => String(rel ?? '').trim().toLowerCase() === 'self'
 
       const currentId = normalizeId(currentMember)
-      const existingSelf = members.find(m => isSelf(m.relation) || m.is_self === true) ?? null
+      const existingSelf = members.find(m => m.is_self_profile === true || isSelf(m.relation) || m.is_self === true) ?? null
       const selfId = normalizeId(existingSelf)
 
       // If current member is not available yet but a Self profile exists, edit that instead of creating duplicates.
@@ -98,17 +108,34 @@ const CompleteProfileModal: React.FC = () => {
       if (memberId) {
         await memberService.editMember(Number(memberId), payload)
       } else {
-        const res = await memberService.saveMember({ ...payload, member_id: 0 })
-        const savedId =
-          (typeof res?.data?.member_id === 'number' && res.data.member_id) ||
-          (typeof (res as any)?.member_id === 'number' && (res as any).member_id) ||
-          (typeof res?.data?.member?.member_id === 'number' && res.data.member.member_id) ||
-          null
-        if (savedId) {
-          try {
-            await handleSelectMember(savedId)
-          } catch {
-            /* ignore */
+        try {
+          const res = await memberService.saveMember({ ...payload, member_id: 0 })
+          const savedId =
+            (typeof res?.data?.member_id === 'number' && res.data.member_id) ||
+            (typeof (res as any)?.member_id === 'number' && (res as any).member_id) ||
+            (typeof res?.data?.member?.member_id === 'number' && res.data.member.member_id) ||
+            null
+          if (savedId) {
+            try {
+              await handleSelectMember(savedId)
+            } catch {
+              /* ignore */
+            }
+          }
+        } catch (createErr: any) {
+          // If create fails because member already exists (members not yet loaded when modal opened),
+          // refresh members and retry as an edit using the self member's ID.
+          if (createErr?.message?.toLowerCase().includes('already exists')) {
+            await refreshMembers()
+            const freshMembers: any[] = await memberService.getMembers().then((r: any) => r?.data ?? r ?? [])
+            const selfMember = freshMembers.find((m: any) => isSelf(m.relation) || m.is_self_profile === true || m.is_self === true)
+            if (selfMember) {
+              await memberService.editMember(Number(selfMember.member_id ?? selfMember.id), payload)
+            } else {
+              throw createErr
+            }
+          } else {
+            throw createErr
           }
         }
       }
@@ -124,15 +151,16 @@ const CompleteProfileModal: React.FC = () => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+      className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto"
+      style={{ backgroundColor: 'rgba(0,0,0,0.6)', padding: '16px' }}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8 relative max-h-screen overflow-y-auto"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg relative my-auto"
+        style={{ padding: '24px 20px', marginTop: '16px', marginBottom: '16px' }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="mb-6 text-center">
-          <h2 className="text-xl font-semibold text-gray-900">Complete Your Profile</h2>
+        <div className="mb-5 text-center">
+          <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: 0 }}>Complete Your Profile</h2>
           <p className="text-sm text-gray-500 mt-1">Please fill in your details to get started</p>
         </div>
 
@@ -142,7 +170,7 @@ const CompleteProfileModal: React.FC = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           {/* Full Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
@@ -223,7 +251,7 @@ const CompleteProfileModal: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3 pt-1">
             <button
               type="button"
               onClick={closeCompleteProfileModal}

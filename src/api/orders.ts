@@ -35,6 +35,7 @@ export interface VerifyPaymentPayload {
 export interface VerifyPaymentResponse {
   status: string
   order_id?: number
+  order_number?: string | null
   message?: string
 }
 
@@ -186,18 +187,20 @@ function normalizeThyrocareStatusCode(input: string): string {
  * Extend here when the backend adds new `order_status_description` / status codes.
  */
 /** Do not map to “Order booked” — Nucleotide order supplies that; treat as no vendor label. */
-const THYROCARE_STATUS_IGNORE_FOR_MAPPING = new Set(['YET_TO_ASSIGN', 'YET_TO_ASSIGNED'])
+const THYROCARE_STATUS_IGNORE_FOR_MAPPING = new Set(['YET_TO_ASSIGN', 'YET_TO_ASSIGNED', 'STARTED', 'ARRIVED'])
 
 const THYROCARE_STATUS_LABEL_BY_CODE: Record<string, string> = {
   ORDER_BOOKED: 'Order booked',
   ORDER_CREATED: 'Order booked',
+  ORDER_PLACED: 'Order booked',
   BOOKED: 'Order booked',
   PENDING_ASSIGNMENT: 'Order booked',
   PENDING: 'Order booked',
   NEW: 'Order booked',
 
+  ASSIGNED: 'Technician assigned',
+
   TSP_ASSIGNED: 'Sample collected',
-  ASSIGNED: 'Sample collected',
   PHLEBO_ASSIGNED: 'Sample collected',
   OUT_FOR_COLLECTION: 'Sample collected',
   SAMPLE_COLLECTED: 'Sample collected',
@@ -327,7 +330,7 @@ export function thyrocareHistoryStepDisplayLabel(historyRow: unknown, fallbackLa
 }
 
 /** Timestamp string from a vendor status-history row (field names vary by API). */
-function thyrocareHistoryEventTimestamp(ev: Record<string, unknown>): string | null {
+export function thyrocareHistoryEventTimestamp(ev: Record<string, unknown>): string | null {
   const ts =
     ev.timestamp ??
     ev.received_at ??
@@ -647,8 +650,9 @@ export function pickReportDownloadUrl(payload: unknown): string | null {
   return null
 }
 
-export async function fetchOrders(): Promise<Order[]> {
-  const res = await api.get<any>('/orders/list')
+export async function fetchOrders(memberId?: number): Promise<Order[]> {
+  const qs = memberId != null ? `?member_id=${encodeURIComponent(String(memberId))}` : ''
+  const res = await api.get<any>(`/orders/list${qs}`)
   if (Array.isArray(res)) return res
   return res?.data ?? res?.orders ?? []
 }
@@ -717,8 +721,9 @@ export async function fetchThyrocareOrderDetails(thyrocareOrderId: string): Prom
  * All lab bookings for the logged-in user. Prefer `status_history` here for timelines
  * when present; still use order-details for patients/reports if needed.
  */
-export async function fetchThyrocareMyOrders(): Promise<ThyrocareMyOrderRow[]> {
-  const res = await api.get<any>('/thyrocare/orders/my-orders')
+export async function fetchThyrocareMyOrders(memberId?: number): Promise<ThyrocareMyOrderRow[]> {
+  const qs = memberId != null ? `?member_id=${encodeURIComponent(String(memberId))}` : ''
+  const res = await api.get<any>(`/thyrocare/orders/my-orders${qs}`)
   const raw = res?.data ?? res
   if (Array.isArray(raw)) return raw as ThyrocareMyOrderRow[]
   if (Array.isArray(raw?.data)) return raw.data as ThyrocareMyOrderRow[]

@@ -194,7 +194,7 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount: orderRes.amount,
+        amount: Math.round(orderRes.amount * 100),
         currency: 'INR',
         name: 'Nucleotide',
         description: items.map(i => i.name).join(', '),
@@ -210,8 +210,9 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
           razorpay_order_id: string
           razorpay_signature: string
         }) => {
+          let verifyRes: Awaited<ReturnType<typeof verifyPayment>> | null = null
           try {
-            await verifyPayment({
+            verifyRes = await verifyPayment({
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
@@ -227,7 +228,7 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
           onOrderComplete()
           const confirmationPayload = {
             orderId: orderRes.order_id,
-            orderNumber: orderRes.order_number,
+            orderNumber: verifyRes?.order_number || orderRes.order_number || null,
             slotDay,
             slotTime,
             items: items.map(i => ({ name: i.name, quantity: i.quantity })),

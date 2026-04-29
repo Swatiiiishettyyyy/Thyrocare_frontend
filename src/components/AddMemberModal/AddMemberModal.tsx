@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { memberService } from '../../services/memberService'
 
@@ -18,8 +18,31 @@ const AddMemberModal: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
+  const [relationOpen, setRelationOpen] = useState(false)
+  const relationRef = useRef<HTMLDivElement>(null)
 
   const isEditing = !!editingMember
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (relationRef.current && !relationRef.current.contains(e.target as Node)) {
+        setRelationOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  useEffect(() => {
+    const lock = isAddMemberModalOpen
+    document.body.style.overflow = lock ? 'hidden' : ''
+    document.documentElement.style.overflow = lock ? 'hidden' : ''
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+    }
+  }, [isAddMemberModalOpen])
 
   useEffect(() => {
     if (!isAddMemberModalOpen) return
@@ -97,12 +120,18 @@ const AddMemberModal: React.FC = () => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+      className="fixed inset-0 z-[200] flex items-center justify-center"
+      style={{ backgroundColor: 'rgba(0,0,0,0.5)', padding: '70px 16px 16px' }}
       onClick={closeAddMemberModal}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8 relative max-h-screen overflow-y-auto"
+        className="bg-white rounded-2xl shadow-2xl w-full relative overflow-y-auto"
+        style={{
+          maxWidth: 448,
+          maxHeight: '88vh',
+          padding: '28px 24px 28px',
+          fontFamily: 'Poppins, sans-serif',
+        }}
         onClick={e => e.stopPropagation()}
       >
         <button
@@ -113,11 +142,11 @@ const AddMemberModal: React.FC = () => {
           &times;
         </button>
 
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">
+        <div className="mb-5">
+          <h2 style={{ fontSize: 18, fontWeight: 600, color: '#111827', fontFamily: 'Poppins, sans-serif', margin: 0 }}>
             {isEditing ? 'Edit Member' : 'Add Family Member'}
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <p style={{ fontSize: 13, color: '#6B7280', marginTop: 4, fontFamily: 'Inter, sans-serif' }}>
             {isEditing ? 'Update member details' : 'Add a new member to your account'}
           </p>
         </div>
@@ -131,112 +160,188 @@ const AddMemberModal: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#101129', marginBottom: 6, fontFamily: 'Inter, sans-serif' }}>Full Name *</label>
             <input
               type="text"
               value={name}
               onChange={e => { setName(e.target.value); setErrors(p => ({ ...p, name: '' })) }}
               placeholder="Enter full name"
-              className="w-full px-4 py-3 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"
-              style={{ borderColor: errors.name ? '#EF4444' : '#D1D5DB' }}
+              style={{
+                width: '100%', padding: '11px 14px', border: `1px solid ${errors.name ? '#EF4444' : '#E7E1FF'}`,
+                borderRadius: 12, fontSize: 14, outline: 'none', fontFamily: 'Inter, sans-serif',
+                color: '#101129', background: '#fff', boxSizing: 'border-box',
+              }}
               disabled={isLoading}
             />
-            {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
+            {errors.name && <p style={{ marginTop: 4, fontSize: 12, color: '#EF4444' }}>{errors.name}</p>}
           </div>
 
           {/* Relationship */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Relationship *</label>
-            <select
-              value={relation}
-              onChange={e => { setRelation(e.target.value); setErrors(p => ({ ...p, relation: '', customRelation: '' })) }}
-              className="w-full px-4 py-3 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              style={{ borderColor: errors.relation ? '#EF4444' : '#D1D5DB' }}
-              disabled={isLoading}
-            >
-              <option value="">Select relationship</option>
-              {RELATIONSHIPS.map(r => <option key={r} value={r}>{r}</option>)}
-            </select>
-            {errors.relation && <p className="mt-1 text-xs text-red-500">{errors.relation}</p>}
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#101129', marginBottom: 6, fontFamily: 'Inter, sans-serif' }}>Relationship *</label>
+            <div ref={relationRef} style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={() => setRelationOpen(o => !o)}
+                disabled={isLoading}
+                style={{
+                  width: '100%', padding: '11px 14px', border: `1px solid ${errors.relation ? '#EF4444' : '#E7E1FF'}`,
+                  borderRadius: 12, fontSize: 14, outline: 'none', fontFamily: 'Inter, sans-serif',
+                  color: relation ? '#101129' : '#828282', background: '#fff', boxSizing: 'border-box',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer',
+                }}
+              >
+                <span>{relation || 'Select relationship'}</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, transform: relationOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+                  <path d="M6 9l6 6 6-6" stroke="#828282" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              {relationOpen && (
+                <div style={{
+                  position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
+                  background: '#fff', border: '1px solid #E7E1FF', borderRadius: 12,
+                  boxShadow: '0 8px 24px rgba(16,17,41,0.12)', zIndex: 100,
+                  overflow: 'hidden', maxHeight: 220, overflowY: 'auto',
+                }}>
+                  {RELATIONSHIPS.map(r => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => { setRelation(r); setRelationOpen(false); setErrors(p => ({ ...p, relation: '', customRelation: '' })) }}
+                      style={{
+                        display: 'block', width: '100%', textAlign: 'left',
+                        padding: '10px 16px', fontSize: 14, fontFamily: 'Inter, sans-serif',
+                        background: relation === r ? '#F3F0FF' : '#fff',
+                        color: relation === r ? '#101129' : '#374151',
+                        fontWeight: relation === r ? 500 : 400,
+                        border: 'none', cursor: 'pointer',
+                      }}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {errors.relation && <p style={{ marginTop: 4, fontSize: 12, color: '#EF4444' }}>{errors.relation}</p>}
           </div>
 
           {relation === 'Other' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Specify Relationship *</label>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#101129', marginBottom: 6, fontFamily: 'Inter, sans-serif' }}>Specify Relationship *</label>
               <input
                 type="text"
                 value={customRelation}
                 onChange={e => { setCustomRelation(e.target.value); setErrors(p => ({ ...p, customRelation: '' })) }}
                 placeholder="e.g. Cousin, Grandparent"
-                className="w-full px-4 py-3 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"
-                style={{ borderColor: errors.customRelation ? '#EF4444' : '#D1D5DB' }}
+                style={{
+                  width: '100%', padding: '11px 14px', border: `1px solid ${errors.customRelation ? '#EF4444' : '#E7E1FF'}`,
+                  borderRadius: 12, fontSize: 14, outline: 'none', fontFamily: 'Inter, sans-serif',
+                  color: '#101129', background: '#fff', boxSizing: 'border-box',
+                }}
                 disabled={isLoading}
               />
-              {errors.customRelation && <p className="mt-1 text-xs text-red-500">{errors.customRelation}</p>}
+              {errors.customRelation && <p style={{ marginTop: 4, fontSize: 12, color: '#EF4444' }}>{errors.customRelation}</p>}
             </div>
           )}
 
           {/* Mobile */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
-            <div className="flex items-center border rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500"
-              style={{ borderColor: errors.mobile ? '#EF4444' : '#D1D5DB' }}>
-              <span className="px-3 py-3 bg-gray-50 text-gray-600 text-sm border-r border-gray-200">+91</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <label style={{ fontSize: 13, fontWeight: 500, color: '#101129', fontFamily: 'Inter, sans-serif' }}>Mobile Number</label>
+              {'contacts' in navigator && (navigator as any).contacts?.select && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const contacts = await (navigator as any).contacts.select(['tel'], { multiple: false })
+                      if (contacts?.[0]?.tel?.[0]) {
+                        const raw = contacts[0].tel[0].replace(/\D/g, '').slice(-10)
+                        setMobile(raw)
+                        setErrors(p => ({ ...p, mobile: '' }))
+                      }
+                    } catch { /* user cancelled */ }
+                  }}
+                  style={{
+                    background: 'none', border: 'none', padding: 0,
+                    color: '#8B5CF6', fontSize: 12, fontWeight: 500,
+                    fontFamily: 'Inter, sans-serif', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 4,
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="#8B5CF6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  From contacts
+                </button>
+              )}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', border: `1px solid ${errors.mobile ? '#EF4444' : '#E7E1FF'}`, borderRadius: 12, overflow: 'hidden', background: '#fff' }}>
+              <span style={{ padding: '11px 12px', background: '#F7F7FF', color: '#828282', fontSize: 14, fontFamily: 'Inter, sans-serif', borderRight: '1px solid #E7E1FF', whiteSpace: 'nowrap' }}>+91</span>
               <input
                 type="tel"
                 inputMode="numeric"
                 value={mobile}
                 onChange={e => { setMobile(e.target.value.replace(/\D/g, '').slice(0, 10)); setErrors(p => ({ ...p, mobile: '' })) }}
                 placeholder="10-digit number"
-                className="flex-1 px-3 py-3 text-sm outline-none"
+                style={{ flex: 1, padding: '11px 12px', fontSize: 14, outline: 'none', border: 'none', fontFamily: 'Inter, sans-serif', color: '#101129', background: 'transparent' }}
                 disabled={isLoading}
               />
             </div>
-            {errors.mobile && <p className="mt-1 text-xs text-red-500">{errors.mobile}</p>}
+            {errors.mobile && <p style={{ marginTop: 4, fontSize: 12, color: '#EF4444' }}>{errors.mobile}</p>}
           </div>
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email (optional)</label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#101129', marginBottom: 6, fontFamily: 'Inter, sans-serif' }}>Email (optional)</label>
             <input
               type="email"
               value={email}
               onChange={e => { setEmail(e.target.value); setErrors(p => ({ ...p, email: '' })) }}
               placeholder="Enter email"
-              className="w-full px-4 py-3 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"
-              style={{ borderColor: errors.email ? '#EF4444' : '#D1D5DB' }}
+              style={{
+                width: '100%', padding: '11px 14px', border: `1px solid ${errors.email ? '#EF4444' : '#E7E1FF'}`,
+                borderRadius: 12, fontSize: 14, outline: 'none', fontFamily: 'Inter, sans-serif',
+                color: '#101129', background: '#fff', boxSizing: 'border-box',
+              }}
               disabled={isLoading}
             />
-            {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
+            {errors.email && <p style={{ marginTop: 4, fontSize: 12, color: '#EF4444' }}>{errors.email}</p>}
           </div>
 
           {/* DOB */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#101129', marginBottom: 6, fontFamily: 'Inter, sans-serif' }}>Date of Birth</label>
             <input
               type="date"
               value={dob}
               onChange={e => setDob(e.target.value)}
               max={new Date().toISOString().split('T')[0]}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              style={{
+                width: '100%', padding: '11px 14px', border: '1px solid #E7E1FF',
+                borderRadius: 12, fontSize: 14, outline: 'none', fontFamily: 'Inter, sans-serif',
+                color: '#101129', background: '#fff', boxSizing: 'border-box',
+              }}
               disabled={isLoading}
             />
           </div>
 
           {/* Gender */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
-            <div className="flex gap-3">
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#101129', marginBottom: 8, fontFamily: 'Inter, sans-serif' }}>Gender</label>
+            <div style={{ display: 'flex', gap: 10 }}>
               {GENDER_OPTIONS.map(opt => (
                 <button
                   key={opt.value}
                   type="button"
                   onClick={() => setGender(opt.value)}
-                  className="flex-1 py-2.5 rounded-xl border text-sm font-medium transition-colors"
                   style={{
-                    borderColor: gender === opt.value ? '#101129' : '#D1D5DB',
-                    backgroundColor: gender === opt.value ? '#101129' : '#fff',
-                    color: gender === opt.value ? '#fff' : '#374151',
+                    flex: 1, padding: '10px 0', borderRadius: 12,
+                    border: `1px solid ${gender === opt.value ? '#101129' : '#E7E1FF'}`,
+                    background: gender === opt.value ? '#101129' : '#fff',
+                    color: gender === opt.value ? '#fff' : '#828282',
+                    fontSize: 14, fontWeight: 500, fontFamily: 'Inter, sans-serif',
+                    cursor: 'pointer', transition: 'all 0.15s',
                   }}
                   disabled={isLoading}
                 >
@@ -249,11 +354,11 @@ const AddMemberModal: React.FC = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 rounded-xl text-sm font-semibold transition-colors"
             style={{
-              backgroundColor: isLoading ? '#9CA3AF' : '#101129',
-              color: '#fff',
-              cursor: isLoading ? 'not-allowed' : 'pointer',
+              width: '100%', padding: '13px 0', borderRadius: 12, border: 'none',
+              background: isLoading ? '#9CA3AF' : 'linear-gradient(90deg, #101129 0%, #2A2C5B 100%)',
+              color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: 'Poppins, sans-serif',
+              cursor: isLoading ? 'not-allowed' : 'pointer', marginTop: 4,
             }}
           >
             {isLoading ? 'Saving…' : isEditing ? 'Update Member' : 'Add Member'}

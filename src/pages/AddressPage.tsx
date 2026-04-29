@@ -8,7 +8,7 @@ import { AddAddressModal } from '../components/AddAddressModal'
 import { CheckoutStepper } from '../components/CheckoutStepper'
 import { OrderSummaryCard } from '../components/OrderSummaryCard'
 import type { CartItem } from '../types'
-import { fetchMembers, saveMember } from '../api/member'
+import { fetchMembers } from '../api/member'
 import { fetchAddresses } from '../api/address'
 import {
   fetchActiveGroups,
@@ -22,6 +22,7 @@ import type { CartGroup } from '../api/cart'
 import type { Member } from '../api/member'
 import type { Address } from '../api/address'
 import type { CheckoutSession } from '../hooks/useCheckoutSession'
+import { useAuth } from '../context/AuthContext'
 
 function isSelfMember(m: Member): boolean {
   return (m.relation ?? '').toLowerCase() === 'self'
@@ -37,22 +38,9 @@ const NAV_LINKS = [
 
 const OVERLAY: React.CSSProperties = {
   position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
-  zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center',
+  zIndex: 100, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
 }
-const MODAL: React.CSSProperties = {
-  background: '#fff', borderRadius: 20, padding: 28, width: 420,
-  display: 'flex', flexDirection: 'column', gap: 16, boxSizing: 'border-box',
-}
-const INPUT: React.CSSProperties = {
-  width: '100%', padding: '10px 14px', borderRadius: 10,
-  border: '1px solid #E7E1FF', outline: 'none',
-  fontFamily: 'Inter, sans-serif', fontSize: 14, color: '#161616',
-  boxSizing: 'border-box',
-}
-const LABEL: React.CSSProperties = {
-  fontSize: 13, fontFamily: 'Inter, sans-serif', color: '#414141',
-  marginBottom: 4, display: 'block',
-}
+// OVERLAY kept for potential future use
 
 interface AddressPageProps {
   cartCount?: number
@@ -67,24 +55,20 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
   const location = useLocation()
   const blockReason = (location.state as any)?.checkoutBlockReason as string | undefined
 
+  const { openAddMemberModal, members: authMembers } = useAuth()
+
   const [members, setMembers] = useState<Member[]>([])
   const [addresses, setAddresses] = useState<Address[]>([])
   const [loading, setLoading] = useState(true)
-  // per-product: selected patient member_ids (any mix of self + family; length must === cart quantity)
   const [memberMap, setMemberMap] = useState<Record<number, number[]>>({})
-  /** Which list is visible: profile only vs family only (selections in `memberMap` are kept when toggling) */
   const [memberListFocus, setMemberListFocus] = useState<Record<number, 'profile' | 'family'>>({})
-  // per-product address (one product group = one address)
   const [addressMap, setAddressMap] = useState<Record<number, number | null>>({})
   const [serviceabilityMap, setServiceabilityMap] = useState<Record<number, { checking: boolean; serviceable: boolean | null; message?: string }>>({})
   const [upsertError, setUpsertError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  // member modal — tracks which productId triggered it
-  const [memberModalProductId, setMemberModalProductId] = useState<number | null>(null)
-  const [newMember, setNewMember] = useState({ name: '', relation: 'Spouse', age: '', gender: 'M', dob: '', mobile: '' })
-  const [savingMember, setSavingMember] = useState(false)
-  const [showGenderModal, setShowGenderModal] = useState(false)
+  // member modal — tracks which productId triggered it (used by openAddMember)
+  const [_memberModalProductId, setMemberModalProductId] = useState<number | null>(null)
 
   const [showAddressModal, setShowAddressModal] = useState(false)
 
@@ -325,55 +309,25 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
     setSubmitting(false)
   }
 
-  async function handleSaveMember() {
-    if (!newMember.name || !newMember.age || !newMember.dob || !newMember.mobile) return
-    if (new Date(newMember.dob) >= new Date()) return
-    const mobile10 = newMember.mobile.replace(/\D/g, '').slice(-10)
-    if (mobile10.length !== 10) return
-    const productIdForModal = memberModalProductId
-    const payload: Member = {
-      member_id: 0,
-      name: newMember.name,
-      relation: newMember.relation,
-      age: parseInt(newMember.age, 10),
-      gender: newMember.gender,
-      dob: newMember.dob,
-      mobile: mobile10,
-    }
-    setSavingMember(true)
-    try {
-      const saved = await saveMember(payload)
-      setMembers(prev => [...prev.filter(m => m.member_id !== saved.member_id), saved])
-      if (productIdForModal != null) {
-        const line = items.find(i => i.thyrocareProductId === productIdForModal)
-        const cap = line?.quantity ?? 1
-        setMemberMap(prev => {
-          const cur = prev[productIdForModal] ?? []
-          if (cur.includes(saved.member_id)) return prev
-          if (cur.length >= cap) return prev
-          return { ...prev, [productIdForModal]: [...cur, saved.member_id] }
-        })
-      }
-      setMemberModalProductId(null)
-      setNewMember({ name: '', relation: 'Spouse', age: '', gender: 'M', dob: '', mobile: '' })
-    } catch {
-      /* CORS / API */
-    } finally {
-      setSavingMember(false)
-    }
+  // Open the shared AddMemberModal; refresh local member list after save
+  function openAddMember(productId: number) {
+    setMemberModalProductId(productId)
+    openAddMemberModal()
   }
 
-  const showMemberModal = memberModalProductId !== null
-  function setShowMemberModal(open: boolean) { if (!open) setMemberModalProductId(null) }
-
-  function genderLabel(value: string) {
-    return value === 'F' ? 'Female' : 'Male'
-  }
-
-  function selectGender(value: 'M' | 'F') {
-    setNewMember(p => ({ ...p, gender: value }))
-    setShowGenderModal(false)
-  }
+  // Sync local member list whenever AuthContext members update (e.g. after AddMemberModal saves)
+  useEffect(() => {
+    setMembers(authMembers.map(m => ({
+      member_id: m.member_id ?? (m.id as number) ?? 0,
+      name: m.name,
+      relation: m.relation,
+      age: m.age ?? 0,
+      gender: m.gender ?? 'M',
+      dob: m.dob,
+      mobile: m.mobile,
+      is_self: m.is_self,
+    })))
+  }, [authMembers])
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Poppins', sans-serif" }}>
@@ -525,7 +479,7 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
                         </span>
                         <button
                           type="button"
-                          onClick={() => setMemberModalProductId(productId)}
+                          onClick={() => openAddMember(productId)}
                           style={{
                             display: 'inline-flex',
                             alignItems: 'center',
@@ -673,140 +627,9 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
         </div>
       </div>
 
-      {/* Add Member Modal */}
-      {showMemberModal && (
-        <div style={OVERLAY} onClick={() => setShowMemberModal(false)}>
-          <div style={MODAL} onClick={e => e.stopPropagation()}>
-            <span style={{ fontSize: 16, fontWeight: 600, color: '#161616', fontFamily: 'Poppins, sans-serif' }}>Add New Member</span>
-            <div><label style={LABEL}>Full Name *</label><input style={INPUT} value={newMember.name} onChange={e => setNewMember(p => ({ ...p, name: e.target.value }))} placeholder="Enter name" /></div>
-            <div><label style={LABEL}>Relation *</label>
-              <select style={INPUT} value={newMember.relation} onChange={e => setNewMember(p => ({ ...p, relation: e.target.value }))}>
-                {(members.some(isSelfMember)
-                  ? ['Spouse', 'Child', 'Parent', 'Sibling', 'Other']
-                  : ['Self', 'Spouse', 'Child', 'Parent', 'Sibling', 'Other']
-                ).map(r => <option key={r}>{r}</option>)}
-              </select>
-            </div>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <div style={{ flex: 1 }}><label style={LABEL}>Age *</label><input style={INPUT} type="number" value={newMember.age} onChange={e => setNewMember(p => ({ ...p, age: e.target.value }))} placeholder="Age" /></div>
-              <div style={{ flex: 1 }}><label style={LABEL}>Gender *</label>
-                <button
-                  type="button"
-                  onClick={() => setShowGenderModal(true)}
-                  style={{
-                    ...INPUT,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 10,
-                  }}
-                  aria-haspopup="dialog"
-                  aria-expanded={showGenderModal}
-                >
-                  <span>{genderLabel(newMember.gender)}</span>
-                  <span aria-hidden style={{ color: '#828282' }}>▾</span>
-                </button>
-              </div>
-            </div>
-            <div><label style={LABEL}>Date of Birth *</label><input style={INPUT} type="date" value={newMember.dob} max={new Date().toISOString().split('T')[0]} onChange={e => setNewMember(p => ({ ...p, dob: e.target.value }))} /></div>
-            <div><label style={LABEL}>Mobile *</label><input style={INPUT} value={newMember.mobile} onChange={e => setNewMember(p => ({ ...p, mobile: e.target.value }))} placeholder="+91 XXXXXXXXXX" /></div>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setShowMemberModal(false)} style={{ flex: 1, height: 44, borderRadius: 8, border: 'none', outline: '1px solid #E7E1FF', background: 'transparent', cursor: 'pointer', fontFamily: 'Poppins, sans-serif', fontSize: 14 }}>Cancel</button>
-              <button onClick={handleSaveMember} disabled={savingMember} style={{ flex: 1, height: 44, borderRadius: 8, border: 'none', background: '#8B5CF6', color: '#fff', cursor: 'pointer', fontFamily: 'Poppins, sans-serif', fontSize: 14, fontWeight: 500 }}>{savingMember ? 'Saving...' : 'Save Member'}</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Add Member Modal — handled by shared AddMemberModal via AuthContext */}
 
-      {/* Gender Modal (Figma node 281:2597) */}
-      {showGenderModal && (
-        <div style={OVERLAY} onClick={() => setShowGenderModal(false)}>
-          <div
-            role="dialog"
-            aria-label="Gender"
-            style={{
-              background: '#fff',
-              borderRadius: 20,
-              padding: '9px 11px 19px',
-              width: 360,
-              maxWidth: 'calc(100vw - 32px)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 21,
-              boxSizing: 'border-box',
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div
-              style={{
-                background: '#E7E1FF',
-                border: '1px solid #E7E1FF',
-                borderRadius: 10,
-                height: 67,
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-            >
-              <span
-                style={{
-                  position: 'absolute',
-                  left: 27,
-                  top: 26,
-                  fontFamily: 'Poppins, sans-serif',
-                  fontSize: 20,
-                  fontWeight: 500,
-                  lineHeight: '26px',
-                  color: '#101129',
-                }}
-              >
-                Gender
-              </span>
-            </div>
-
-            <div style={{ paddingInline: 25, display: 'flex', flexDirection: 'column', gap: 18 }}>
-              <button
-                type="button"
-                onClick={() => selectGender('M')}
-                style={{
-                  border: 'none',
-                  background: 'transparent',
-                  padding: 0,
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  fontFamily: 'Poppins, sans-serif',
-                  fontSize: 20,
-                  fontWeight: 500,
-                  lineHeight: '26px',
-                  color: '#101129',
-                }}
-              >
-                Male
-              </button>
-              <div style={{ height: 1, width: 235, background: '#8B5CF6' }} />
-              <button
-                type="button"
-                onClick={() => selectGender('F')}
-                style={{
-                  border: 'none',
-                  background: 'transparent',
-                  padding: 0,
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  fontFamily: 'Poppins, sans-serif',
-                  fontSize: 20,
-                  fontWeight: 500,
-                  lineHeight: '26px',
-                  color: '#828282',
-                }}
-              >
-                Female
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Gender Modal — handled inside AddMemberModal */}
 
       <AddAddressModal
         open={showAddressModal}

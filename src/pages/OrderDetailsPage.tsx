@@ -16,11 +16,10 @@ import {
   getMyReportRowKey,
   getOrderOidSegmentForReportKey,
   thyrocareIdsForOrderItem,
-  thyrocareCombinedStatusDisplayLabel,
   thyrocareHistoryStepDisplayLabel,
   thyrocareFallbackTimelineStage,
   thyrocareMilestoneIndexForLabel,
-  isThyrocareOrderPlacedDuplicateHistoryRow,
+  thyrocareHistoryEventTimestamp,
 } from '../api/orders'
 import { API_BASE_URL } from '../api/client'
 import type { Order, ThyrocareOrderDetails, ThyrocareMyOrderRow, OrderMemberAddressRow, OrderItem, MyReportRow, ReportLinkContext } from '../api/orders'
@@ -37,42 +36,8 @@ function normalizePersonName(s: string | undefined): string {
   return (s ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
 }
 
-/** Match vendor timeline patient name to cart member row (scoped to same Thyrocare visit when possible). */
-function resolveMemberIdForItemAndVisit(
-  it: OrderItem,
-  thyrocareVisitId: string | undefined,
-  patientDisplayName: string | undefined,
-  patientIndex?: number,
-): number | undefined {
-  const nameTarget = normalizePersonName(patientDisplayName)
-  const tc = thyrocareVisitId?.trim()
-  const rows = it.member_address_map ?? []
-  if (rows.length === 0) return undefined
-  if (!nameTarget) {
-    if (patientIndex != null && rows[patientIndex]?.member?.member_id != null) {
-      return rows[patientIndex]!.member.member_id
-    }
-    return rows.length === 1 ? rows[0]!.member.member_id : undefined
-  }
-
-  const matchRow = (preferTc: boolean) => {
-    for (const row of rows) {
-      const rowTc = row.thyrocare_order_id?.trim()
-      if (preferTc && tc && rowTc && rowTc !== tc) continue
-      if (normalizePersonName(row.member?.name) === nameTarget) return row.member.member_id
-    }
-    return undefined
-  }
-  const byName = matchRow(true) ?? matchRow(false)
-  if (byName != null) return byName
-  if (patientIndex != null && patientIndex >= 0 && patientIndex < rows.length) {
-    return rows[patientIndex]!.member.member_id
-  }
-  return rows.length === 1 ? rows[0]!.member.member_id : undefined
-}
-
 /** Same fields the reports list uses for {@link getMyReportRowKey} / {@link getOrderOidSegmentForReportKey}. */
-function buildReportSeedFromOrder(order: Order, labPatientId: string, memberId: number): MyReportRow {
+function buildReportSeedFromOrder(order: Order, labPatientId: string, memberId: number, productName?: string): MyReportRow {
   const row: MyReportRow = {
     member_id: memberId,
     patient_id: String(labPatientId).trim(),
@@ -86,6 +51,7 @@ function buildReportSeedFromOrder(order: Order, labPatientId: string, memberId: 
   }
   const on = order.order_number?.trim()
   if (on) row.order_number = on
+  if (productName?.trim()) row.product_name = productName.trim()
   return row
 }
 
@@ -153,77 +119,6 @@ function formatMemberGender(g: string | undefined) {
   return t || '—'
 }
 
-function statusHistoryStepDone(s: Record<string, unknown>): boolean {
-  if (typeof s.completed === 'boolean') return s.completed
-  if (typeof s.done === 'boolean') return s.done
-  if (typeof s.is_completed === 'boolean') return s.is_completed
-  if (typeof s.is_current === 'boolean') return !s.is_current
-  return true
-}
-
-/** Vendor payloads sometimes only send timestamps; try common text fields, then sensible fallbacks. */
-function pickHistoryStepLabel(s: any): string {
-  if (s == null) return ''
-  if (typeof s === 'string') return s.trim()
-  const candidates = [
-    s.order_status,
-    s.status,
-    s.order_status_description,
-    s.label,
-    s.description,
-    s.message,
-    s.title,
-    s.name,
-    s.state,
-    s.status_text,
-    s.statusText,
-    s.event,
-    s.event_name,
-    s.eventName,
-    s.stage,
-    s.remarks,
-    s.note,
-    s.text,
-    s.activity,
-    s.action,
-  ]
-  for (const c of candidates) {
-    if (typeof c === 'string' && c.trim()) return c.trim()
-  }
-  return ''
-}
-
-function normalizeHistoryTimestamp(v: unknown): string | null {
-  if (v == null) return null
-  const t = typeof v === 'string' ? v.trim() : String(v)
-  if (!t) return null
-  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(t)) return t.replace(' ', 'T')
-  return t
-}
-
-function mapStatusHistoryToSteps(
-  history: any[],
-): Array<{ label: string; time: string; done: boolean }> {
-  return history.map((s: any, index: number) => {
-    const timeRaw =
-      normalizeHistoryTimestamp(s?.timestamp)
-      ?? normalizeHistoryTimestamp(s?.time)
-      ?? normalizeHistoryTimestamp(s?.received_at)
-      ?? normalizeHistoryTimestamp(s?.created_at)
-      ?? normalizeHistoryTimestamp(s?.updated_at)
-    const time = timeRaw ? formatDateTime(timeRaw) : ''
-    let label = pickHistoryStepLabel(s)
-    if (!label && time) label = 'Status update'
-    if (!label) label = `Step ${index + 1}`
-    label = thyrocareHistoryStepDisplayLabel(s, label)
-    return {
-      label,
-      time,
-      done: statusHistoryStepDone(s as Record<string, unknown>),
-    }
-  })
-}
-
 function resolveHistoryForBooking(
   myRow: ThyrocareMyOrderRow | undefined,
   d: ThyrocareOrderDetails | undefined,
@@ -240,10 +135,6 @@ function fallbackVisitSteps(
   myRow: ThyrocareMyOrderRow | undefined,
   d: ThyrocareOrderDetails | undefined,
 ): Array<{ label: string; time: string; done: boolean }> {
-  const appt =
-    myRow?.appointment_date
-    ?? d?.appointment_date
-    ?? (d as any)?.patients?.[0]?.appointment_date
   const stage = thyrocareFallbackTimelineStage(myRow ?? null, d ?? null)
   const labels = [
     'Order booked',
@@ -254,12 +145,7 @@ function fallbackVisitSteps(
   ] as const
   return labels.map((label, i) => ({
     label,
-    time:
-      i === 0
-        ? formatDateTime(order.order_date || order.created_at)
-        : i === 1 && appt
-          ? formatDate(appt)
-          : '',
+    time: i === 0 ? formatDateTime(order.order_date || order.created_at) : '',
     done: i <= stage,
   }))
 }
@@ -309,20 +195,21 @@ function buildVisitStepsWithOrderBooked(
     return fallbackVisitSteps(order, myRow, d)
   }
 
-  // Compute the highest milestone (0-4) reached across all history rows + current status fields.
-  // Renders the fixed 5-stage list with proper done/greyed states instead of raw DB rows.
   let maxStage = thyrocareFallbackTimelineStage(myRow, d)
+  const timestampByMilestone: Record<number, string> = {}
+
   for (const row of hist) {
     const mapped = thyrocareHistoryStepDisplayLabel(row, '')
     if (mapped && mapped !== '—') {
-      maxStage = Math.max(maxStage, thyrocareMilestoneIndexForLabel(mapped))
+      const mi = thyrocareMilestoneIndexForLabel(mapped)
+      maxStage = Math.max(maxStage, mi)
+      if (!timestampByMilestone[mi]) {
+        const ts = thyrocareHistoryEventTimestamp(row as Record<string, unknown>)
+        if (ts) timestampByMilestone[mi] = ts
+      }
     }
   }
 
-  const appt =
-    myRow?.appointment_date
-    ?? d?.appointment_date
-    ?? (d as any)?.patients?.[0]?.appointment_date
   const labels = [
     'Order booked',
     'Sample collected',
@@ -332,21 +219,18 @@ function buildVisitStepsWithOrderBooked(
   ] as const
   return labels.map((label, i) => ({
     label,
-    time:
-      i === 0
-        ? formatDateTime(order.order_date || order.created_at)
-        : i === 1 && appt
-          ? formatDate(appt)
-          : '',
+    time: i === 0
+      ? formatDateTime(order.order_date || order.created_at)
+      : timestampByMilestone[i] ? formatDateTime(timestampByMilestone[i]) : '',
     done: i <= maxStage,
   }))
 }
 
 /** Matches the timeline: current milestone = first incomplete step, else last step. */
 function timelineHeadlineFromSteps(steps: Array<{ label: string; done: boolean }>): string {
-  const active = steps.find(s => !s.done)
-  if (active) return active.label
-  return steps[steps.length - 1]?.label ?? '—'
+  const lastDone = [...steps].reverse().find(s => s.done)
+  if (lastDone) return lastDone.label
+  return steps[0]?.label ?? '—'
 }
 
 function effectiveRowThyrocareId(row: OrderMemberAddressRow, itemStripIds: string[]): string | null {
@@ -566,7 +450,11 @@ export default function OrderDetailsPage() {
     const patientIdVariants = [labPid, ...extra].filter((x, i, a) => x && a.indexOf(x) === i)
 
     if (memberId != null && order && labPid) {
-      const primarySeed = buildReportSeedFromOrder(order, labPid, memberId)
+      const tcId = opts?.thyrocareOrderId?.trim()
+      const productName = tcId
+        ? (order.items ?? []).find(it => thyrocareIdsForOrderItem(it).includes(tcId))?.product_name ?? ''
+        : ''
+      const primarySeed = buildReportSeedFromOrder(order, labPid, memberId, productName || undefined)
       const oidSeg = getOrderOidSegmentForReportKey(primarySeed)
       const reportLinkContext: ReportLinkContext = {
         memberId,
@@ -725,7 +613,7 @@ export default function OrderDetailsPage() {
       value:
         vendorPayment?.razorpay_payment_id?.trim()
           ? vendorPayment.razorpay_payment_id.trim()
-          : `NUC-INV-${String(order.order_number ?? '').slice(-4).padStart(4, '0')}`,
+          : order.order_number || '—',
     },
   ]
 
@@ -865,11 +753,9 @@ export default function OrderDetailsPage() {
                           const err = thyrocareErr[tcId]
                           const hist = resolveHistoryForBooking(myRow, d)
                           const visitSteps = buildVisitStepsWithOrderBooked(order, hist, myRow, d)
-                          const patients: any[] = Array.isArray((d as any)?.patients) ? (d as any).patients : []
                           const phleboName = myRow?.phlebo_name?.trim() || d?.phlebo?.name?.trim()
                           const phleboContact = myRow?.phlebo_contact?.trim() || d?.phlebo?.contact?.trim()
                           const hasPhlebo = !!(phleboName || phleboContact)
-                          const statusText = thyrocareCombinedStatusDisplayLabel(myRow, d)
                           const apptRaw =
                             myRow?.appointment_date
                             ?? d?.appointment_date
@@ -882,6 +768,7 @@ export default function OrderDetailsPage() {
                           return (
                             <div
                               key={`${itemIdx}-v-${vi}`}
+                              className="order-detail-visit-card"
                               style={{
                                 border: '1px solid #E7E1FF',
                                 borderRadius: 12,
@@ -897,7 +784,7 @@ export default function OrderDetailsPage() {
                               {(hasPayload || (!loading && !err)) && (
                                 <>
                                   {apptRaw && (
-                                    <div style={{ ...LABEL, marginBottom: 8 }}>
+                                    <div style={{ fontSize: 13, color: '#828282', fontWeight: 400, lineHeight: 1.4, marginBottom: 8, fontFamily: 'Inter, sans-serif' }}>
                                       Appointment: {formatDate(apptRaw)}
                                     </div>
                                   )}
@@ -927,49 +814,6 @@ export default function OrderDetailsPage() {
                                   </div>
                                   {loading && !d && (
                                     <div style={{ ...LABEL, fontSize: 12, marginTop: 8 }}>Loading reports…</div>
-                                  )}
-                                  {patients.length > 0 && (
-                                    <div style={{ marginTop: 12 }}>
-                                      <div style={{ fontWeight: 500, fontSize: 14, marginBottom: 8 }}>Reports</div>
-                                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                        {patients.map((p: any, pi: number) => {
-                                          const patientId: string | undefined = p?.id ?? p?.lead_id ?? p?.patient_id
-                                          const memberIdForPatient = resolveMemberIdForItemAndVisit(it, tcId, p?.name, pi)
-                                          const vendorIdVariants = [p?.id, p?.lead_id, p?.patient_id]
-                                            .filter(v => v != null && String(v).trim())
-                                            .map(v => String(v).trim())
-                                          const alternatePatientIds = [...new Set(vendorIdVariants)].filter(x => x !== String(patientId))
-                                          return (
-                                            <div key={`${itemIdx}-${vi}-p-${patientId ?? pi}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                                              <span style={{ ...LABEL, color: '#161616' }}>{String(p?.name ?? `Patient ${pi + 1}`)}</span>
-                                              {patientId && (
-                                                <button
-                                                  className="order-detail-patientViewReportBtn"
-                                                  type="button"
-                                                  onClick={() =>
-                                                    handleViewReport(String(patientId), {
-                                                      thyrocareOrderId: tcId,
-                                                      leadId: String(
-                                                        p?.lead_id ?? p?.patient_id ?? p?.id ?? patientId,
-                                                      ),
-                                                      memberId: memberIdForPatient,
-                                                      alternatePatientIds,
-                                                    })}
-                                                  disabled={!!reportLoading[String(patientId)]}
-                                                >
-                                                  {reportLoading[String(patientId)] ? 'Loading…' : (
-                                                    <>
-                                                      <img className="order-detail-patientViewReportIcon" src={fileIcon} alt="" aria-hidden="true" />
-                                                      View report
-                                                    </>
-                                                  )}
-                                                </button>
-                                              )}
-                                            </div>
-                                          )
-                                        })}
-                                      </div>
-                                    </div>
                                   )}
                                 </>
                               )}
@@ -1011,7 +855,6 @@ export default function OrderDetailsPage() {
                         const addr = entry.address
                         const isDone = entry.order_status?.toUpperCase() === 'COMPLETED'
                         const patientId = resolvePatientIdForRow(entry, it, stripIds)
-                        const hasReport = isDone && !!patientId
                         const tcIdForRow = canTrack ? effectiveRowThyrocareId(entry, stripIds) : null
                         const myRowForStatus = tcIdForRow ? myOrderByTcId[tcIdForRow] : undefined
                         const dForStatus = tcIdForRow ? thyrocareById[tcIdForRow] : undefined
@@ -1028,6 +871,7 @@ export default function OrderDetailsPage() {
                         const vendorMatch = vendorPatients.find(
                           (tp: any) => normalizePersonName(tp?.name) === normalizePersonName(m.name),
                         )
+                        const isReportAvailable = isDone || !!(vendorMatch?.is_report_available)
                         const alternatePatientIds = vendorMatch
                           ? [...new Set(
                               [vendorMatch.id, vendorMatch.lead_id, vendorMatch.patient_id]
@@ -1075,7 +919,7 @@ export default function OrderDetailsPage() {
                                 <span style={LABEL}>· {formatDate(entry.scheduled_date)}</span>
                               )}
                             </div>
-                            {patientId && (isDone || hasReport) && (
+                            {patientId && isReportAvailable && (
                               <button
                                 className="order-detail-patientViewReportBtn"
                                 type="button"

@@ -335,7 +335,8 @@ export default function ReportPage() {
   const [report, setReport] = useState<MyReportRow | null>(seedRow)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [loading, setLoading] = useState(!!reportId || !seedRow)
-  const [activeFilter, setActiveFilter] = useState('All(0)')
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({})
+  const [groupFilters, setGroupFilters] = useState<Record<string, string>>({})
   const [pdfLoading, setPdfLoading] = useState(false)
   const [pdfError, setPdfError] = useState<string | null>(null)
   const [members, setMembers] = useState<Member[]>([])
@@ -449,24 +450,7 @@ export default function ReportPage() {
   const low = biomarkers.filter(b => b.status === 'Low').length
   const needs = high + low
 
-  const filterTabs = useMemo(() => [
-    `All(${biomarkers.length})`,
-    `Normal(${normal})`,
-    `Needs Attention(${needs})`,
-  ], [biomarkers.length, normal, needs])
-
-  useEffect(() => {
-    setActiveFilter(`All(${biomarkers.length})`)
-  }, [biomarkers.length])
-
   const categories = useMemo(() => [...new Set(biomarkers.map(b => b.category))], [biomarkers])
-
-  const filteredBiomarkers = useMemo(() => {
-    if (activeFilter.startsWith('All')) return biomarkers
-    if (activeFilter.startsWith('Normal')) return biomarkers.filter(b => b.status === 'Normal')
-    if (activeFilter.startsWith('Needs')) return biomarkers.filter(b => b.status !== 'Normal')
-    return biomarkers.filter(b => b.category === activeFilter)
-  }, [biomarkers, activeFilter])
 
   const title =
     str(report, 'test_name', 'product_name', 'package_name', 'report_name', 'title', 'order_name')
@@ -711,32 +695,89 @@ export default function ReportPage() {
               </div>
             </div>
 
-            <div style={{ marginBottom: 16 }}>
-              <span style={{ fontFamily: 'Poppins,sans-serif', fontSize: 16, fontWeight: 500, color: '#161616' }}>Parameters</span>
-            </div>
+            {(() => {
+              const abnormalGroups = categories.filter(cat =>
+                biomarkers.filter(b => b.category === cat).some(b => b.status !== 'Normal')
+              ).length
+              if (!abnormalGroups) return null
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: 12, padding: '12px 16px', marginBottom: 16 }}>
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                    <path d="M10 2L2 17h16L10 2z" stroke="#D97706" strokeWidth="1.3" strokeLinejoin="round"/>
+                    <path d="M10 8v4M10 14h.01" stroke="#D97706" strokeWidth="1.3" strokeLinecap="round"/>
+                  </svg>
+                  <span style={{ fontSize: 13, color: '#92400E', fontFamily: 'Poppins,sans-serif' }}>
+                    {abnormalGroups} test group{abnormalGroups > 1 ? 's' : ''} with parameters outside normal range. Expand below to review.
+                  </span>
+                </div>
+              )
+            })()}
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: 6, background: '#fff', borderRadius: 100, outline: '1px solid #E7E1FF' }}>
-                {filterTabs.map(f => (
-                  <button key={f} type="button" onClick={() => setActiveFilter(f)} style={{
-                    padding: '6px 16px', borderRadius: 100, fontFamily: 'Poppins,sans-serif',
-                    fontSize: 13, fontWeight: 500, cursor: 'pointer', border: 'none',
-                    background: activeFilter === f ? '#fff' : 'transparent',
-                    outline: activeFilter === f ? '1px solid #E7E1FF' : 'none',
-                    boxShadow: activeFilter === f ? '0px 4px 27.3px 0px rgba(0,0,0,0.05)' : 'none',
-                    color: activeFilter === f ? '#8B5CF6' : '#414141',
-                  }}>{f}</button>
-                ))}
-              </div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: '#1B1F3B', fontFamily: 'Poppins,sans-serif', marginBottom: 12 }}>
+              Test Results by Category
             </div>
 
             {categories.map(cat => {
-              const markers = filteredBiomarkers.filter(b => b.category === cat)
-              if (!markers.length) return null
+              const catMarkers = biomarkers.filter(b => b.category === cat)
+              const catNormal = catMarkers.filter(b => b.status === 'Normal').length
+              const catAbnormal = catMarkers.filter(b => b.status !== 'Normal').length
+              const isExpanded = expandedGroups[cat] ?? false
+              const gf = groupFilters[cat] ?? 'All'
+              const visible =
+                gf === 'Normal' ? catMarkers.filter(b => b.status === 'Normal')
+                : gf === 'Needs Attention' ? catMarkers.filter(b => b.status !== 'Normal')
+                : catMarkers
+
               return (
-                <div key={cat} style={{ marginBottom: 60 }}>
-                  <p style={{ fontFamily: 'Poppins,sans-serif', fontSize: 14, fontWeight: 500, color: '#161616', margin: '0 0 16px' }}>{cat}</p>
-                  {markers.map((b, i) => <BiomarkerCard key={`${cat}-${b.name}-${i}`} b={b} />)}
+                <div key={cat} style={{ background: '#fff', borderRadius: 16, marginBottom: 8, overflow: 'hidden', boxShadow: '0px 4px 27.3px 0px rgba(0,0,0,0.05)' }}>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedGroups(prev => ({ ...prev, [cat]: !prev[cat] }))}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+                  >
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#EDE9FE', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                        <path d="M7 2h6v4l2 2v8a1 1 0 01-1 1H6a1 1 0 01-1-1V8l2-2V2z" stroke="#7C5CFC" strokeWidth="1.2" strokeLinejoin="round"/>
+                        <path d="M7 2v4h6V2" stroke="#7C5CFC" strokeWidth="1.2"/>
+                      </svg>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: '#111827', fontFamily: 'Poppins,sans-serif' }}>{cat}</div>
+                      <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2, fontFamily: 'Poppins,sans-serif' }}>{catMarkers.length} Parameters</div>
+                    </div>
+                    {catAbnormal > 0 ? (
+                      <span style={{ fontSize: 11, fontWeight: 600, color: '#DC2626', background: '#FEE2E2', borderRadius: 20, padding: '4px 10px', flexShrink: 0, fontFamily: 'Poppins,sans-serif' }}>
+                        {catAbnormal} Abnormal
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 11, fontWeight: 600, color: '#059669', background: '#D1FAE5', borderRadius: 20, padding: '4px 10px', flexShrink: 0, fontFamily: 'Poppins,sans-serif' }}>
+                        All Normal
+                      </span>
+                    )}
+                    <svg width="8" height="14" viewBox="0 0 8 14" fill="none"
+                      style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }}>
+                      <path d="M1 1l6 6-6 6" stroke="#828282" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+
+                  {isExpanded && (
+                    <div style={{ padding: '0 20px 20px', borderTop: '1px solid #F3F4F6' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '14px 0 12px', flexWrap: 'wrap' }}>
+                        {(['All', 'Normal', 'Needs Attention'] as const).map(f => {
+                          const count = f === 'All' ? catMarkers.length : f === 'Normal' ? catNormal : catAbnormal
+                          return (
+                            <button key={f} type="button"
+                              onClick={e => { e.stopPropagation(); setGroupFilters(prev => ({ ...prev, [cat]: f })) }}
+                              style={{ padding: '6px 14px', borderRadius: 100, fontSize: 12, fontWeight: 500, cursor: 'pointer', border: 'none', background: gf === f ? '#7C5CFC' : '#F3F4F6', color: gf === f ? '#fff' : '#6B7280', fontFamily: 'Poppins,sans-serif' }}
+                            >
+                              {f}({count})
+                            </button>
+                          )
+                        })}
+                      </div>
+                      {visible.map((b, i) => <BiomarkerCard key={`${cat}-${b.name}-${i}`} b={b} />)}
+                    </div>
+                  )}
                 </div>
               )
             })}

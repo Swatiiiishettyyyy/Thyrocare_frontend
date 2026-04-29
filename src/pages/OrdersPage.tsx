@@ -56,7 +56,7 @@ export default function OrdersPage() {
   // Re-fetch whenever the selected member changes so the list always reflects the active profile.
   useEffect(() => {
     setLoading(true)
-    fetchOrders()
+    fetchOrders(currentMember?.member_id)
       .then(setOrders)
       .catch(() => setOrders([]))
       .finally(() => setLoading(false))

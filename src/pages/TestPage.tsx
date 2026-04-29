@@ -364,14 +364,6 @@ export default function TestPage({ cartCount }: { cartCount?: number }) {
           </div>
         </section>
 
-        {/* Popular Packages */}
-        <PackagesSection
-          heading="Popular Health Packages"
-          subheading="Most booked preventive health packages, recommended for regular health monitoring."
-          cards={popularCards}
-          onViewAll={() => navigate('/packages')}
-        />
-
         {/* Comprehensive Health Packages */}
         <section id="comprehensive" className="page-section" style={{ background: '#fff', position: 'relative', overflow: 'hidden' }}>
           <img src={rect20} alt="" aria-hidden="true" style={{
@@ -456,6 +448,12 @@ export default function TestPage({ cartCount }: { cartCount?: number }) {
             </div>
           </div>
         </section>
+        <PackagesSection
+          heading="Popular Health Packages"
+          subheading="Most booked preventive health packages, recommended for regular health monitoring."
+          cards={popularCards}
+          onViewAll={() => navigate('/packages')}
+        />
         <WhyChooseUs />
         <HowItWorks />
       </main>

@@ -53,6 +53,7 @@ export interface MemberListResponse {
   status: 'success' | 'error'
   message?: string
   data?: MemberProfile[]
+  members?: MemberProfile[]
 }
 
 export interface DeleteMemberResponse {

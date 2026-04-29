@@ -25,6 +25,7 @@ export default function EmptyCartPage() {
         logoAlt="Nucleotide"
         links={NAV_LINKS}
         ctaLabel="My Cart"
+        hideSearchOnMobile
         onCtaClick={() => navigate('/cart')}
       />
 

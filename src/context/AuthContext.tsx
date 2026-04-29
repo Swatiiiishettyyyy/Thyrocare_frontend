@@ -71,11 +71,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         memberService.getMemberList(),
       ])
       if (currentRes.status === 'fulfilled') {
-        const data = currentRes.value?.data || currentRes.value
+        const data = currentRes.value?.data || currentRes.value?.member || currentRes.value
         setCurrentMember(data || null)
       }
       if (listRes.status === 'fulfilled') {
-        const list = listRes.value?.data || []
+        const list = listRes.value?.data || listRes.value?.members || []
         setMembers(Array.isArray(list) ? list : [])
       }
     } catch {}
@@ -238,13 +238,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const handleSelectMember = useCallback(async (memberId: number | string) => {
     try {
       const response = await memberService.selectMember(memberId)
+      // Save new JWT — backend embeds selected_member_id in it so all subsequent
+      // data fetches (orders, reports, metrics) are automatically scoped to this member.
+      const newToken = response?.token || response?.data?.token
+      if (typeof newToken === 'string' && newToken.trim()) saveAuthToken(newToken.trim())
       const newCsrf = response?.csrf_token || response?.csrfToken || response?.data?.csrf_token
       if (newCsrf) saveCsrfToken(newCsrf)
-      await loadMemberData()
+
+      const numId = typeof memberId === 'string' ? parseInt(memberId, 10) : memberId
+      const picked = members.find(m => (m.member_id ?? Number(m.id)) === numId)
+      if (picked) {
+        const normId = picked.member_id ?? (Number(picked.id) || undefined)
+        setCurrentMember({ ...picked, member_id: normId })
+      }
+      try {
+        const listRes = await memberService.getMemberList()
+        const list = listRes?.data || (listRes as any)?.members || []
+        if (Array.isArray(list)) setMembers(list)
+      } catch {}
     } catch (error: any) {
       throw error
     }
-  }, [loadMemberData])
+  }, [members])
 
   const refreshMembers = useCallback(async () => {
     await loadMemberData()

@@ -23,7 +23,19 @@ const NAV_LINKS = [
   { label: 'Orders', href: '#' },
 ]
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const update = () => setIsMobile(window.innerWidth <= 768)
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+  return isMobile
+}
+
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const DAYS_SHORT = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
 function toDateStr(d: Date) {
@@ -44,6 +56,7 @@ interface TimeSlotPageProps {
 export default function TimeSlotPage({ cartCount, items, session, onSessionUpdate, onUpsertGroup }: TimeSlotPageProps) {
   const navigate = useNavigate()
   const location = useLocation()
+  const isMobile = useIsMobile()
   const blockReason = (location.state as any)?.checkoutBlockReason as string | undefined
   const today = useMemo(() => {
     const d = new Date()
@@ -272,7 +285,7 @@ export default function TimeSlotPage({ cartCount, items, session, onSessionUpdat
         boxSizing: 'border-box', width: '100%',
       }}>
         {/* Left column */}
-        <div style={{ flex: '1 1 300px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 32 }}>
+        <div style={{ flex: '1 1 300px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: isMobile ? 16 : 32 }}>
 
           <span style={{ fontSize: 'clamp(16px, 1.4vw, 20px)', fontWeight: 500, color: '#161616' }}>Select Collection Time</span>
           {blockReason && (
@@ -303,7 +316,7 @@ export default function TimeSlotPage({ cartCount, items, session, onSessionUpdat
                   : null
 
                 return (
-                  <div key={gid} style={{ border: '1px solid #E7E1FF', borderRadius: 16, padding: 16, background: '#fff', boxShadow: '0px 4px 20px rgba(0,0,0,0.06)' }}>
+                  <div key={gid} style={{ border: '1px solid #E7E1FF', borderRadius: 16, padding: isMobile ? '12px 10px' : 16, background: '#fff', boxShadow: '0px 4px 20px rgba(0,0,0,0.06)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                         <span style={{ fontSize: 14, fontWeight: 600, color: '#101129', fontFamily: 'Poppins, sans-serif' }}>
@@ -320,9 +333,9 @@ export default function TimeSlotPage({ cartCount, items, session, onSessionUpdat
                       )}
                     </div>
 
-                    <div className="timeslot-picker" style={{ display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap', marginTop: 14 }}>
+                    <div className="timeslot-picker" style={{ display: 'flex', gap: isMobile ? 14 : 20, alignItems: isMobile ? 'stretch' : 'flex-start', flexWrap: 'wrap', marginTop: 14, width: '100%' }}>
                       {/* Calendar */}
-                      <div style={{ flex: '0 0 auto', width: 280, background: '#fff', borderRadius: 16, padding: '14px 16px', boxSizing: 'border-box', border: '1px solid #F3F4F6' }}>
+                      <div className="timeslot-calendar-container" style={{ flex: '1 1 260px', minWidth: 0, background: '#fff', borderRadius: 16, padding: '14px 12px', boxSizing: 'border-box', border: '1px solid #F3F4F6' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                           <button
                             onClick={() => {
@@ -356,10 +369,10 @@ export default function TimeSlotPage({ cartCount, items, session, onSessionUpdat
                             <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="#161616" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                           </button>
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 4 }}>
-                          {DAYS.map(d => <div key={d} style={{ textAlign: 'center', fontSize: 10, color: '#9CA3AF', fontFamily: 'Inter, sans-serif', padding: '2px 0' }}>{d}</div>)}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 4, gap: 2 }}>
+                          {(isMobile ? DAYS_SHORT : DAYS).map((d, i) => <div key={i} style={{ textAlign: 'center', fontSize: isMobile ? 11 : 10, color: '#9CA3AF', fontFamily: 'Inter, sans-serif', padding: '2px 0' }}>{d}</div>)}
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
                           {calCells.map((date, i) => {
                             if (!date) return <div key={i} style={{ aspectRatio: '1' }} />
                             const isPast = date < today
@@ -383,7 +396,7 @@ export default function TimeSlotPage({ cartCount, items, session, onSessionUpdat
                       </div>
 
                       {/* Slot dropdown */}
-                      <div className="timeslot-slotcol" style={{ flex: '0 1 220px', minWidth: 180, display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 2 }}>
+                      <div className="timeslot-slotcol" style={{ flex: '1 1 180px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
                         <span style={{ fontSize: 13, color: '#414141', fontFamily: 'Inter, sans-serif' }}>
                           {ui?.selectedDate ? <>Time slot for <strong>{selectedDateLabel}</strong></> : 'Select a date first'}
                         </span>

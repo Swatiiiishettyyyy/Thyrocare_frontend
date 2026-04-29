@@ -226,6 +226,15 @@ export function AddAddressModal({ open, onClose, onSaved }: AddAddressModalProps
   }, [])
 
   useEffect(() => {
+    document.body.style.overflow = open ? 'hidden' : ''
+    document.documentElement.style.overflow = open ? 'hidden' : ''
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+    }
+  }, [open])
+
+  useEffect(() => {
     if (!open) return
     resetFlow()
     if (!navigator.geolocation) return

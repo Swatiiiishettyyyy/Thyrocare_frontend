@@ -16,11 +16,10 @@ const TestCard = React.memo(function TestCard({
 
   // TEMP: hardcode offer badge to match Figma (167:2331) even if API discount is missing.
   // Once API discount is reliable everywhere, we can restore conditional rendering.
-  const offerLabel = offerPercent?.trim() || '40% OFF'
+  const offerLabel = '30% OFF'
 
   const goToDetail = useCallback(() => {
-    const id = thyrocareProductId ?? encodeURIComponent(name)
-    navigate(`/${id}`, {
+    navigate(`/${encodeURIComponent(name)}`, {
       state: {
         test: {
           name,
@@ -50,7 +49,7 @@ const TestCard = React.memo(function TestCard({
     <article
       onClick={goToDetail}
       className="test-card cursor-pointer h-full min-h-0 min-w-0 w-full box-border border border-[#E7E1FF] bg-white flex flex-col"
-      style={{ borderRadius: 'var(--test-card-shell-radius)', padding: 'var(--test-card-shell-pad)' }}
+      style={{ borderRadius: 'var(--test-card-shell-radius)', padding: 'var(--test-card-shell-pad)', boxShadow: '0px 4px 20px rgba(139, 92, 246, 0.08)' }}
     >
       <div
         className="flex flex-1 flex-col min-h-0 overflow-hidden w-full"

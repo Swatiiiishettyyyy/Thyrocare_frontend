@@ -359,3 +359,8 @@
   line-height: 27px;
   letter-spacing: -0.02em;
 }
+
+/* Hide mobile organ dropdown on desktop — only shown via responsive.css on mobile */
+.vitals-organ-select-mobile {
+  display: none;
+}

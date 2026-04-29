@@ -50,8 +50,23 @@ const Navbar = React.memo(function Navbar({
   const [pincodeInput, setPincodeInput] = useState('')
   const [pincodeMode, setPincodeMode] = useState<'enter' | 'current'>('enter')
   const pincodeRef = useRef<HTMLDivElement>(null)
+  const pincodeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Close pincode dropdown when clicking outside
+  // Auto-close pincode modal after 30s of inactivity
+  useEffect(() => {
+    if (!showPincodeModal) {
+      if (pincodeTimeoutRef.current) clearTimeout(pincodeTimeoutRef.current)
+      return
+    }
+    pincodeTimeoutRef.current = setTimeout(() => setShowPincodeModal(false), 30000)
+    return () => { if (pincodeTimeoutRef.current) clearTimeout(pincodeTimeoutRef.current) }
+  }, [showPincodeModal])
+
+  function resetPincodeTimeout() {
+    if (!showPincodeModal) return
+    if (pincodeTimeoutRef.current) clearTimeout(pincodeTimeoutRef.current)
+    pincodeTimeoutRef.current = setTimeout(() => setShowPincodeModal(false), 30000)
+  }
   useEffect(() => {
     if (!showPincodeModal) return
     function onOutside(e: MouseEvent) {
@@ -281,7 +296,7 @@ const Navbar = React.memo(function Navbar({
           <span className="navbar-location-mobile-label" style={{ fontFamily: 'Inter, sans-serif', fontSize: 16, fontWeight: 500, color: '#161616', lineHeight: '27px' }}>
             {locationLabel}
           </span>
-          <svg width="20" height="20" viewBox="0 0 12 8" fill="none" aria-hidden className="navbar-location-mobile-chevron">
+          <svg width="10" height="10" viewBox="0 0 12 8" fill="none" aria-hidden className="navbar-location-mobile-chevron">
             <path d="M1 1L6 6L11 1" stroke="#161616" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
         </button>
@@ -369,6 +384,8 @@ const Navbar = React.memo(function Navbar({
           {/* Pincode dropdown */}
           {showPincodeModal && (
             <div
+              onMouseMove={resetPincodeTimeout}
+              onTouchStart={resetPincodeTimeout}
               style={{
                 position: 'absolute', top: '110%', left: 0, zIndex: 200,
                 background: '#fff',
@@ -537,7 +554,7 @@ const Navbar = React.memo(function Navbar({
               </svg>
             </button>
             <div className="navbar-member-switch-drawer" style={{ padding: '48px 16px 12px' }}>
-              <MemberSwitchDropdown />
+              <MemberSwitchDropdown onAction={() => setMenuOpen(false)} />
             </div>
             <nav style={{ display: 'flex', flexDirection: 'column', padding: '0' }}>
               {links.map((link) => (

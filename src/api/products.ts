@@ -39,7 +39,7 @@ export interface ThyrocareProduct {
 
 const PAGE_SIZE = 100
 const MAX_PAGES = 50
-const DEFAULT_DISCOUNT_PERCENT = 40
+const DEFAULT_DISCOUNT_PERCENT = 30
 
 /** Lowercase, collapse spaces; underscores ↔ spaces so UI matches API slugs. */
 function normalizeCategoryKey(c: string): string {
@@ -219,8 +219,8 @@ export async function fetchProductById(id: number): Promise<ThyrocareProduct> {
 
 function cardProductType(t: string): 'Single' | 'Package' {
   const u = (t || '').toUpperCase()
-  if (u === 'MSKU' || u === 'OFFER') return 'Package'
-  return 'Single'
+  if (u === 'PSKU') return 'Single'
+  return 'Package'
 }
 
 export function toTestCard(p: ThyrocareProduct): TestCardProps {
@@ -229,16 +229,13 @@ export function toTestCard(p: ThyrocareProduct): TestCardProps {
   // - Strike-off price shown in UI = `thyrocare_listing_price`
   const actual = Number(p.thyrocare_price ?? 0) || 0
   const strike = Number(p.thyrocare_listing_price ?? 0) || 0
-  const discount =
-    Number.isFinite(Number(p.discount_percentage))
-      ? `${Math.round(Number(p.discount_percentage))}% OFF`
-      : `${DEFAULT_DISCOUNT_PERCENT}% OFF`
+  const discount = `${DEFAULT_DISCOUNT_PERCENT}% OFF`
 
   return {
     thyrocareProductId: p.id,
     maxBeneficiaries: p.beneficiaries_max,
     name: String(p.product_name ?? p.name ?? '').trim() || String(p.name ?? '').trim(),
-    description: p.short_description ?? p.about ?? `${p.no_of_tests_included} tests included`,
+    description: p.about ?? p.short_description ?? `${p.no_of_tests_included} tests included`,
     price: String(Math.round(actual)),
     originalPrice: String(Math.round(strike)),
     offerPercent: discount,

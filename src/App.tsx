@@ -142,7 +142,7 @@ export default function App() {
 
   const handleAddToCart = useCallback((test: TestCardProps): boolean => {
     const hasSelf =
-      members.some(m => String(m.relation ?? '').trim().toLowerCase() === 'self' || m.is_self === true)
+      members.some(m => String(m.relation ?? '').trim().toLowerCase() === 'self' || m.is_self === true || m.is_self_profile === true)
 
     // Requirement: if profile isn't completed, prompt for Self profile when attempting to add to cart.
     if (!isLoggedIn) {

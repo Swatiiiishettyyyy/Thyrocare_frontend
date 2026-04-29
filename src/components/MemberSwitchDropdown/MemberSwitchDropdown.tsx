@@ -11,7 +11,7 @@ function getInitials(name: string): string {
     .join('')
 }
 
-const MemberSwitchDropdown: React.FC = () => {
+const MemberSwitchDropdown: React.FC<{ onAction?: () => void }> = ({ onAction }) => {
   const {
     isLoggedIn,
     user,
@@ -40,7 +40,7 @@ const MemberSwitchDropdown: React.FC = () => {
   if (!isLoggedIn) {
     return (
       <button
-        onClick={openLoginModal}
+        onClick={() => { onAction?.(); openLoginModal() }}
         className="navbar-login-btn flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors"
         style={{
           background: 'linear-gradient(90deg, #101129 0%, #2A2C5B 100%)',
@@ -155,7 +155,7 @@ const MemberSwitchDropdown: React.FC = () => {
           {/* Actions */}
           <div className="border-t border-gray-100 py-1">
             <button
-              onClick={() => { setIsOpen(false); openAddMemberModal() }}
+              onClick={() => { setIsOpen(false); onAction?.(); openAddMemberModal() }}
               className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
             >
               <div className="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center flex-shrink-0">

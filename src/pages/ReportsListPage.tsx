@@ -276,10 +276,10 @@ export default function ReportsListPage() {
   const load = useCallback(() => {
     setLoading(true)
     setError(null)
-    void fetchOrders()
+    void fetchOrders(currentMember?.member_id)
       .then(setOrders)
       .catch(() => setOrders([]))
-    void fetchThyrocareMyOrders()
+    void fetchThyrocareMyOrders(currentMember?.member_id)
       .then(setThyrocareMyOrders)
       .catch(() => setThyrocareMyOrders([]))
     fetchMyReports(currentMember?.member_id ?? undefined)
@@ -366,27 +366,6 @@ export default function ReportsListPage() {
             <p style={{ fontSize: 15, color: '#9CA3AF', margin: 0 }}>View, track, and understand your health data</p>
           </div>
           <div className="reports-header-actions" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button
-              type="button"
-              onClick={() => navigate('/upload-report')}
-              className="reports-upload-btn"
-              style={{
-                height: 42,
-                padding: '0 16px',
-                width: 'clamp(160px, 55vw, 220px)',
-                borderRadius: 12,
-                border: '1px solid #E7E1FF',
-                background: 'linear-gradient(90deg, #101129 0%, #2A2C5B 100%)',
-                color: '#fff',
-                fontFamily: 'Poppins, sans-serif',
-                fontSize: 14,
-                fontWeight: 500,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Upload Report
-            </button>
           </div>
         </div>
 

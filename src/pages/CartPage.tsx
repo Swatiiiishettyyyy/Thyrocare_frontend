@@ -251,7 +251,7 @@ export default function CartPage({
                         style={{
                           border: 'none',
                           background: 'transparent',
-                          color: '#6B7280',
+                          color: '#DC2626',
                           cursor: 'pointer',
                           fontFamily: 'Inter,sans-serif',
                           fontSize: 13,
