@@ -234,7 +234,7 @@ export function toTestCard(p: ThyrocareProduct): TestCardProps {
   return {
     thyrocareProductId: p.id,
     maxBeneficiaries: p.beneficiaries_max,
-    name: String(p.product_name ?? p.name ?? '').trim() || String(p.name ?? '').trim(),
+    name: String(p.product_name ?? '').trim(),
     description: p.about ?? p.short_description ?? `${p.no_of_tests_included} tests included`,
     price: String(Math.round(actual)),
     originalPrice: String(Math.round(strike)),

@@ -258,7 +258,7 @@ export default function AddressPage({ cartCount, items, session, onSessionUpdate
           ...(existingGroup ?? {
             group_id: groupId,
             thyrocare_product_id: pid,
-            product_name: item.name,
+            product_name: item.product_name,
             items: [],
           }),
           group_id: groupId,
