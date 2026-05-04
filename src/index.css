@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Hide pre-render fallback — only meaningful to crawlers, not users */
+noscript-fallback { display: none; }
+
 /*
  * Fluid type + spacing: Figma uses fixed px at one frame width; real desktops
  * (1280–1600px, toolbars, scrollbars) need values that scale and cap smoothly.

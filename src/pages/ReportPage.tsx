@@ -79,7 +79,6 @@ function reportSummaryEntries(row: MyReportRow | null): { key: string; value: st
     'lead_id',
     'leadId',
     'member_id',
-    'test_name',
     'product_name',
     'package_name',
     'report_name',
@@ -453,7 +452,7 @@ export default function ReportPage() {
   const categories = useMemo(() => [...new Set(biomarkers.map(b => b.category))], [biomarkers])
 
   const title =
-    str(report, 'test_name', 'product_name', 'package_name', 'report_name', 'title', 'order_name')
+    str(report, 'product_name', 'package_name', 'report_name', 'title', 'order_name')
     || 'Lab report'
   const typeBadge =
     str(report, 'report_type', 'reportType', 'category', 'type') || 'Blood test'

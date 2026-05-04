@@ -48,6 +48,40 @@ export async function saveThyrocareAddress(data: Address): Promise<Address> {
   return _saveAddressToEndpoint('/thyrocare/address/save', data)
 }
 
+export async function updateAddress(addressId: number, data: Omit<Address, 'address_id'>): Promise<Address> {
+  const payload: Record<string, unknown> = {
+    address_label: data.address_label,
+    street_address: data.street_address,
+    landmark: data.landmark ?? '',
+    locality: data.locality,
+    city: data.city,
+    state: data.state,
+    postal_code: data.postal_code,
+    country: data.country,
+    save_for_future: true,
+  }
+  if (data.latitude != null && Number.isFinite(data.latitude)) payload.latitude = data.latitude
+  if (data.longitude != null && Number.isFinite(data.longitude)) payload.longitude = data.longitude
+  const res = await api.put<any>(`/address/edit/${addressId}`, payload)
+  const a = res.data ?? res
+  return {
+    address_id: a.address_id ?? addressId,
+    address_label: a.address_label ?? data.address_label,
+    street_address: a.street_address ?? data.street_address,
+    landmark: a.landmark,
+    locality: a.locality ?? data.locality,
+    city: a.city ?? data.city,
+    state: a.state ?? data.state,
+    postal_code: a.postal_code ?? data.postal_code,
+    country: a.country ?? data.country,
+    save_for_future: a.save_for_future,
+  }
+}
+
+export async function deleteAddress(addressId: number): Promise<void> {
+  await api.delete<any>(`/address/delete/${addressId}`)
+}
+
 async function _saveAddressToEndpoint(endpoint: string, data: Address): Promise<Address> {
   const payload: Record<string, unknown> = {
     address_id: 0,

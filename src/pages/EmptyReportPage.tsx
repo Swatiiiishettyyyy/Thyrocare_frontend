@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Navbar } from '../components'
+import { Navbar, Footer } from '../components'
 import emptyReportIllustration from '../assets/figma/empty-report/fi_4751509.svg'
 import arrowWhite from '../assets/figma/empty-report/Frame-3.svg'
 
@@ -90,6 +90,8 @@ export default function EmptyReportPage() {
         </div>
 
       </div>
+
+      <Footer />
     </div>
   )
 }

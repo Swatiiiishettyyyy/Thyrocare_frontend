@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Navbar } from '../components'
+import { Navbar, Footer } from '../components'
 import emptyCartImg from '../assets/figma/checkout-pages/empty_cart.png'
 
 const NAV_LINKS = [
@@ -122,6 +122,8 @@ export default function EmptyCartPage() {
           </svg>
         </button>
       </div>
+
+      <Footer />
     </div>
   )
 }

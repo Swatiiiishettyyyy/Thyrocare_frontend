@@ -4,7 +4,7 @@
  */
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
-import { Navbar } from '../components'
+import { Navbar, Footer } from '../components'
 import {
   fetchOrderByOrderNumber,
   fetchOrders,
@@ -915,9 +915,12 @@ export default function OrderDetailsPage() {
                                 </span>
                               )}
                               <span style={{ fontSize: 13, color: '#161616' }}>{rowStatusDisplay}</span>
-                              {entry.scheduled_date && (
-                                <span style={LABEL}>· {formatDate(entry.scheduled_date)}</span>
-                              )}
+                              {(() => {
+                                const _s = String(entry.order_status ?? '').toUpperCase()
+                                const _isPostCollection = ['SAMPLE_COLLECTED','SAMPLE_RECEIVED_BY_LAB','TESTING_IN_PROGRESS','REPORT_READY','COMPLETED'].includes(_s)
+                                const _ts = _isPostCollection ? entry.status_updated_at : entry.scheduled_date
+                                return _ts ? <span style={LABEL}>· {formatDate(_ts)}</span> : null
+                              })()}
                             </div>
                             {patientId && isReportAvailable && (
                               <button

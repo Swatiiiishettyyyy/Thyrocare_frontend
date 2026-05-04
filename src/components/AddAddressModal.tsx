@@ -3,7 +3,7 @@ import { flushSync } from 'react-dom'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import type { Address } from '../api/address'
-import { saveThyrocareAddress } from '../api/address'
+import { saveThyrocareAddress, updateAddress } from '../api/address'
 import { checkPincodeServiceability } from '../api/cart'
 import {
   getMapboxAccessToken,
@@ -129,9 +129,11 @@ export interface AddAddressModalProps {
   open: boolean
   onClose: () => void
   onSaved: (address: Address) => void
+  editingAddress?: Address | null
 }
 
-export function AddAddressModal({ open, onClose, onSaved }: AddAddressModalProps) {
+export function AddAddressModal({ open, onClose, onSaved, editingAddress }: AddAddressModalProps) {
+  const isEditMode = !!editingAddress
   const mapboxTokenPresent = !!getMapboxAccessToken()
 
   const [step, setStep] = useState<Step>('main')
@@ -237,6 +239,35 @@ export function AddAddressModal({ open, onClose, onSaved }: AddAddressModalProps
   useEffect(() => {
     if (!open) return
     resetFlow()
+    if (editingAddress) {
+      const existingLabel = editingAddress.address_label ?? 'Home'
+      let labelValue = 'Home'
+      let customLabel = ''
+      if (['Home', 'Work'].includes(existingLabel)) {
+        labelValue = existingLabel
+      } else if (existingLabel.startsWith('Other — ')) {
+        labelValue = 'Other'
+        customLabel = existingLabel.replace(/^Other — /, '')
+      } else {
+        labelValue = 'Other'
+        customLabel = existingLabel
+      }
+      setForm(f => ({
+        ...f,
+        address_label: labelValue,
+        custom_label: customLabel,
+        street_address: editingAddress.street_address ?? '',
+        landmark: editingAddress.landmark ?? '',
+        locality: editingAddress.locality ?? '',
+        city: editingAddress.city ?? '',
+        state: editingAddress.state ?? '',
+        postal_code: editingAddress.postal_code ?? '',
+        country: editingAddress.country ?? 'India',
+      }))
+      const pin = (editingAddress.postal_code ?? '').replace(/\D/g, '').slice(0, 6)
+      if (pin.length === 6) void verifyPin(pin)
+      return
+    }
     if (!navigator.geolocation) return
     navigator.geolocation.getCurrentPosition(
       pos => {
@@ -246,7 +277,7 @@ export function AddAddressModal({ open, onClose, onSaved }: AddAddressModalProps
       () => {},
       { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 },
     )
-  }, [open, resetFlow])
+  }, [open, resetFlow, editingAddress])
 
   const applyParsedToForm = useCallback((p: ParsedGeocodeResult, pinCoords?: { lng: number; lat: number } | null) => {
     setForm(f => ({
@@ -646,7 +677,7 @@ export function AddAddressModal({ open, onClose, onSaved }: AddAddressModalProps
 
   const handleSave = async () => {
     setFormError(null)
-    if (!houseNumber.trim()) {
+    if (!isEditMode && !houseNumber.trim()) {
       setFormError('Flat / floor number is required.')
       return
     }
@@ -673,7 +704,7 @@ export function AddAddressModal({ open, onClose, onSaved }: AddAddressModalProps
     setSaving(true)
     try {
       const payload: Address = {
-        address_id: 0,
+        address_id: isEditMode ? editingAddress!.address_id : 0,
         address_label: label,
         street_address: streetComposed,
         landmark: form.landmark,
@@ -685,8 +716,10 @@ export function AddAddressModal({ open, onClose, onSaved }: AddAddressModalProps
         save_for_future: true,
         ...(coords ? { latitude: coords.lat, longitude: coords.lng } : {}),
       }
-      const saved = await saveThyrocareAddress(payload)
-      if (lastSearchQuery.trim()) {
+      const saved = isEditMode
+        ? await updateAddress(editingAddress!.address_id, payload)
+        : await saveThyrocareAddress(payload)
+      if (!isEditMode && lastSearchQuery.trim()) {
         appendRecentAddressSearch({
           query: lastSearchQuery.trim(),
           place_name: `${streetComposed}, ${form.locality}`,
@@ -1101,7 +1134,7 @@ export function AddAddressModal({ open, onClose, onSaved }: AddAddressModalProps
                     lineHeight: 1.25,
                   }}
                 >
-                  Add address
+                  {isEditMode ? 'Edit address' : 'Add address'}
                 </span>
               </div>
               <button
@@ -1281,7 +1314,7 @@ export function AddAddressModal({ open, onClose, onSaved }: AddAddressModalProps
                   fontFamily: 'Inter, sans-serif',
                 }}
               >
-                {saving ? 'Saving…' : 'Save address'}
+                {saving ? 'Saving…' : isEditMode ? 'Update address' : 'Save address'}
               </button>
             </div>
           </>

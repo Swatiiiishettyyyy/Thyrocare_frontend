@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { LineGraph, Navbar } from '../components'
+import { LineGraph, Navbar, Footer } from '../components'
 import { fetchMyReports, pickSampleCollectedTimestampFromReport, type MyReportRow } from '../api/orders'
 import { useAuth } from '../context/AuthContext'
 

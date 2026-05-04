@@ -81,16 +81,18 @@ async function refreshAuthToken(): Promise<void> {
       }
       if (csrfToken) baseHeaders['X-CSRF-Token'] = csrfToken
 
-      // Cookie session (works on HTTPS / when Set-Cookie is not Secure-only).
-      // On http://localhost, Secure cookies are not stored — try body refresh next.
-      const attempts: Array<{ body?: string }> = [{ body: undefined }]
+      // Prefer the stored refresh token when available. Sending an empty cookie
+      // refresh first creates avoidable 401s and can trip backend rate limits.
       const rt = getRefreshToken()
+      const attempts: Array<{ body?: string }> = []
       if (rt?.trim()) {
         attempts.push({ body: JSON.stringify({ refresh_token: rt.trim() }) })
-        attempts.push({ body: JSON.stringify({ refreshToken: rt.trim() }) })
+      } else {
+        attempts.push({ body: undefined })
       }
 
       let lastMessage = 'Token refresh failed'
+      let hitRateLimit = false
       for (const { body } of attempts) {
         const res = await fetch(`${BASE_URL}/auth/refresh`, {
           method: 'POST',
@@ -110,14 +112,19 @@ async function refreshAuthToken(): Promise<void> {
           if (newCsrf) saveCsrfToken(newCsrf)
           return
         }
+        if (res.status === 429) hitRateLimit = true
         if (typeof responseData === 'object' && responseData && 'message' in responseData) {
           const m = (responseData as { message?: unknown }).message
           if (typeof m === 'string' && m.trim()) lastMessage = m.trim()
         }
       }
 
-      clearAuthData()
-      globalHandlers.handleUnauthorized()
+      // 429 means rate-limited, not invalid — keep existing tokens so the user
+      // stays authenticated and the next request can retry normally.
+      if (!hitRateLimit) {
+        clearAuthData()
+        globalHandlers.handleUnauthorized()
+      }
       throw new Error(lastMessage)
     } finally {
       isRefreshing = false
@@ -202,7 +209,6 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
             headers: retryHeaders,
             body,
             credentials: 'include',
-            signal,
           })
           const retryData: T = retryRes.headers.get('content-type')?.includes('application/json')
             ? await retryRes.json()

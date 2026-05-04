@@ -22,6 +22,7 @@ const AddMemberModal: React.FC = () => {
   const relationRef = useRef<HTMLDivElement>(null)
 
   const isEditing = !!editingMember
+  const isSelf = String(editingMember?.relation ?? '').trim().toLowerCase() === 'self'
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -67,8 +68,8 @@ const AddMemberModal: React.FC = () => {
   const validate = (): boolean => {
     const errs: Record<string, string> = {}
     if (!name.trim()) errs.name = 'Name is required'
-    if (!relation) errs.relation = 'Relationship is required'
-    if (relation === 'Other' && !customRelation.trim()) errs.customRelation = 'Please specify relationship'
+    if (!isSelf && !relation) errs.relation = 'Relationship is required'
+    if (!isSelf && relation === 'Other' && !customRelation.trim()) errs.customRelation = 'Please specify relationship'
     if (mobile && !/^\d{10}$/.test(mobile)) errs.mobile = 'Enter a valid 10-digit number'
     if (email && !/^\S+@\S+\.\S+$/.test(email)) errs.email = 'Enter a valid email'
     setErrors(errs)
@@ -91,7 +92,7 @@ const AddMemberModal: React.FC = () => {
     setIsLoading(true)
     setApiError(null)
     try {
-      const finalRelation = relation === 'Other' ? customRelation.trim() : relation
+      const finalRelation = isSelf ? 'Self' : (relation === 'Other' ? customRelation.trim() : relation)
       const payload = {
         name: name.trim(),
         relation: finalRelation,
@@ -176,8 +177,8 @@ const AddMemberModal: React.FC = () => {
             {errors.name && <p style={{ marginTop: 4, fontSize: 12, color: '#EF4444' }}>{errors.name}</p>}
           </div>
 
-          {/* Relationship */}
-          <div>
+          {/* Relationship — hidden when editing self */}
+          {!isSelf && <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#101129', marginBottom: 6, fontFamily: 'Inter, sans-serif' }}>Relationship *</label>
             <div ref={relationRef} style={{ position: 'relative' }}>
               <button
@@ -224,9 +225,9 @@ const AddMemberModal: React.FC = () => {
               )}
             </div>
             {errors.relation && <p style={{ marginTop: 4, fontSize: 12, color: '#EF4444' }}>{errors.relation}</p>}
-          </div>
+          </div>}
 
-          {relation === 'Other' && (
+          {!isSelf && relation === 'Other' && (
             <div>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#101129', marginBottom: 6, fontFamily: 'Inter, sans-serif' }}>Specify Relationship *</label>
               <input
@@ -249,7 +250,7 @@ const AddMemberModal: React.FC = () => {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
               <label style={{ fontSize: 13, fontWeight: 500, color: '#101129', fontFamily: 'Inter, sans-serif' }}>Mobile Number</label>
-              {'contacts' in navigator && (navigator as any).contacts?.select && (
+              {!isSelf && 'contacts' in navigator && (navigator as any).contacts?.select && (
                 <button
                   type="button"
                   onClick={async () => {
@@ -276,15 +277,16 @@ const AddMemberModal: React.FC = () => {
                 </button>
               )}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', border: `1px solid ${errors.mobile ? '#EF4444' : '#E7E1FF'}`, borderRadius: 12, overflow: 'hidden', background: '#fff' }}>
+            <div style={{ display: 'flex', alignItems: 'center', border: `1px solid ${errors.mobile ? '#EF4444' : '#E7E1FF'}`, borderRadius: 12, overflow: 'hidden', background: isSelf ? '#F9FAFB' : '#fff' }}>
               <span style={{ padding: '11px 12px', background: '#F7F7FF', color: '#828282', fontSize: 14, fontFamily: 'Inter, sans-serif', borderRight: '1px solid #E7E1FF', whiteSpace: 'nowrap' }}>+91</span>
               <input
                 type="tel"
                 inputMode="numeric"
                 value={mobile}
-                onChange={e => { setMobile(e.target.value.replace(/\D/g, '').slice(0, 10)); setErrors(p => ({ ...p, mobile: '' })) }}
+                readOnly={isSelf}
+                onChange={isSelf ? undefined : e => { setMobile(e.target.value.replace(/\D/g, '').slice(0, 10)); setErrors(p => ({ ...p, mobile: '' })) }}
                 placeholder="10-digit number"
-                style={{ flex: 1, padding: '11px 12px', fontSize: 14, outline: 'none', border: 'none', fontFamily: 'Inter, sans-serif', color: '#101129', background: 'transparent' }}
+                style={{ flex: 1, padding: '11px 12px', fontSize: 14, outline: 'none', border: 'none', fontFamily: 'Inter, sans-serif', color: isSelf ? '#6B7280' : '#101129', background: 'transparent', cursor: isSelf ? 'not-allowed' : 'text' }}
                 disabled={isLoading}
               />
             </div>

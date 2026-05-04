@@ -282,6 +282,16 @@ const Navbar = React.memo(function Navbar({
               </Link>
             )
           })}
+          <a
+            href="https://www.nucleotide.life/genetic-test"
+            style={{
+              fontFamily: 'Poppins, sans-serif', fontSize: 'var(--type-nav)', fontWeight: 500,
+              lineHeight: 'var(--lh-ui)', color: '#161616',
+              textDecoration: 'none', whiteSpace: 'nowrap',
+            }}
+          >
+            Genetics
+          </a>
         </nav>
 
         {/* Mobile location button */}
@@ -567,6 +577,13 @@ const Navbar = React.memo(function Navbar({
                   {link.label}
                 </Link>
               ))}
+              <a
+                href="https://www.nucleotide.life/genetic-test"
+                onClick={() => setMenuOpen(false)}
+                style={{ fontFamily: 'Poppins, sans-serif', fontSize: 16, fontWeight: 500, color: '#161616', textDecoration: 'none', padding: '24px 16px', borderBottom: '1px solid rgba(139,92,246,0.08)', display: 'block' }}
+              >
+                Genetics
+              </a>
             </nav>
           </div>
         </>

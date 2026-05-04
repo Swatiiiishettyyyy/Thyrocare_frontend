@@ -64,6 +64,8 @@ export interface OrderMemberAddressRow {
   order_item_id: number
   order_status: string
   scheduled_date: string | null
+  /** Timestamp of the most recent status transition for this item (ISO string). */
+  status_updated_at?: string | null
   /** Which Thyrocare lab booking this row belongs to (for multi-pack / multi-visit). */
   thyrocare_order_id?: string
 }

@@ -36,6 +36,7 @@ interface AuthContextValue {
   openAddMemberModal: (member?: MemberProfile) => void
   closeAddMemberModal: () => void
   handleVerifySuccess: (response: VerifyOTPResponse, mobile: string) => Promise<void>
+  updateUser: (patch: Partial<UserData>) => void
   handleLogout: () => Promise<void>
   handleSelectMember: (memberId: number | string) => Promise<void>
   refreshMembers: () => Promise<void>
@@ -137,10 +138,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const delay = Math.max(0, refreshAt - now)
 
       refreshTimerRef.current = window.setTimeout(async () => {
+        // Don't refresh while the app is backgrounded — the browser may kill the
+        // response before the frontend can save the new tokens, leaving a rotated
+        // (now-invalid) refresh token in localStorage and causing TOKEN_REUSE_DETECTED
+        // on the next reactive refresh.
+        if (document.visibilityState === 'hidden') {
+          const onVisible = () => {
+            document.removeEventListener('visibilitychange', onVisible)
+            schedule()
+          }
+          document.addEventListener('visibilitychange', onVisible, { once: true })
+          return
+        }
         try {
           await refreshAuthIfNeeded()
-        } catch {
-          // If refresh fails, existing global unauthorized handler will take over on next request/401.
+        } catch (err) {
+          console.warn('[auth] Proactive token refresh failed — will retry on next 401:', err)
         } finally {
           // Reschedule using the rotated access token (if any).
           schedule()
@@ -226,6 +239,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await loadMemberData()
   }, [loadMemberData])
 
+  const updateUser = useCallback((patch: Partial<UserData>) => {
+    setUser(prev => {
+      const next = { ...(prev ?? { name: '', email: '' }), ...patch } as UserData
+      saveUserData(next)
+      return next
+    })
+  }, [])
+
   const handleLogout = useCallback(async () => {
     try { await authService.logout() } catch {}
     clearAuthData()
@@ -285,6 +306,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       openAddMemberModal,
       closeAddMemberModal,
       handleVerifySuccess,
+      updateUser,
       handleLogout,
       handleSelectMember,
       refreshMembers,

@@ -5,7 +5,7 @@ const STEPS = [
   { num: 1, desc: 'Choose tests by organ, condition, packages' },
   { num: 2, desc: 'Schedule home sample pickup in seconds' },
   { num: 3, desc: 'Certified phlebotomist collects sample at home' },
-  { num: 4, desc: 'Get clear, visual reports and track changes over time.' },
+  { num: 4, desc: 'Get clear, visual reports and track changes' },
 ]
 
 export default function HowItWorks() {

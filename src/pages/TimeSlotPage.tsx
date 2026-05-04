@@ -136,7 +136,7 @@ export default function TimeSlotPage({ cartCount, items, session, onSessionUpdat
     })
   }, [session.groups, today])
 
-  const { subtotal, savings, total: slotTotal } = getCheckoutPriceSummary(items, {
+  const { total: slotTotal } = getCheckoutPriceSummary(items, {
     thyrocarePricing: session.thyrocarePricing,
     netPayableAmount: session.netPayableAmount,
     groups: session.groups,
@@ -459,8 +459,8 @@ export default function TimeSlotPage({ cartCount, items, session, onSessionUpdat
         <div className="checkout-summary" style={{ flex: '0 1 380px', width: '100%', maxWidth: 380, boxSizing: 'border-box' }}>
           <OrderSummaryCard
             itemCount={patientCount}
-            subtotal={subtotal}
-            savings={savings}
+            subtotal={slotTotal}
+            savings={0}
             total={slotTotal}
             onBack={() => navigate('/address')}
             onContinue={() => navigate('/payment')}

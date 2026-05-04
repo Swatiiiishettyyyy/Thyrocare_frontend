@@ -83,7 +83,7 @@ function normalizeCartGroupRow(raw: any): CartGroup | null {
   return {
     group_id: gid,
     thyrocare_product_id: pid,
-    product_name: String(raw.product_name ?? raw.name ?? ''),
+    product_name: String(raw.product_name ?? ''),
     address_id: raw.address_id != null ? Number(raw.address_id) : null,
     member_ids,
     appointment_date: String(raw.appointment_date ?? ''),
@@ -371,6 +371,7 @@ export async function checkPincodeServiceability(pincode: string): Promise<Servi
 
 
 export interface CartItemAPI {
+  [key: string]: unknown
   /** Row id for DELETE `/cart/delete/{id}` — API may send `cart_item_id` instead */
   id?: number
   cart_item_id?: number
@@ -571,7 +572,7 @@ function flattenCartViewLine(raw: unknown): CartItemAPI | null {
       pickMoney(r, ['selling_price', 'sellingPrice', 'discount_price', 'discountPrice', 'final_price', 'finalPrice', 'price'])
     product = {
       id: pid || thyrocarePid || 0,
-      name: String((prod.name ?? nameHint) || 'Item'),
+      name: String(nameHint || prod.name || 'Item'),
       type: String(prod.type ?? 'SSKU'),
       no_of_tests_included: Number(prod.no_of_tests_included) || 0,
       listing_price: listing || selling || 0,

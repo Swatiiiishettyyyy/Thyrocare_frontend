@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components'
 import { CheckoutStepper } from '../components/CheckoutStepper'
@@ -17,6 +17,12 @@ import {
 } from '../api/cart'
 import { fetchAddresses } from '../api/address'
 import type { Address } from '../api/address'
+import {
+  applyBloodTestCoupon,
+  removeBloodTestCoupon,
+  listBloodTestCoupons,
+} from '../api/bloodTestCoupon'
+import type { BloodTestCoupon } from '../api/bloodTestCoupon'
 
 import type { CheckoutSession } from '../hooks/useCheckoutSession'
 
@@ -87,6 +93,14 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
   const [error, setError] = useState<string | null>(null)
   const [address, setAddress] = useState<Address | null>(null)
 
+  const [couponCode, setCouponCode] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null)
+  const [couponError, setCouponError] = useState<string | null>(null)
+  const [couponLoading, setCouponLoading] = useState(false)
+  const [availableCoupons, setAvailableCoupons] = useState<BloodTestCoupon[]>([])
+  const [offersExpanded, setOffersExpanded] = useState(false)
+  const orderPlacedRef = useRef(false)
+
 
   /** First non-null address_id across groups (checkout often shares one address). */
   const collectionAddressId =
@@ -133,12 +147,54 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
     return () => window.removeEventListener('resize', handler)
   }, [])
 
-  const { subtotal, savings, total } = getCheckoutPriceSummary(items, {
+  useEffect(() => {
+    listBloodTestCoupons().then(setAvailableCoupons).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (!orderPlacedRef.current) {
+        removeBloodTestCoupon().catch(() => {})
+      }
+    }
+  }, [])
+
+  async function handleApplyCoupon(code: string) {
+    const c = code.trim().toUpperCase()
+    if (!c) return
+    setCouponLoading(true)
+    setCouponError(null)
+    try {
+      const res = await applyBloodTestCoupon(c)
+      setAppliedCoupon({ code: res.data.coupon_code, discount: res.data.discount_amount })
+      setCouponCode('')
+    } catch (err: any) {
+      const msg = err?.data?.detail || err?.message || 'Invalid coupon code.'
+      setCouponError(msg)
+    } finally {
+      setCouponLoading(false)
+    }
+  }
+
+  async function handleRemoveCoupon() {
+    setCouponLoading(true)
+    try {
+      await removeBloodTestCoupon()
+      setAppliedCoupon(null)
+      setCouponError(null)
+    } finally {
+      setCouponLoading(false)
+    }
+  }
+
+  const { total } = getCheckoutPriceSummary(items, {
     thyrocarePricing: session.thyrocarePricing,
     netPayableAmount: session.netPayableAmount,
     groups: session.groups,
     pricingSnapshotKey: session.pricingSnapshotKey,
   })
+  const couponAmt = appliedCoupon?.discount ?? 0
+  const effectiveTotal = Math.max(0, total - couponAmt)
 
   async function handlePlaceOrder() {
     if (placing) return
@@ -225,6 +281,7 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
               return
             }
           }
+          orderPlacedRef.current = true
           onOrderComplete()
           const confirmationPayload = {
             orderId: orderRes.order_id,
@@ -233,7 +290,7 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
             slotTime,
             items: items.map(i => ({ name: i.name, quantity: i.quantity })),
             address: address ? `${address.address_label} — ${address.street_address}, ${address.city} - ${address.postal_code}` : null,
-            amountPaid: total,
+            amountPaid: effectiveTotal,
           }
           try {
             sessionStorage.setItem('nucleotide_last_confirmation_v1', JSON.stringify(confirmationPayload))
@@ -336,11 +393,11 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
 
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#161616', fontFamily: 'Poppins, sans-serif', lineHeight: '20px' }}>
                 <span>Subtotal({patientCount} item{patientCount !== 1 ? 's' : ''})</span>
-                <span>₹{subtotal}</span>
+                <span>₹{total}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontFamily: 'Poppins, sans-serif', lineHeight: '20px' }}>
                 <span style={{ color: '#161616' }}>You Save</span>
-                <span style={{ color: '#41C9B3' }}>{savings > 0 ? `-₹${savings}` : '₹0'}</span>
+                <span style={{ color: '#41C9B3' }}>{couponAmt > 0 ? `-₹${couponAmt}` : '₹0'}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontFamily: 'Poppins, sans-serif', lineHeight: '20px' }}>
                 <span style={{ color: '#161616' }}>Home Collection</span>
@@ -351,7 +408,7 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
 
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif', lineHeight: '20px', letterSpacing: '-0.32px' }}>
                 <span>Total</span>
-                <span>₹{total}</span>
+                <span>₹{effectiveTotal}</span>
               </div>
             </div>
           </div>
@@ -412,9 +469,10 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
             <div className="payment-mobile-actions">
               <OrderSummaryCard
                 itemCount={patientCount}
-                subtotal={subtotal}
-                savings={savings}
+                subtotal={total}
+                savings={0}
                 total={total}
+                couponDiscount={couponAmt}
                 onBack={() => navigate('/timeslot')}
                 onContinue={handlePlaceOrder}
                 continueLabel={placing ? 'Placing...' : 'Continue'}
@@ -425,12 +483,91 @@ export default function PaymentPage({ cartCount, items, session, onSessionUpdate
         </div>
 
         {/* Sidebar */}
-        <div className="checkout-summary payment-desktop-sidebar" style={{ flex: '0 1 380px', width: '100%', maxWidth: 380, boxSizing: 'border-box' }}>
+        <div className="checkout-summary payment-desktop-sidebar" style={{ flex: '0 1 380px', width: '100%', maxWidth: 380, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* Coupon section */}
+          <div style={{ background: '#fff', borderRadius: 18, border: '1px solid #E7E1FF', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: '#101129', fontFamily: 'Poppins, sans-serif' }}>Apply Coupon</span>
+
+            {appliedCoupon ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#F0FDF4', border: '1px solid #86EFAC', borderRadius: 10, padding: '8px 12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <svg width="14" height="14" fill="none" stroke="#16A34A" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#15803D', fontFamily: 'Inter, sans-serif' }}>{appliedCoupon.code}</span>
+                  <span style={{ fontSize: 12, color: '#16A34A', fontFamily: 'Inter, sans-serif' }}>−₹{appliedCoupon.discount}</span>
+                </div>
+                <button
+                  onClick={handleRemoveCoupon}
+                  disabled={couponLoading}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#6B7280', lineHeight: 1, padding: '0 2px' }}
+                  title="Remove coupon"
+                >×</button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  type="text"
+                  value={couponCode}
+                  onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponError(null) }}
+                  onKeyDown={e => { if (e.key === 'Enter') handleApplyCoupon(couponCode) }}
+                  placeholder="Enter coupon code"
+                  style={{ flex: 1, height: 38, borderRadius: 8, border: '1px solid #E7E1FF', padding: '0 12px', fontSize: 13, fontFamily: 'Inter, sans-serif', outline: 'none', color: '#101129' }}
+                />
+                <button
+                  onClick={() => handleApplyCoupon(couponCode)}
+                  disabled={couponLoading || !couponCode.trim()}
+                  style={{ height: 38, padding: '0 16px', borderRadius: 8, border: 'none', background: couponCode.trim() ? '#8B5CF6' : '#E7E1FF', color: couponCode.trim() ? '#fff' : '#9CA3AF', fontSize: 13, fontWeight: 600, fontFamily: 'Inter, sans-serif', cursor: couponCode.trim() ? 'pointer' : 'not-allowed' }}
+                >
+                  {couponLoading ? '…' : 'Apply'}
+                </button>
+              </div>
+            )}
+
+            {couponError && (
+              <span style={{ fontSize: 12, color: '#DC2626', fontFamily: 'Inter, sans-serif' }}>{couponError}</span>
+            )}
+
+            {availableCoupons.length > 0 && (
+              <div>
+                <button
+                  onClick={() => setOffersExpanded(p => !p)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: '#8B5CF6', fontFamily: 'Inter, sans-serif', fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: 4 }}
+                >
+                  {offersExpanded ? '▲' : '▼'} Available offers ({availableCoupons.length})
+                </button>
+                {offersExpanded && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+                    {availableCoupons.map(c => (
+                      <div
+                        key={c.coupon_code}
+                        onClick={() => { setCouponCode(c.coupon_code); setCouponError(null); handleApplyCoupon(c.coupon_code) }}
+                        style={{ border: '1px dashed #C4B5FD', borderRadius: 10, padding: '8px 12px', cursor: 'pointer', background: '#FAFAFF' }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: '#7C3AED', fontFamily: 'Inter, sans-serif', letterSpacing: '0.04em' }}>{c.coupon_code}</span>
+                          <span style={{ fontSize: 11, color: '#8B5CF6', fontFamily: 'Inter, sans-serif', background: '#EDE9FE', borderRadius: 20, padding: '1px 8px' }}>
+                            {c.discount_type === 'percentage' ? `${c.discount_value}% off` : `₹${c.discount_value} off`}
+                          </span>
+                        </div>
+                        {c.min_order_amount > 0 && (
+                          <div style={{ fontSize: 11, color: '#9CA3AF', fontFamily: 'Inter, sans-serif', marginTop: 2 }}>Min ₹{c.min_order_amount}</div>
+                        )}
+                        {c.description && (
+                          <div style={{ fontSize: 11, color: '#6B7280', fontFamily: 'Inter, sans-serif', marginTop: 2 }}>{c.description}</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <OrderSummaryCard
             itemCount={patientCount}
-            subtotal={subtotal}
-            savings={savings}
+            subtotal={total}
+            savings={0}
             total={total}
+            couponDiscount={couponAmt}
             onContinue={handlePlaceOrder}
             continueLabel={placing ? 'Placing...' : 'Place Order'}
             continueDisabled={placing}

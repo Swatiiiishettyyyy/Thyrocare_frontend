@@ -1,34 +1,40 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef } from 'react'
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import LoginModal from './components/LoginModal/LoginModal'
 import OTPModal from './components/OTPModal/OTPModal'
 import CompleteProfileModal from './components/CompleteProfileModal/CompleteProfileModal'
 import AddMemberModal from './components/AddMemberModal/AddMemberModal'
-import CartPage from './pages/CartPage'
-import AddressPage from './pages/AddressPage'
-import PaymentPage from './pages/PaymentPage'
-import ConfirmationPage from './pages/ConfirmationPage'
-import OrderDetailsPage from './pages/OrderDetailsPage'
-import ReportsListPage from './pages/ReportsListPage'
-import EmptyReportPage from './pages/EmptyReportPage'
-import CompareReportsPage from './pages/CompareReportsPage'
-import UploadReportPage from './pages/UploadReportPage'
-import UploadReportDetailsPage from './pages/UploadReportDetailsPage'
-import AnalysingReportPage from './pages/AnalysingReportPage'
-import ReviewReportPage from './pages/ReviewReportPage'
-import PackagesPage from './pages/PackagesPage'
-import OrdersPage from './pages/OrdersPage'
-import ReportPage from './pages/ReportPage'
-import TestPage from './pages/TestPage'
-import TestDetailPage from './pages/TestDetailPage'
-import WomenHealthSegmentPage from './pages/WomenHealthSegmentPage'
-import MenHealthSegmentPage from './pages/MenHealthSegmentPage'
-import OrganDetailPage from './pages/OrganDetailPage'
-import HealthMetricsPage from './pages/HealthMetricsPage'
-import TimeSlotPage from './pages/TimeSlotPage'
-import VitalsOrganPage from './pages/VitalsOrganPage'
-import ComprehensiveBrowsePage from './pages/ComprehensiveBrowsePage'
+
+const CartPage                = lazy(() => import('./pages/CartPage'))
+const AddressPage             = lazy(() => import('./pages/AddressPage'))
+const PaymentPage             = lazy(() => import('./pages/PaymentPage'))
+const ConfirmationPage        = lazy(() => import('./pages/ConfirmationPage'))
+const OrderDetailsPage        = lazy(() => import('./pages/OrderDetailsPage'))
+const ReportsListPage         = lazy(() => import('./pages/ReportsListPage'))
+const EmptyReportPage         = lazy(() => import('./pages/EmptyReportPage'))
+const CompareReportsPage      = lazy(() => import('./pages/CompareReportsPage'))
+const UploadReportPage        = lazy(() => import('./pages/UploadReportPage'))
+const UploadReportDetailsPage = lazy(() => import('./pages/UploadReportDetailsPage'))
+const AnalysingReportPage     = lazy(() => import('./pages/AnalysingReportPage'))
+const ReviewReportPage        = lazy(() => import('./pages/ReviewReportPage'))
+const PackagesPage            = lazy(() => import('./pages/PackagesPage'))
+const OrdersPage              = lazy(() => import('./pages/OrdersPage'))
+const ReportPage              = lazy(() => import('./pages/ReportPage'))
+const TestPage                = lazy(() => import('./pages/TestPage'))
+const TestDetailPage          = lazy(() => import('./pages/TestDetailPage'))
+const WomenHealthSegmentPage  = lazy(() => import('./pages/WomenHealthSegmentPage'))
+const MenHealthSegmentPage    = lazy(() => import('./pages/MenHealthSegmentPage'))
+const OrganDetailPage         = lazy(() => import('./pages/OrganDetailPage'))
+const HealthMetricsPage       = lazy(() => import('./pages/HealthMetricsPage'))
+const TimeSlotPage            = lazy(() => import('./pages/TimeSlotPage'))
+const VitalsOrganPage         = lazy(() => import('./pages/VitalsOrganPage'))
+const ComprehensiveBrowsePage = lazy(() => import('./pages/ComprehensiveBrowsePage'))
+const PrivacyPolicyPage       = lazy(() => import('./pages/PrivacyPolicyPage'))
+const TermsPage               = lazy(() => import('./pages/TermsPage'))
+const RefundPolicyPage        = lazy(() => import('./pages/RefundPolicyPage'))
+const ContactUsPage           = lazy(() => import('./pages/ContactUsPage'))
+const FAQPage                 = lazy(() => import('./pages/FAQPage'))
 import type { TestCardProps } from './types'
 import {
   checkoutPricingSnapshotKey,
@@ -36,6 +42,9 @@ import {
 } from './api/cart'
 import { useCheckoutSession } from './hooks/useCheckoutSession'
 import { cartLineKey, findExistingLineForAdd } from './utils/cartLineKey'
+import { readUtmFromUrl, hasUtmParams, saveUtmToSession, markUtmFired, wasUtmFired } from './utils/utmUtil'
+import { trackUtm } from './api/utm'
+import { getDeviceId } from './utils/deviceUtil'
 
 // Page-1 Cart is now local-only; server hydration starts from Address onward.
 const CHECKOUT_PATHS = ['/address', '/timeslot', '/payment']
@@ -67,12 +76,26 @@ function ScrollToTopOnRouteChange() {
 export default function App() {
   const location = useLocation()
   const { session, update, upsertGroup, clearSession } = useCheckoutSession()
-  const { isLoggedIn, members, openLoginModal, openCompleteProfileModal } = useAuth()
+  const { isLoggedIn, user, members, openLoginModal, openCompleteProfileModal } = useAuth()
   const cartItems = session.cartItems
   const cartLineCount = cartItems.length
   const didInitialSync = useRef(false)
   const sessionRef = useRef(session)
   sessionRef.current = session
+
+  useEffect(() => {
+    if (wasUtmFired()) return
+    const utm = readUtmFromUrl()
+    if (!hasUtmParams(utm)) return
+    saveUtmToSession(utm)
+    markUtmFired()
+    void trackUtm({
+      fingerprint: getDeviceId(),
+      landing_url: window.location.href,
+      user_id: user?.id ? Number(user.id) : null,
+      ...utm,
+    }).catch(() => { /* non-critical */ })
+  }, [])
 
   const applyCheckoutSnapshot = useCallback(
     (snap: Awaited<ReturnType<typeof pullCheckoutSnapshot>>) => {
@@ -108,11 +131,15 @@ export default function App() {
       await hydrateCheckoutFromView()
     } catch (e) {
       console.error('Checkout sync failed:', e)
+      // If the user is no longer logged in, the auth failure already opened the
+      // login modal via globalHandlers.handleUnauthorized — don't overlay a cart
+      // error banner on top of it.
+      if (!isLoggedIn) return
       update({
         checkoutSyncError: 'Could not refresh your cart. Check your connection and try again.',
       })
     }
-  }, [hydrateCheckoutFromView, update])
+  }, [hydrateCheckoutFromView, isLoggedIn, update])
 
   const retryCheckoutSync = useCallback(async () => {
     await runCheckoutHydrateWithErrorBanner()
@@ -149,7 +176,7 @@ export default function App() {
       openLoginModal()
       return false
     }
-    if (!hasSelf) {
+    if (!hasSelf && user?.is_new_user === true) {
       openCompleteProfileModal()
       // Block add-to-cart until Self profile exists.
       return false
@@ -229,7 +256,8 @@ export default function App() {
           </button>
         </div>
       )}
-    <Routes>
+    <Suspense fallback={<div style={{ minHeight: '50vh' }} />}>
+      <Routes>
       {/* Some static hosts land on /index.html; treat it as / */}
       <Route path="/index.html" element={<Navigate to="/" replace />} />
       {/* Badge = number of distinct cart lines (products), not sum of patient quantities */}
@@ -271,7 +299,13 @@ export default function App() {
       <Route path="/packages" element={<PackagesPage cartCount={cartLineCount} />} />
       <Route path="/metrics" element={<HealthMetricsPage cartCount={cartLineCount} />} />
       <Route path="/metrics/:organ" element={<OrganDetailPage cartCount={cartLineCount} />} />
-    </Routes>
+      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/refund-policy" element={<RefundPolicyPage />} />
+      <Route path="/contact-us" element={<ContactUsPage />} />
+      <Route path="/faq" element={<FAQPage />} />
+      </Routes>
+    </Suspense>
     </>
   )
 }

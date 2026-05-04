@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Navbar } from '../components'
+import { Navbar, Footer } from '../components'
 import { fetchOrders } from '../api/orders'
 import type { Order } from '../api/orders'
 

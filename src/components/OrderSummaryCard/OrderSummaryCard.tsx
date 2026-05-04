@@ -1,12 +1,16 @@
+import { useState } from 'react'
+
 interface OrderSummaryCardProps {
   itemCount: number
   subtotal: number
   savings: number
   total: number
+  couponDiscount?: number
   onBack?: () => void
   onContinue: () => void | Promise<void>
   continueLabel?: string
   continueDisabled?: boolean
+  continueReasons?: string[]
 }
 
 export default function OrderSummaryCard({
@@ -14,11 +18,16 @@ export default function OrderSummaryCard({
   subtotal,
   savings,
   total,
+  couponDiscount = 0,
   onBack,
   onContinue,
   continueLabel = 'Continue',
   continueDisabled = false,
+  continueReasons = [],
 }: OrderSummaryCardProps) {
+  const finalTotal = Math.max(0, total - couponDiscount)
+  const finalSavings = savings + couponDiscount
+  const [showTooltip, setShowTooltip] = useState(false)
   return (
     <div className="order-summary-card" style={{
       background: 'linear-gradient(0deg, #E7E1FF 0%, white 100%)',
@@ -56,7 +65,7 @@ export default function OrderSummaryCard({
                 You Save
               </span>
               <span className="order-summary-rowValue order-summary-rowValue--green" style={{ fontSize: 18, fontWeight: 500, color: '#41C9B3', fontFamily: 'Poppins, sans-serif', lineHeight: '26px' }}>
-                {savings > 0 ? `−₹${savings}` : '₹0'}
+                {finalSavings > 0 ? `−₹${finalSavings}` : '₹0'}
               </span>
             </div>
 
@@ -80,7 +89,7 @@ export default function OrderSummaryCard({
             Total
           </span>
           <span className="order-summary-totalValue" style={{ fontSize: 24, fontWeight: 500, color: '#161616', fontFamily: 'Poppins, sans-serif', lineHeight: '27px' }}>
-            ₹{total}
+            ₹{finalTotal}
           </span>
         </div>
       </div>
@@ -110,24 +119,70 @@ export default function OrderSummaryCard({
           </button>
         )}
 
-        <button onClick={onContinue} disabled={continueDisabled} className="order-summary-continueBtn" style={{
-          height: 58,
-          borderRadius: 8,
-          border: 'none',
-          background: continueDisabled ? '#E7E1FF' : '#8B5CF6',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 10,
-          cursor: continueDisabled ? 'not-allowed' : 'pointer',
-          fontFamily: 'Poppins, sans-serif',
-          fontSize: 18,
-          fontWeight: 500,
-          color: continueDisabled ? '#828282' : 'white',
-          lineHeight: '26px',
-        }}>
-          {continueLabel} ›
-        </button>
+        <div style={{ position: 'relative' }}
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
+        >
+          {showTooltip && continueDisabled && continueReasons.length > 0 && (
+            <div style={{
+              position: 'absolute',
+              bottom: 'calc(100% + 12px)',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: '#fff',
+              border: '1px solid #E7E1FF',
+              borderRadius: 14,
+              padding: '12px 16px',
+              fontSize: 13,
+              fontFamily: 'Poppins, sans-serif',
+              lineHeight: '20px',
+              zIndex: 100,
+              boxShadow: '0px 4px 20px rgba(139,92,246,0.10)',
+              pointerEvents: 'none',
+              minWidth: 220,
+            }}>
+              <div style={{ fontWeight: 600, marginBottom: 8, color: '#8B5CF6', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Complete to continue</div>
+              {continueReasons.map((reason, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, marginBottom: i < continueReasons.length - 1 ? 6 : 0 }}>
+                  <span style={{ color: '#8B5CF6', flexShrink: 0, fontWeight: 700, fontSize: 14, lineHeight: '20px' }}>·</span>
+                  <span style={{ color: '#101129' }}>{reason}</span>
+                </div>
+              ))}
+              <div style={{
+                position: 'absolute',
+                bottom: -7,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: 12,
+                height: 7,
+                overflow: 'visible',
+              }}>
+                <svg width="14" height="8" viewBox="0 0 14 8" fill="none" style={{ display: 'block' }}>
+                  <path d="M1 0.5L7 7L13 0.5" stroke="#E7E1FF" strokeWidth="1" fill="#fff" />
+                </svg>
+              </div>
+            </div>
+          )}
+          <button onClick={onContinue} disabled={continueDisabled} className="order-summary-continueBtn" style={{
+            width: '100%',
+            height: 58,
+            borderRadius: 8,
+            border: 'none',
+            background: continueDisabled ? '#E7E1FF' : '#8B5CF6',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 10,
+            cursor: continueDisabled ? 'not-allowed' : 'pointer',
+            fontFamily: 'Poppins, sans-serif',
+            fontSize: 18,
+            fontWeight: 500,
+            color: continueDisabled ? '#828282' : 'white',
+            lineHeight: '26px',
+          }}>
+            {continueLabel} ›
+          </button>
+        </div>
 
         <div className="order-summary-savingsRow" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}>
           <span className="order-summary-savingsIcon" aria-hidden="true" style={{ width: 16, height: 16, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -136,8 +191,8 @@ export default function OrderSummaryCard({
             </svg>
           </span>
           <span className="order-summary-savingsText" style={{ fontFamily: 'Inter, sans-serif', fontSize: 18, fontWeight: 320, color: '#828282', lineHeight: '27px' }}>
-            {savings > 0
-              ? `You are saving ₹${savings} on this order`
+            {finalSavings > 0
+              ? `You are saving ₹${finalSavings} on this order`
               : 'No discount applied to this order'}
           </span>
         </div>

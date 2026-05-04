@@ -2,6 +2,7 @@
   "name": "nucleotide-app",
   "private": true,
   "version": "0.0.0",
+  "homepage": "/blood-test",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -4,7 +4,7 @@
  */
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Navbar } from '../components'
+import { Navbar, Footer } from '../components'
 import { fetchOrders, getEarliestScheduledDate } from '../api/orders'
 import type { Order } from '../api/orders'
 import { useAuth } from '../context/AuthContext'
@@ -62,10 +62,25 @@ export default function OrdersPage() {
       .finally(() => setLoading(false))
   }, [currentMember?.member_id])
 
+  const isMemberCompleted = (o: typeof orders[number]): boolean => {
+    if (!o.items || o.items.length === 0) return false
+    return o.items.every(it =>
+      Array.isArray(it.member_address_map) &&
+      it.member_address_map.length > 0 &&
+      it.member_address_map.every(row =>
+        String(row.order_status ?? '').toUpperCase() === 'COMPLETED'
+      )
+    )
+  }
+
   const filtered = orders.filter(o => {
     if (activeTab === 'All') return true
-    if (activeTab === 'Active') return o.order_status?.toUpperCase() === 'CONFIRMED'
-    if (activeTab === 'Completed') return o.order_status?.toUpperCase() === 'COMPLETED'
+    const completedForMember = isMemberCompleted(o)
+    if (activeTab === 'Completed') return completedForMember
+    if (activeTab === 'Active') {
+      const cancelled = o.order_status?.toUpperCase() === 'CANCELLED'
+      return !completedForMember && !cancelled
+    }
     return true
   })
 
@@ -427,6 +442,8 @@ export default function OrdersPage() {
         )}
       </div>
       </div>
+
+      <Footer />
     </div>
   )
 }

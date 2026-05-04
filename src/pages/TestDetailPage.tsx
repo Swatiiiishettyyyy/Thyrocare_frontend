@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate, useLocation, useParams } from 'react-router-dom'
-import { Navbar } from '../components'
+import { Navbar, Footer } from '../components'
 import type { TestCardProps } from '../types'
 import { useProductCatalog } from '../hooks/useProductCatalog'
 import { fetchProductById, toTestCard, type ThyrocareProduct } from '../api/products'
@@ -749,8 +749,8 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
         >
           {[
             { icon: homeCollectionIcon, text: 'Home Collection' },
-            { icon: postpaidIcon, text: 'Postpaid Available' },
-            { icon: rupeeIcon, text: '₹50 Cashback' },
+            { icon: postpaidIcon, text: 'Prepaid Available' },
+            { icon: rupeeIcon, text: '₹ 0 Cashback' },
           ].map(item => (
             <div
               key={item.text}
@@ -1246,6 +1246,8 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
         </div>
 
       </div>
+
+      <Footer />
     </div>
   )
 }

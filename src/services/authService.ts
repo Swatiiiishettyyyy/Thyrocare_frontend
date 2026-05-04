@@ -20,6 +20,7 @@ export interface VerifyOTPRequest {
   device_id: string
   device_platform: string
   device_details: string
+  utm_fingerprint?: string
 }
 
 export interface VerifyOTPResponse {
@@ -72,6 +73,7 @@ export const verifyOTP = async (mobile: string, otp: string, country_code = '+91
       device_id: getDeviceId(),
       device_platform: getDevicePlatform(),
       device_details: getDeviceDetails(),
+      utm_fingerprint: getDeviceId(),
     }
     return await api.post<VerifyOTPResponse>('/auth/verify-otp', payload)
   } catch (error: any) {

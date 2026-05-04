@@ -107,7 +107,7 @@ export const saveMember = async (memberData: SaveMemberRequest): Promise<SaveMem
   try {
     return await api.post<SaveMemberResponse>('/member/save', memberData)
   } catch (error: any) {
-    throw { message: error?.data?.message || 'Failed to save member', error: error?.data || error }
+    throw { message: error?.data?.detail || error?.data?.message || 'Failed to save member', detail: error?.data?.detail, error: error?.data || error }
   }
 }
 

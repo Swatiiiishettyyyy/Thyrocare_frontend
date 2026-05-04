@@ -17,6 +17,7 @@ const CompleteProfileModal: React.FC = () => {
     currentMember,
     members,
     user,
+    updateUser,
     handleSelectMember,
   } = useAuth()
 
@@ -90,7 +91,7 @@ const CompleteProfileModal: React.FC = () => {
       const isSelf = (rel: unknown): boolean => String(rel ?? '').trim().toLowerCase() === 'self'
 
       const currentId = normalizeId(currentMember)
-      const existingSelf = members.find(m => m.is_self_profile === true || isSelf(m.relation) || m.is_self === true) ?? null
+      const existingSelf = members.find(m => (m as any).is_self_profile === true || isSelf(m.relation) || (m as any).is_self === true) ?? null
       const selfId = normalizeId(existingSelf)
 
       // If current member is not available yet but a Self profile exists, edit that instead of creating duplicates.
@@ -108,39 +109,54 @@ const CompleteProfileModal: React.FC = () => {
       if (memberId) {
         await memberService.editMember(Number(memberId), payload)
       } else {
-        try {
-          const res = await memberService.saveMember({ ...payload, member_id: 0 })
-          const savedId =
-            (typeof res?.data?.member_id === 'number' && res.data.member_id) ||
-            (typeof (res as any)?.member_id === 'number' && (res as any).member_id) ||
-            (typeof res?.data?.member?.member_id === 'number' && res.data.member.member_id) ||
-            null
-          if (savedId) {
-            try {
-              await handleSelectMember(savedId)
-            } catch {
-              /* ignore */
+        // Always do a fresh server fetch first — catches cases where a previous
+        // save succeeded server-side but the client never received the response
+        // (network timeout, etc.), which would otherwise create a duplicate self.
+        const freshRes = await memberService.getMemberList().catch(() => null)
+        const freshList: any[] = (freshRes as any)?.data ?? (freshRes as any)?.members ?? []
+        const existingSelfFresh = freshList.find((m: any) => isSelf(m.relation) || (m as any).is_self_profile === true || (m as any).is_self === true) ?? null
+        const freshSelfId = existingSelfFresh ? Number(existingSelfFresh.member_id ?? existingSelfFresh.id) : null
+
+        if (freshSelfId) {
+          await memberService.editMember(freshSelfId, payload)
+        } else {
+          try {
+            const res = await memberService.saveMember({ ...payload, member_id: 0 })
+            const savedId =
+              (typeof res?.data?.member_id === 'number' && res.data.member_id) ||
+              (typeof (res as any)?.member_id === 'number' && (res as any).member_id) ||
+              (typeof res?.data?.member?.member_id === 'number' && res.data.member.member_id) ||
+              null
+            if (savedId) {
+              try {
+                await handleSelectMember(savedId)
+              } catch {
+                /* ignore */
+              }
             }
-          }
-        } catch (createErr: any) {
-          // If create fails because member already exists (members not yet loaded when modal opened),
-          // refresh members and retry as an edit using the self member's ID.
-          if (createErr?.message?.toLowerCase().includes('already exists')) {
-            await refreshMembers()
-            const freshMembers: any[] = await memberService.getMembers().then((r: any) => r?.data ?? r ?? [])
-            const selfMember = freshMembers.find((m: any) => isSelf(m.relation) || m.is_self_profile === true || m.is_self === true)
-            if (selfMember) {
-              await memberService.editMember(Number(selfMember.member_id ?? selfMember.id), payload)
+          } catch (createErr: any) {
+            const isAlreadyExists =
+              createErr?.message?.toLowerCase().includes('already exists') ||
+              String(createErr?.detail ?? '').toLowerCase().includes('already exists')
+            if (isAlreadyExists) {
+              await refreshMembers()
+              const retryRes = await memberService.getMemberList().catch(() => null)
+              const retryList: any[] = (retryRes as any)?.data ?? (retryRes as any)?.members ?? []
+              const selfMember = retryList.find((m: any) => isSelf(m.relation) || (m as any).is_self_profile === true || (m as any).is_self === true)
+              if (selfMember) {
+                await memberService.editMember(Number(selfMember.member_id ?? selfMember.id), payload)
+              } else {
+                throw createErr
+              }
             } else {
               throw createErr
             }
-          } else {
-            throw createErr
           }
         }
       }
 
       await refreshMembers()
+      if (user?.is_new_user) updateUser({ is_new_user: false })
       closeCompleteProfileModal()
     } catch (err: any) {
       setApiError(err?.message || 'Failed to save profile. Please try again.')

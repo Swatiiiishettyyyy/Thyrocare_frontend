@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Navbar } from '../components'
+import { Navbar, Footer } from '../components'
 import EmptyReportPage from './EmptyReportPage'
 import {
   fetchMyReports,
@@ -200,14 +200,12 @@ function mapRowToListItem(
   const patientName = str(r, 'patient_name', 'member_name', 'patientName', 'beneficiary_name')
   const title = str(
     r,
-    'test_name',
     'product_name',
     'package_name',
     'report_name',
     'title',
     'order_name',
     'productName',
-    'testName',
   )
   const listOrderNumber = resolveOrdersListOrderNumber(r, orders, thyrocareToOurOrderId)
   const orderBadge = listOrderNumber ? formatOrderNumberBadge(listOrderNumber) : ''
@@ -458,6 +456,8 @@ export default function ReportsListPage() {
           </div>
         )}
       </div>
+
+      <Footer />
     </div>
   )
 }

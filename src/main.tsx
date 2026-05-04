@@ -6,7 +6,7 @@ import './responsive.css'
 import App from './App'
 import { AuthProvider } from './context/AuthContext'
 
-const BASENAME = '/'
+const BASENAME = '/blood-test'
 
 
 
