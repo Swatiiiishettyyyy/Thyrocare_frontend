@@ -4,7 +4,7 @@ import { Navbar, Footer, HeroSection } from '../components'
 import { WhyChooseUs } from '../components/WhyChooseUs'
 import { HowItWorks } from '../components/HowItWorks'
 import { TestCard } from '../components/TestCard'
-import { filterByCategory, toTestCard } from '../api/products'
+import { filterByCategory, toTestCard, parseProductCategories } from '../api/products'
 import { useProductCatalog } from '../hooks/useProductCatalog'
 
 const NAV_LINKS = [
@@ -49,7 +49,7 @@ export default function PackagesPage({ cartCount }: { cartCount?: number } = {})
     () => (query
       ? products
           .filter(p => p.name.toLowerCase().includes(query.toLowerCase()) ||
-            (p.category ?? '').toLowerCase().includes(query.toLowerCase()))
+            parseProductCategories(p).some(c => c.toLowerCase().includes(query.toLowerCase())))
           .map(toTestCard)
       : filterByCategory(products, activeCategory).map(toTestCard)
     ),

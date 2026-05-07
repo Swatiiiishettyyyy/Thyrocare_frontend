@@ -173,8 +173,8 @@
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  /* Desktop: show all vitals tiles in one row (Figma has 7) */
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  /* Desktop: show all visible vitals tiles in one centered row. */
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: clamp(12px, 1.2vw, 20px);
   align-items: stretch;
 }
@@ -3234,10 +3234,6 @@
   .organ-filter-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     gap: 12px !important;
-  }
-  /* Center the last tile (Vitamins) when it's alone on the final row */
-  .organ-filter-grid > *:nth-child(7) {
-    grid-column: 2;
   }
   .organ-filter-grid .organ-filter-btn {
     padding: 14px 10px !important;

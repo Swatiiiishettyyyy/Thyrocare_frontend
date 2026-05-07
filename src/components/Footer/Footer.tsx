@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import footerLogo from '../../assets/figma/WhatsApp Image 2026-04-06 at 7.56.48 AM.jpeg'
 
 const COLUMNS = [
@@ -71,14 +72,23 @@ export function Footer() {
             <div key={col.heading}>
               <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginBottom: 16 }}>{col.heading}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-               {col.links.map(link => (
-  <a key={link.text} href={link.url} style={{ fontSize: 13, color: '#9CA3AF', textDecoration: 'none' }}
-    onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-    onMouseLeave={e => (e.currentTarget.style.color = '#9CA3AF')}
-  >
-    {link.text}
-  </a>
-))}
+               {col.links.map(link =>
+  link.url === '#' ? (
+    <a key={link.text} href="#" style={{ fontSize: 13, color: '#9CA3AF', textDecoration: 'none' }}
+      onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+      onMouseLeave={e => (e.currentTarget.style.color = '#9CA3AF')}
+    >
+      {link.text}
+    </a>
+  ) : (
+    <Link key={link.text} to={`/${link.url}`} style={{ fontSize: 13, color: '#9CA3AF', textDecoration: 'none' }}
+      onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+      onMouseLeave={e => (e.currentTarget.style.color = '#9CA3AF')}
+    >
+      {link.text}
+    </Link>
+  )
+)}
  
               </div>
             </div>

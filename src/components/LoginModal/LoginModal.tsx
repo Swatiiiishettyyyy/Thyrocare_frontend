@@ -208,9 +208,9 @@ const LoginModal: React.FC = () => {
 
         <p style={{ marginTop: 20, textAlign: 'center', fontSize: 12, color: '#9CA3AF', fontFamily: 'Inter, sans-serif' }}>
           By continuing, you agree to our{' '}
-          <a href="/blood-test/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#8B5CF6', textDecoration: 'none' }}>Terms of Service</a>{' '}
+          <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#8B5CF6', textDecoration: 'none' }}>Terms of Service</a>{' '}
           and{' '}
-          <a href="/blood-test/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: '#8B5CF6', textDecoration: 'none' }}>Privacy Policy</a>
+          <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: '#8B5CF6', textDecoration: 'none' }}>Privacy Policy</a>
         </p>
       </div>
     </div>

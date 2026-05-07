@@ -3,7 +3,7 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom'
 import { Navbar, Footer } from '../components'
 import type { TestCardProps } from '../types'
 import { useProductCatalog } from '../hooks/useProductCatalog'
-import { fetchProductById, toTestCard, type ThyrocareProduct } from '../api/products'
+import { fetchProductById, toTestCard, parseProductCategories, type ThyrocareProduct } from '../api/products'
 
 import parametersIcon from '../assets/figma/Test-detail/Frame-3.svg'
 import nablIcon from '../assets/figma/Test-detail/Vector-1.svg'
@@ -280,7 +280,7 @@ export default function TestDetailPage({ cartCount, onAddToCart }: { cartCount?:
         ? uniqueParams
         : [
             `Includes ${paramCountDisplay} ${type === 'Package' ? 'tests' : 'parameters'}`,
-            p?.category ? `Category: ${p.category}` : null,
+            p ? (() => { const cats = parseProductCategories(p); return cats.length ? `Category: ${cats.join(', ')}` : null })() : null,
           ].filter((x): x is string => typeof x === 'string' && x.trim().length > 0)
 
     const minB = p?.beneficiaries_min

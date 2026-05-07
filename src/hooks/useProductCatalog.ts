@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchProducts, type ThyrocareProduct } from '../api/products'
+import { fetchProducts, visibleFrontendProducts, type ThyrocareProduct } from '../api/products'
 
 let cached: ThyrocareProduct[] | null = null
 let inflight: Promise<ThyrocareProduct[]> | null = null
@@ -50,7 +50,7 @@ function loadCatalog(): Promise<ThyrocareProduct[]> {
  * Single shared catalog fetch for home + browse pages (avoids duplicate full pagination calls).
  */
 export function useProductCatalog() {
-  const [products, setProducts] = useState<ThyrocareProduct[]>(() => cached ?? [])
+  const [products, setProducts] = useState<ThyrocareProduct[]>(() => visibleFrontendProducts(cached ?? []))
   const [ready, setReady] = useState(Boolean(cached))
   const [error, setError] = useState<string | null>(null)
 
@@ -59,7 +59,7 @@ export function useProductCatalog() {
     loadCatalog()
       .then((p) => {
         if (!cancelled) {
-          setProducts(p)
+          setProducts(visibleFrontendProducts(p))
           setError(null)
         }
       })

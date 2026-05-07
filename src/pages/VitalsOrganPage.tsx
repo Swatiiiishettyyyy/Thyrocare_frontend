@@ -17,7 +17,6 @@ const ORGANS = [
   { id: 'heart',    label: 'Heart'    },
   { id: 'liver',    label: 'Liver'    },
   { id: 'bone',     label: 'Bone'     },
-  { id: 'kidney',   label: 'Kidney'   },
   { id: 'gut',      label: 'Gut'      },
   { id: 'hormones', label: 'Hormones' },
   { id: 'vitamins', label: 'Vitamins' },

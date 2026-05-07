@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Navbar, Footer, TestCard } from '../components'
 import { useProductCatalog } from '../hooks/useProductCatalog'
 import {
-  filterComprehensive, toTestCard,
+  filterComprehensive, toTestCard, parseProductCategories,
   type ComprehensiveAgeBand,
 } from '../api/products'
 
@@ -144,8 +144,8 @@ export default function MenHealthSegmentPage({ cartCount }: { cartCount?: number
     if (ready && products.length > 0) {
       const menCats = [...new Set(
         products
-          .filter(p => /\bmen\b|\bman\b/i.test(p.category ?? '') && !/women|woman/i.test(p.category ?? ''))
-          .map(p => p.category)
+          .filter(p => parseProductCategories(p).some(c => /\bmen\b|\bman\b/i.test(c) && !/women|woman/i.test(c)))
+          .map(p => parseProductCategories(p).find(c => /\bmen\b|\bman\b/i.test(c) && !/women|woman/i.test(c)) ?? null)
       )]
       console.log('[MenHealth] men categories:', menCats)
     }

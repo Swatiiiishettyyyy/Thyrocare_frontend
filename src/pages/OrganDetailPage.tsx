@@ -5,7 +5,6 @@ import { fetchMyReports, pickSampleCollectedTimestampFromReport, type MyReportRo
 import { useAuth } from '../context/AuthContext'
 
 import heartIcon from '../assets/figma/Health metrics/heart.svg'
-import kidneyIcon from '../assets/figma/Health metrics/kidney.svg'
 import liverIcon from '../assets/figma/Health metrics/liver.svg'
 import boneIcon from '../assets/figma/Health metrics/Bone.svg'
 import gutIcon from '../assets/figma/Health metrics/gut.svg'
@@ -21,13 +20,12 @@ const NAV_LINKS = [
   { label: 'Orders',   href: '/orders' },
 ]
 
-type OrganName = 'Heart' | 'Kidney' | 'Liver' | 'Bone' | 'Gut' | 'Thyroid' | 'Blood' | 'Vitamins'
+type OrganName = 'Heart' | 'Liver' | 'Bone' | 'Gut' | 'Thyroid' | 'Blood' | 'Vitamins'
 type Status = 'Normal' | 'High' | 'Low'
 type StatusType = 'Normal' | 'Abnormal'
 
 const ORGAN_ICON: Record<OrganName, string> = {
   Heart: heartIcon,
-  Kidney: kidneyIcon,
   Liver: liverIcon,
   Bone: boneIcon,
   Gut: gutIcon,

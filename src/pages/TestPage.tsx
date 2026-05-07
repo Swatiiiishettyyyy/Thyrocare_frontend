@@ -10,6 +10,7 @@ import type { OrganItem, TestCardProps } from '../types'
 import {
   filterByCategory,
   filterByConditionLabel,
+  parseProductCategories,
   toTestCard,
   type ComprehensiveAgeBand,
 } from '../api/products'
@@ -25,7 +26,6 @@ import menUnder25 from '../assets/figma/comprehensive/men_under25-4e32c2.png'
 import heartImg from '../assets/figma/icons/heart_glyph.svg'
 import liverImg from '../assets/figma/icons/liver_glyph.svg'
 import boneImg from '../assets/figma/icons/bone_glyph.svg'
-import kidneyImg from '../assets/figma/icons/kidney_glyph.svg'
 import gutImg from '../assets/figma/icons/gut_glyph.svg'
 import hormoneImg from '../assets/figma/icons/hormones_glyph.svg'
 import vitaminsImg from '../assets/figma/icons/vitamins_glyph.svg'
@@ -44,13 +44,12 @@ const ORGANS: OrganItem[] = [
   { id: 'heart', label: 'Heart', iconSrc: heartImg },
   { id: 'liver', label: 'Liver', iconSrc: liverImg },
   { id: 'bone', label: 'Bone', iconSrc: boneImg },
-  { id: 'kidney', label: 'Kidney', iconSrc: kidneyImg },
   { id: 'gut', label: 'Gut', iconSrc: gutImg },
   { id: 'hormones', label: 'Hormones', iconSrc: hormoneImg },
   { id: 'vitamins', label: 'Vitamins', iconSrc: vitaminsImg },
 ]
 
-const CONDITIONS = ['STD', 'Monsoon Fever', 'Allergy', 'Cancer']
+const CONDITIONS = ['Monsoon Fever', 'Allergy', 'Cancer']
 
 const HOME_CARD_LIMIT = 3
 const ESSENTIAL_PAGE_SIZE_DESKTOP = 3
@@ -86,7 +85,7 @@ const menComprehensiveSlots: { label: string; age: ComprehensiveAgeBand; bg: str
 
 export default function TestPage({ cartCount }: { cartCount?: number }) {
   const [activeOrgan, setActiveOrgan] = useState('')
-  const [activeCondition, setActiveCondition] = useState('STD')
+  const [activeCondition, setActiveCondition] = useState(CONDITIONS[0])
   const [essentialPage, setEssentialPage] = useState(0)
   const [essentialPageSize, setEssentialPageSize] = useState(readEssentialPageSize)
   const navigate = useNavigate()
@@ -114,7 +113,7 @@ export default function TestPage({ cartCount }: { cartCount?: number }) {
     return products
       .filter(p => {
         const name = (p.name ?? '').toLowerCase()
-        const cat = (p.category ?? '').toLowerCase()
+        const cat = parseProductCategories(p).join(' ').toLowerCase()
         const shortDesc = ((p as any).short_description ?? '').toString().toLowerCase()
         const about = ((p as any).about ?? '').toString().toLowerCase()
         const checks = ((p as any).what_this_test_checks ?? '').toString().toLowerCase()

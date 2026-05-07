@@ -25,7 +25,7 @@ export interface ThyrocareProduct {
   what_this_test_checks?: string | string[] | null
   who_should_take_this_test?: string | string[] | null
   why_doctors_recommend?: string | string[] | null
-  category: string | null
+  category: string | string[] | null
   parameters?: { id: number; name: string; group_name?: string | null }[]
   is_home_collectible?: boolean | null
   is_active?: boolean
@@ -37,6 +37,22 @@ export interface ThyrocareProduct {
   thyrocare_listing_price?: number | null
 }
 
+/** Parse category field (may be JSON array string, string[], or plain string) into a normalized array. */
+export function parseProductCategories(p: ThyrocareProduct): string[] {
+  const c = p.category
+  if (c == null) return []
+  if (Array.isArray(c)) return c.filter(Boolean)
+  const s = c.trim()
+  if (!s) return []
+  if (s.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(s)
+      if (Array.isArray(parsed)) return parsed.filter((v): v is string => typeof v === 'string' && v.length > 0)
+    } catch { /* fall through */ }
+  }
+  return [s]
+}
+
 const PAGE_SIZE = 100
 const MAX_PAGES = 50
 const DEFAULT_DISCOUNT_PERCENT = 30
@@ -44,6 +60,28 @@ const DEFAULT_DISCOUNT_PERCENT = 30
 /** Lowercase, collapse spaces; underscores ↔ spaces so UI matches API slugs. */
 function normalizeCategoryKey(c: string): string {
   return c.trim().toLowerCase().replace(/_/g, ' ').replace(/\s+/g, ' ')
+}
+
+const HIDDEN_FRONTEND_CATEGORY_KEYS = new Set([
+  'kidney',
+  'std',
+  'sti',
+  'sexually transmitted',
+  'venereal',
+])
+
+function isHiddenFrontendCategory(category: string): boolean {
+  const key = normalizeCategoryKey(category)
+  if (HIDDEN_FRONTEND_CATEGORY_KEYS.has(key)) return true
+  return /\b(std|sti)\b/.test(key) || key.includes('sexually transmitted') || key.includes('venereal')
+}
+
+export function isFrontendHiddenProduct(product: ThyrocareProduct): boolean {
+  return parseProductCategories(product).some(isHiddenFrontendCategory)
+}
+
+export function visibleFrontendProducts(products: ThyrocareProduct[]): ThyrocareProduct[] {
+  return products.filter(product => !isFrontendHiddenProduct(product))
 }
 
 /** Build API category keys that should match a UI section label. */
@@ -62,8 +100,9 @@ function categoryMatchTargets(uiCategory: string): Set<string> {
   }
 
   if (t === 'essential tests') {
-    set.add('essential test')
+    set.add('essential_test')
     set.add('essential_tests')
+    set.add('essential test')
     set.add('essential tests > 25-50')
   }
 
@@ -250,20 +289,21 @@ export function filterByCategory(products: ThyrocareProduct[], category: string)
   const targets = categoryMatchTargets(category)
   const uiKey = normalizeCategoryKey(category)
   return products.filter(p => {
-    if (p.category == null || p.category === '') return false
-    const k = normalizeCategoryKey(p.category)
-    if (targets.has(k)) return true
-    // Compound paths like `package/popular_packages` or prefixes/suffixes around the slug
-    if (uiKey === 'popular packages') {
-      if (/\bpopular\s+packages\b/.test(k)) return true
-      const compact = k.replace(/[\s/|>]+/g, '')
-      if (compact.includes('popularpackages')) return true
-      // Path segments (do not use full `targets`: it includes bare `package`, which is too broad)
-      const popularSeg = new Set(['popular packages', 'popular package', 'popular-packages', 'popularpackages'])
-      const segments = k.split(/\s*\/\s*/).map(s => normalizeCategoryKey(s)).filter(Boolean)
-      if (segments.some(s => popularSeg.has(s))) return true
-    }
-    return false
+    const cats = parseProductCategories(p)
+    if (cats.length === 0) return false
+    return cats.some(cat => {
+      const k = normalizeCategoryKey(cat)
+      if (targets.has(k)) return true
+      if (uiKey === 'popular packages') {
+        if (/\bpopular\s+packages\b/.test(k)) return true
+        const compact = k.replace(/[\s/|>]+/g, '')
+        if (compact.includes('popularpackages')) return true
+        const popularSeg = new Set(['popular packages', 'popular package', 'popular-packages', 'popularpackages'])
+        const segments = k.split(/\s*\/\s*/).map(s => normalizeCategoryKey(s)).filter(Boolean)
+        if (segments.some(s => popularSeg.has(s))) return true
+      }
+      return false
+    })
   })
 }
 
@@ -284,8 +324,8 @@ export function filterByOrganId(products: ThyrocareProduct[], organId: string): 
   if (!labels) return []
   const keys = new Set(labels.map(l => normalizeCategoryKey(l)))
   return products.filter(p => {
-    if (p.category == null || p.category === '') return false
-    return keys.has(normalizeCategoryKey(p.category))
+    const cats = parseProductCategories(p)
+    return cats.some(cat => keys.has(normalizeCategoryKey(cat)))
   })
 }
 
@@ -295,6 +335,7 @@ const CONDITION_ALIASES: Record<string, string[]> = {
   'Monsoon Fever': ['monsoon', 'monsoon fever', 'dengue', 'viral fever', 'chikungunya'],
   Allergy: ['allergy', 'allergies', 'allergic', 'allergen', 'ige', 'immunoglobulin e'],
   Cancer: ['cancer', 'oncology', 'tumor', 'tumour'],
+  Diabetes: ['diabetes', 'diabetic', 'glucose', 'insulin', 'blood sugar', 'hba1c'],
 }
 
 export function filterByConditionLabel(products: ThyrocareProduct[], uiLabel: string): ThyrocareProduct[] {
@@ -302,13 +343,16 @@ export function filterByConditionLabel(products: ThyrocareProduct[], uiLabel: st
   const needles = new Set<string>([normalizeCategoryKey(uiLabel)])
   for (const a of CONDITION_ALIASES[uiLabel] ?? []) needles.add(normalizeCategoryKey(a))
   return products.filter(p => {
-    if (p.category == null || p.category === '') return false
-    const k = normalizeCategoryKey(p.category)
-    for (const n of needles) {
-      if (!n) continue
-      if (k === n || k.includes(n) || n.includes(k)) return true
-    }
-    return false
+    const cats = parseProductCategories(p)
+    if (cats.length === 0) return false
+    return cats.some(cat => {
+      const k = normalizeCategoryKey(cat)
+      for (const n of needles) {
+        if (!n) continue
+        if (k === n || k.includes(n) || n.includes(k)) return true
+      }
+      return false
+    })
   })
 }
 
@@ -399,25 +443,29 @@ function ageBandMatchesSegment(segment: string, age: ComprehensiveAgeBand): bool
  * - `package/under25women`, `package/25-50women`
  */
 export function comprehensiveSubcategoryFromProductCategory(
-  category: string | null | undefined,
+  category: string | string[] | null | undefined,
 ): { gender: ComprehensiveGender; age: ComprehensiveAgeBand } | null {
-  const c = (category ?? '').trim()
-  if (!c) return null
-  const lower = c.toLowerCase()
-
-  const gender: ComprehensiveGender | null =
-    isWomenCategoryString(lower) ? 'women' : (isMenCategoryString(lower) ? 'men' : null)
-  if (!gender) return null
-
-  const seg = categoryAgeSegment(lower)
-  const age: ComprehensiveAgeBand | null =
-    ageBandMatchesSegment(seg, 'under25') ? 'under25'
-      : ageBandMatchesSegment(seg, '25_50') ? '25_50'
-        : ageBandMatchesSegment(seg, '50plus') ? '50plus'
-          : null
-  if (!age) return null
-
-  return { gender, age }
+  const cats = Array.isArray(category)
+    ? category
+    : category && category.trim().startsWith('[')
+      ? (() => { try { return JSON.parse(category) } catch { return [category] } })()
+      : category ? [category] : []
+  for (const raw of cats) {
+    const lower = (raw ?? '').trim().toLowerCase()
+    if (!lower) continue
+    const gender: ComprehensiveGender | null =
+      isWomenCategoryString(lower) ? 'women' : (isMenCategoryString(lower) ? 'men' : null)
+    if (!gender) continue
+    const seg = categoryAgeSegment(lower)
+    const age: ComprehensiveAgeBand | null =
+      ageBandMatchesSegment(seg, 'under25') ? 'under25'
+        : ageBandMatchesSegment(seg, '25_50') ? '25_50'
+          : ageBandMatchesSegment(seg, '50plus') ? '50plus'
+            : null
+    if (!age) continue
+    return { gender, age }
+  }
+  return null
 }
 
 /** Gender + age-band packages (API patterns like `25/women`, `under25/men`). */
@@ -428,15 +476,15 @@ export function filterComprehensive(
 ): ThyrocareProduct[] {
   if (!Array.isArray(products)) return []
   return products.filter(p => {
-    if (p.category == null || p.category === '') return false
-    const c = p.category
-    if (gender === 'women' && !isWomenCategoryString(c)) return false
-    if (gender === 'men' && !isMenCategoryString(c)) return false
-    const seg = categoryAgeSegment(c)
-    // Backend quirk: women's "under 25" packages are sometimes categorized as `25/women`.
-    if (gender === 'women' && age === 'under25' && seg === '25') return true
-    // Backend quirk: men's "under 25" packages are sometimes categorized as `25/men`.
-    if (gender === 'men' && age === 'under25' && seg === '25') return true
-    return ageBandMatchesSegment(seg, age)
+    const cats = parseProductCategories(p)
+    if (cats.length === 0) return false
+    return cats.some(cat => {
+      if (gender === 'women' && !isWomenCategoryString(cat)) return false
+      if (gender === 'men' && !isMenCategoryString(cat)) return false
+      const seg = categoryAgeSegment(cat)
+      if (gender === 'women' && age === 'under25' && seg === '25') return true
+      if (gender === 'men' && age === 'under25' && seg === '25') return true
+      return ageBandMatchesSegment(seg, age)
+    })
   })
 }
